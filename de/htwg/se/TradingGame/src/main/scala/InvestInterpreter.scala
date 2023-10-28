@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 
 
-class InvestInterpreter extends Interpreter {
+class InvestInterpreter(tickersymbol: String, balance: String) extends Interpreter {
 
 
     override val descriptor: String = "Please enter your entryTrade:"
@@ -12,7 +12,7 @@ class InvestInterpreter extends Interpreter {
     val invest: String = "[1-9][0-9]*"
     val wrongInput: String = ".*"
 
-    def doInvest(input: String): (String, BrowseInterpreter) = (TradingMethods.currentTrade(new Trade(input.toDouble, 200, 300, 2, LocalDate.parse("2023-10-26"), "TSLA")), new BrowseInterpreter)
+    def doInvest(input: String): (String, BrowseInterpreter) = (TradingMethods.currentTrade(new Trade(input.toDouble, 200, 300, 2, LocalDate.parse("2023-10-26"), tickersymbol)), new BrowseInterpreter(balance))
 
     def doWrongInput(input: String): (String, InvestInterpreter) = ("Wrong input. Pleas type a numbers", this)
 

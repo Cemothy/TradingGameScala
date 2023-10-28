@@ -7,7 +7,7 @@ class MenuInterpreter extends Interpreter {
     val balance: String = "[1-9][0-9]*"
     val wrongInput: String = ".*"
 
-    def doBalance(input: String): (String, BrowseInterpreter) = ("", new BrowseInterpreter)
+    def doBalance(input: String): (String, BrowseInterpreter) = ("", new BrowseInterpreter(input))
 
     def doWrongInput(input: String): (String, MenuInterpreter) = ("Wrong input. Please type a number!", this)
 
