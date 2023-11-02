@@ -2,17 +2,19 @@ package TradingGame
 import java.time.LocalDate
 
 
+//InvestInterpreter should read entryTrade, stopLossTrade, takeProfitTrade, riskTrade from terminal input
+
+class InvestInterpreter(tickersymbol: String, dateTime: String, balance: String) extends Interpreter {
 
 
-class InvestInterpreter(tickersymbol: String, balance: String) extends Interpreter {
+    override val descriptor: String = "Please enter your entryTrade stopLossTrade takeProfitTrade riskTrade\n"
+    
 
-
-    override val descriptor: String = "Please enter your entryTrade:"
-
-    val invest: String = "[1-9][0-9]*"
+    val invest: String = "[1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]*"
     val wrongInput: String = ".*"
 
-    def doInvest(input: String): (String, BrowseInterpreter) = (TradingMethods.currentTrade(new Trade(input.toDouble, 200, 300, 2, LocalDate.parse("2023-10-26"), tickersymbol)), new BrowseInterpreter(balance))
+
+    def doInvest(input: String): (String, BrowseInterpreter) = (TradingMethods.currentTrade(new Trade(input.split(" ")(0).toDouble, input.split(" ")(1).toDouble, input.split(" ")(2).toDouble, input.split(" ")(3).toDouble, dateTime, tickersymbol)), new BrowseInterpreter(balance))
 
     def doWrongInput(input: String): (String, InvestInterpreter) = ("Wrong input. Pleas type a numbers", this)
 

@@ -15,6 +15,9 @@ def getPriceForDateTime(dateTime: String, dataFilePath: String): Double = {
       .toList
       .lastOption
       .getOrElse(0.0) // If no matching line found, return 0.0
+      if (price.equals(0.0)){
+        println("Date not found")
+      }
   } catch {
     case e: Exception =>
       println("An error occurred: " + e.getMessage)
@@ -24,6 +27,8 @@ def getPriceForDateTime(dateTime: String, dataFilePath: String): Double = {
 
   price
 }
+
+//
 
 
 

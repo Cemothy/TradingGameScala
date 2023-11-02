@@ -27,24 +27,25 @@ val chooseTickertext = "_" * 20 + "\nPlease Enter the Tickersymbol of your choic
 
 "The showCompany method" should {
     "return a formatted company information string" in {
-      val currentTicker = "TSLA"
-      val currentDate = LocalDate.parse("2023-10-26")
+      val currentTicker = "EURUSD"
+      val currentDate = "2023.08.17,23:51"
       val balance = 100.00
-      val result = showCompany(currentTicker, currentDate, balance)
+      val price = 210.80
+      val result = showCompany(currentTicker, currentDate, balance, price)
       result should include(s"Balance: $balance")
       result should include(s"Company: $currentTicker")
       result should include(s"Date: $currentDate")
-      result should include(s"Current Value: $$210.80")
+      result should include(s"Current Value: $$$price")
     }
   }
 
    "The currentTrade method" should {
     "return a formatted trade information string" in {
-      val trade = new Trade(210.80, 200.00, 300.00, 2.0, LocalDate.parse("2023-10-26"), "TSLA")
+      val trade = new Trade(210.80, 200.00, 300.00, 2.0, "2023.08.17,23:51", "EURUSD")
     
 
       val result = currentTrade(trade)
-      result should include("Ticker: TSLA")
+      result should include("Ticker: EURUSD")
       result should include("Entry: $210.8")
       result should include("StopLoss: $200.0")
       result should include("TakeProfit: $300.0")

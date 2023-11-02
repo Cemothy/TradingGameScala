@@ -6,22 +6,20 @@ class Trade(
   val stopLossTrade: Double,
   val takeProfitTrade: Double,
   val riskTrade: Double,
-  val date: LocalDate,
+  val date: String,
   val ticker: String
 )
 
 object TradingMethods {
-  def showCompany(currentTicker: String, date: LocalDate, balance: Double): String = {
+  def showCompany(currentTicker: String, date: String, balance: Double, currentPrice: Double): String = {
     val output =
       s"""_____________________________________
          |Currently trading with :
          |Balance: $balance
          |Company: $currentTicker
          |Date: $date
-         |Current Value: $$210.80
+         |Current Value: $$$currentPrice
          |_____________________________________
-         |To invest type: invest
-         |To browse type: browse
          |""".stripMargin
 
     output

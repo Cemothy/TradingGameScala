@@ -4,20 +4,20 @@ import org.scalatest.matchers.should.Matchers
 
 class BrowseInterpreterSpec extends AnyWordSpec with Matchers {
   val interpreter: Interpreter = new BrowseInterpreter("1000")
-  val newInterpreter: Interpreter = interpreter.processInputLine("TSLA")._2
-  val wrongInput: (String, Interpreter) = interpreter.processInputLine("something else")
+  val newInterpreter: Interpreter = interpreter.processInputLine("EURUSD 2023.12.23,12:23")._2
+  val wrongInput: (String, Interpreter) = interpreter.processInputLine("somethingelse")
   val isGameInterpreter: Boolean = newInterpreter.isInstanceOf[InvestInterpreter]
-  val wrongOutput: String = "Wrong input. Please choose from Available Symbols:\nTSLA : Tesla\nAAPL : Apple\nAMZN : Amazon\nMCD  : McDonalds\n\nto Stop : Q\n\n"
+  val wrongOutput: String = "Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n"
 
   "The Interpreter should" should {
     "have the right descriptor" in {
         
-      interpreter.descriptor should be("Please Enter the Tickersymbol of your choice:\nAvailable Symbols:\nTSLA : Tesla\nAAPL : Apple\nAMZN : Amazon\nMCD  : McDonalds\n\nto Stop : Q\n\n")
+      interpreter.descriptor should be("Please Enter the Tickersymbol of your choice: EURUSD Date: YYYY.MM.DD,HH:MM \n\nto Stop : Q\n\n")
     }
   }
 
   "the function processInputLine should" should {
-    "return a GameInterpreter if input is TSLA" in {
+    "return a GameInterpreter if input is EURUSD" in {
       isGameInterpreter should be (true)
     }
 

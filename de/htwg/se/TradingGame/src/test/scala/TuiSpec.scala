@@ -3,7 +3,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import TradingMethods._
 import java.time.LocalDate
-
+import GetMarketData._
 import java.io.FileInputStream
 
 
@@ -18,6 +18,10 @@ class TUISpec extends AnyWordSpec with Matchers {
   var investCorrectInput: String = ""
   val menuInterpreter: MenuInterpreter = new MenuInterpreter
 
+//test for processInputLine to see if the correct interpreter is set
+
+
+
 
   "the function processInputLine should" should {
     "set the correct interpreter" in {
@@ -28,21 +32,21 @@ class TUISpec extends AnyWordSpec with Matchers {
       tui.interpreter.isInstanceOf[BrowseInterpreter] should be (true)
       browseWrongInput = tui.processInputLine("something wrong")
       tui.interpreter.isInstanceOf[BrowseInterpreter] should be (true)
-      browseCorrectInput = tui.processInputLine("TSLA")
+      browseCorrectInput = tui.processInputLine("EURUSD 2023.08.17,23:51")
       tui.interpreter.isInstanceOf[InvestInterpreter] should be (true)
       investWrongInput = tui.processInputLine("something wrong")
       tui.interpreter.isInstanceOf[InvestInterpreter] should be (true)
-      investCorrectInput = tui.processInputLine("200")
+      investCorrectInput = tui.processInputLine("1.00 1.00 1.00 1.00")
       tui.interpreter.isInstanceOf[BrowseInterpreter] should be (true)
     }
 
     "return the correct String" in {
       menuWrongInput should be ("Wrong input. Please type a number!")
       menuCorrectInput should be ("")
-      browseWrongInput should be ("Wrong input. Please choose from Available Symbols:\nTSLA : Tesla\nAAPL : Apple\nAMZN : Amazon\nMCD  : McDonalds\n\nto Stop : Q\n\n")
-      browseCorrectInput should be (showCompany("TSLA", LocalDate.parse("2023-10-26"), 1000))
+      browseWrongInput should be ("Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n")
+      browseCorrectInput should be (showCompany("EURUSD", "2023.08.17,23:51", 1000, getPriceForDateTime("2023.08.17,23:51", s"src/Symbols/EURUSD.csv")))
       investWrongInput should be ("Wrong input. Pleas type a numbers")
-      investCorrectInput should be (currentTrade(new Trade(200,200,300,2,LocalDate.parse("2023-10-26"), "TSLA")))
+      investCorrectInput should be (currentTrade(new Trade(1.00,1.00,1.00,1.00,"2023.08.17,23:51", "EURUSD")))
     }
   }
 }
