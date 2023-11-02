@@ -1,5 +1,5 @@
 import java.io.{BufferedWriter, File, FileWriter}
-
+//test
 object CSVFilter {
   def main(args: Array[String]): Unit = {
     val inputFile = new File("src/Symbols/GBPUSD1.csv")
