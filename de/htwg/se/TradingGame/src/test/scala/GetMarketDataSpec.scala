@@ -63,46 +63,35 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
     }
   }
 
+
+
+
+
+
 "dateWhenTradeTriggered " should {
   "return the correct date when the trade was triggered" in {
     // Create a temporary test file for the test
-    val testFilePath = "testFile.csv"
-    val writer = new PrintWriter(new File(testFilePath))
-    writer.write(
-      """2022.09.08,15:00,1.00198,1.00218,1.00182,1.00202,155
-        |2022.09.08,15:11,1.00176,1.00208,1.00176,1.00208,132
-        |2022.09.08,15:34,0.99954,1.00015,0.99954,1.00002,308""".stripMargin)
-    writer.close()
-
+ 
     // Test scenario
-    val result = dateWhenTradeTriggered(Trade(1.00181 , 1.00015, 1.00250, 2.0, "2022.09.08,15:00", "EURUSD"))
+    val result = dateWhenTradeTriggered(Trade(1.09999 , 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"))
 
     // Assertion
-    result shouldEqual "2022.09.08:15:11"
-
-    // Clean up: Delete the temporary file
-    val file = new File(testFilePath)
-    if (file.exists()) file.delete()
+    result shouldEqual "2023.08.11,11:55"
   }
 
   "return Trade was not triggered when no matching date and time are found" in {
     val testFilePath = "testFileEmpty.csv"
     val writer = new PrintWriter(new File(testFilePath))
-    writer.write(
-      """2022.09.08,15:15,1.00096,1.00300,0.99998,1.00005,435
-        |2022.09.08,15:28,1.00074,1.00103,1.00049,1.00059,178""".stripMargin)
-    writer.close()
-
-    // Test scenario
-    val result = dateWhenTradeTriggered(Trade(0.995 , 0.8, 1.00250, 2.0, "2022.08.17,23:51", "EURUSD"))
-
-    // Assertion
-    result shouldEqual "Trade was not triggered"
-
-    // Clean up: Delete the temporary file
-    val file = new File(testFilePath)
-    if (file.exists()) file.delete()
   
+    // Test scenario
+    val result = dateWhenTradeTriggered(Trade(0.05 , 0.3, 1.00250, 2.0, "2023.08.17,23:51", "EURUSD"))
+
+    // Assertio
+    result shouldEqual "Trade was not triggered"
 }
 }
+  //test for dateWhenTradeTriggered stream
+  
+
+
 }

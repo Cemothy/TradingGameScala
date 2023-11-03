@@ -1,7 +1,11 @@
 package TradingGame
 import scala.io.Source
 import TradingMethods._
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 object GetMarketData {
+
+val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
 
 def getPriceForDateTime(dateTime: String, dataFilePath: String): Double = {
   var price: Double = 0.0
@@ -46,26 +50,31 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
   //get the file into a stream and check if the trade was triggered
   //* @param trade: Trade
   //* @return String
-  def dateWhenTradeTriggered(trade : Trade) : String = {
-    var dateWhenTradeTriggered = ""
-    val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
-    //put source into a stream starting from trade.date and look if trade is a buy that Low is lower or equal to trade.entryTrade or if trade is a sell that High is higher or equal to trade.entryTrade
-  
-      dateWhenTradeTriggered = source.getLines()
-        .collect {
-          case line if line.startsWith(trade.date) && isTradeBuyorSell(trade) && line.split(",")(4).toDouble <= trade.entryTrade => line.split(",")(0) // Fetching the date when the trade was triggered
-          case line if line.startsWith(trade.date) && !isTradeBuyorSell(trade) && line.split(",")(3).toDouble >= trade.entryTrade => line.split(",")(0) // Fetching the date when the trade was triggered
-        }
-        .toList
-        .lastOption
-        .getOrElse("Trade was not triggered") // If no matching line found, return "Trade was not triggered"
-        source.close()
-        dateWhenTradeTriggered
-    }
 
+
+  def dateWhenTradeTriggered(trade: Trade): String = {
+    var date: String = "Trade was not triggered"
+    val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
+    if(isTradeBuyorSell(trade)){
+    source.getLines()
+      .collect {
+        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.date, formatter))  && trade.entryTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+      }
+      .toList
+      .headOption
+      .getOrElse("Trade was not triggered") // If no matching line found, return 0.0
+    }else{
+      source.getLines()
+      .collect {
+        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.date, formatter))  && trade.entryTrade < line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+      }
+      .toList
+      .headOption
+      .getOrElse("Trade was not triggered") // If no matching line found, return 0.0
+    }
     
-  }
-  
+}
+}
 
 
 
