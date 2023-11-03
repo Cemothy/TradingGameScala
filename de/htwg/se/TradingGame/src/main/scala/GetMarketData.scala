@@ -4,7 +4,7 @@ import TradingMethods._
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 object GetMarketData {
-//test
+
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
 
 def isDateInFile(dateTime: String, dataFilePath: String): Boolean = {
@@ -183,17 +183,62 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
     }else{
       source.getLines()
       .collect {
-        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.date, formatter))  && trade.entryTrade < line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.date, formatter))  && trade.entryTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
       }
       .toList
       .headOption
       .getOrElse("Trade was not triggered") // If no matching line found, return 0.0
     }
-    
-}
+  
 }
 
+def dateWhenTradehitTakeProfit (trade: Trade): String = {
+  var date: String = " Trade did not hit take profit"
+  val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
+  val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
+  if(isTradeBuyorSell(trade)){
+    source.getLines()
+    .collect {
+      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.takeProfitTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+    }
+    .toList
+    .headOption
+    .getOrElse("Trade did not hit take profit buy") // If no matching line found, return 0.0
+  }else{
+    source.getLines()
+    .collect {
+      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.takeProfitTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+    }
+    .toList
+    .headOption
+    .getOrElse("Trade did not hit take profit sell") // If no matching line found, return 0.0
+  }
+}
 
+def dateWhenTradehitStopLoss(trade: Trade): String = {
+  var date: String = " Trade did not hit stop loss"
+  val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
+  val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
+  if(isTradeBuyorSell(trade)){
+    source.getLines()
+    .collect {
+      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.stopLossTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+    }
+    .toList
+    .headOption
+    .getOrElse("Trade did not hit stop loss buy") // If no matching line found, return 0.0
+  }else{
+    source.getLines()
+    .collect {
+      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.stopLossTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+    }
+    .toList
+    .headOption
+    .getOrElse("Trade did not hit stop loss sell") // If no matching line found, return 0.0
+  }
+}
+
+}
 
 
 

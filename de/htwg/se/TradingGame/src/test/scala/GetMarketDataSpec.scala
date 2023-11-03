@@ -142,8 +142,8 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
 
 
 "dateWhenTradeTriggered " should {
-  "return the correct date when the trade was triggered" in {
-    // Create a temporary test file for the test
+  "return the correct date when the trade was triggered for a buy" in {
+
  
     // Test scenario
     val result = dateWhenTradeTriggered(Trade(1.09999 , 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"))
@@ -152,7 +152,7 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
     result shouldEqual "2023.08.11,11:55"
   }
 
-  "return Trade was not triggered when no matching date and time are found" in {
+  "return Trade was not triggered when no matching date and time are found for a buy" in {
     val testFilePath = "testFileEmpty.csv"
     val writer = new PrintWriter(new File(testFilePath))
   
@@ -162,9 +162,66 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
     // Assertio
     result shouldEqual "Trade was not triggered"
 }
+  "return the correct date when the trade was triggered for a sell" in {
+
+
+  // Test scenario
+  val result = dateWhenTradeTriggered(Trade(1.1004 , 2.0, 1.0, 2.0, "2023.08.11,11:53", "EURUSD"))
+
+  // Assertion
+  result shouldEqual "2023.08.11,15:09"
 }
   //test for dateWhenTradeTriggered stream
   
+}
+
+"dateWhenTradehitTakeProfit" should {
+  "return the correct date when the trade hit the take profit after the trade was triggered for a buy" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = dateWhenTradehitTakeProfit(Trade(1.09999 , 1.001, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"))
+    result shouldEqual "2023.08.11,15:09"
+  }
+  "return Target not hit when no matching date and time are found for a buy" in {
+    val testFilePath = "testFileEmpty.csv"
+    val writer = new PrintWriter(new File(testFilePath))
+  
+    // Test scenario
+    val result = dateWhenTradehitTakeProfit(Trade(1.09999 , 0.3, 3.0, 2.0, "2023.08.11,11:53", "EURUSD"))
+
+    // Assertio
+    result shouldEqual "Trade did not hit take profit buy"
+}
+  "return the correct date when the trade hit the take profit after the trade was triggered for a sell" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = dateWhenTradehitTakeProfit(Trade(1.1004 , 2.0, 1.09999, 2.0, "2023.08.11,11:53", "EURUSD"))
+    result shouldEqual "2023.08.11,15:14"
+  }
+
+
+}
+
+"dateWhenTradehitStopLoss" should {
+  "return the correct date when the trade hit the stop loss after the trade was triggered for a buy" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = dateWhenTradehitStopLoss(Trade(1.09999 , 1.09950, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"))
+    result shouldEqual "2023.08.11,12:15"
+  }
+  "return Target not hit when no matching date and time are found for a buy" in {
+    val testFilePath = "testFileEmpty.csv"
+    val writer = new PrintWriter(new File(testFilePath))
+  
+    // Test scenario
+    val result = dateWhenTradehitStopLoss(Trade(1.09999 , 0.3, 3.0, 2.0, "2023.08.11,11:53", "EURUSD"))
+
+    // Assertio
+    result shouldEqual "Trade did not hit stop loss buy"
+}
+  "return the correct date when the trade hit the stop loss after the trade was triggered for a sell" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = dateWhenTradehitStopLoss(Trade(1.1004 , 1.10048, 1.09999, 2.0, "2023.08.11,11:53", "EURUSD"))
+    result shouldEqual "2023.08.11,15:26"
+  }
+}
 
 
 }
