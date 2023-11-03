@@ -4,7 +4,7 @@ import TradingMethods._
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 object GetMarketData {
-
+//test
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
 
 def isDateInFile(dateTime: String, dataFilePath: String): Boolean = {
