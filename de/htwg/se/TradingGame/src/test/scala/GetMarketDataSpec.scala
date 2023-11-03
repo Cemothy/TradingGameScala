@@ -6,6 +6,24 @@ import GetMarketData._
 
 class GetMarketDataSpec extends AnyWordSpec with Matchers {
 
+"getLastDateofFile" should{
+  "return the last date of the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = getLastDateofFile(testFilePath)
+    result shouldEqual "2023.11.02,21:32"
+  }
+}
+
+"getFirsDateofFile" should{
+  "return the first date of the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = getFirsDateofFile(testFilePath)
+    result shouldEqual "2023.01.02,07:02"
+  }
+}
+
+
+
 "isTradeBuyorSell" should {
   "return true if the trade is a buy" in {
     val trade = Trade(1.00181 , 1.00015, 1.00250, 2.0, "2022.09.08,15:00", "EURUSD")
@@ -20,47 +38,102 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
     result shouldEqual false
   }
 
+"getPriceForDateTimeDouble" should {
+  "return the correct price for a given date and time" in {
+   
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = getPriceForDateTimeDouble("2023.03.14,15:20", testFilePath, 5)
+    result shouldEqual 1.07345
 
-  "getPriceForDateTime" should {
+  }
+  "return 0.0 when the date is after the last date of the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = getPriceForDateTimeDouble("2023.12.03,15:20", testFilePath, 5)
+    result shouldEqual 0.0
+  }
+  "return 0.0 when the date is before the first date of the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = getPriceForDateTimeDouble("2022.12.03,15:20", testFilePath, 5)
+    result shouldEqual 0.0
+  }
+}
+
+"isDateBeforefirstDateinFile" should {
+  "return true if the date is before the first date in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = isDateBeforefirstDateinFile("2022.12.03,15:20", testFilePath)
+    result shouldEqual true
+  }
+  "return false if the date is not before the first date in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = isDateBeforefirstDateinFile("2023.10.22,20:12", testFilePath)
+    result shouldEqual false
+  }
+}
+
+"isDateAfterLastDateinFile" should {
+  "return true if the date is after the last date in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = isDateAfterLastDateinFile("2023.12.03,15:20", testFilePath)
+    result shouldEqual true
+  }
+  "return false if the date is not after the last date in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = isDateAfterLastDateinFile("2023.10.22,20:12", testFilePath)
+    result shouldEqual false
+  }
+}
+
+" isDateInFile" should {
+  "return true if the date is in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = isDateInFile("2023.02.17,11:52", testFilePath)
+    result shouldEqual true
+  }
+  "return false if the date is not in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = isDateInFile("2023.10.29,00:01", testFilePath)
+    result shouldEqual false
+  }
+}
+
+"nextPossibleDateinFile" should {
+  "return the next possible date in the file" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = nextPossibleDateinFile("2023.10.22,20:12", testFilePath)
+    result shouldEqual "2023.10.23,00:00"
+  }
+}
+
+
+  "getPriceForDateTimeString" should {
     "return the correct price for a given date and time" in {
-      // Create a temporary test file for the test
-      val testFilePath = "testFile.csv"
-      val writer = new PrintWriter(new File(testFilePath))
-      writer.write(
-        """2022.09.08,15:00,1.00198,1.00218,1.00182,1.00202,155
-          |2022.09.08,15:11,1.00176,1.00208,1.00176,1.00208,132
-          |2022.09.08,15:34,0.99954,1.00015,0.99954,1.00002,308""".stripMargin)
-      writer.close()
+     
+      val testFilePath = "src/Symbols/EURUSD.csv"
+
 
       // Test scenario
-      val result = getPriceForDateTime("2022.09.08,15:34", testFilePath)
+      val result = getPriceForDateTimeString("2023.03.14,15:20", testFilePath, 5)
 
       // Assertion
-      result shouldEqual 1.00002
+      result shouldEqual "1.07345"
 
-      // Clean up: Delete the temporary file
-      val file = new File(testFilePath)
-      if (file.exists()) file.delete()
+     
+      
     }
 
-    "return 0.0 when no matching date and time are found" in {
-      val testFilePath = "testFileEmpty.csv"
-      val writer = new PrintWriter(new File(testFilePath))
-      writer.write(
-        """2022.09.08,15:15,1.00096,1.00300,0.99998,1.00005,435
-        |2022.09.08,15:28,1.00074,1.00103,1.00049,1.00059,178""".stripMargin)
-      writer.close()
-
-      // Test scenario
-      val result = getPriceForDateTime("2022.08.17,23:51", testFilePath)
-
-      // Assertion
-      result shouldEqual 0.0
-
-      // Clean up: Delete the temporary file
-      val file = new File(testFilePath)
-      if (file.exists()) file.delete()
+    "print date is afer last date of file when the date is after the last date of the file" in {
+      val testFilePath = "src/Symbols/EURUSD.csv"
+      val result = getPriceForDateTimeString("2023.12.03,15:20", testFilePath, 5)
+      result shouldEqual "date is after last date of file"
     }
+
+    "print date is before first date of file when the date is before the first date of the file" in {
+      val testFilePath = "src/Symbols/EURUSD.csv"
+      val result = getPriceForDateTimeString("2022.12.03,15:20", testFilePath, 5)
+      result shouldEqual "date is before first date of file"
+    }
+
   }
 
 

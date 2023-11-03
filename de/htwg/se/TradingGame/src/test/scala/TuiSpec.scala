@@ -44,7 +44,7 @@ class TUISpec extends AnyWordSpec with Matchers {
       menuWrongInput should be ("Wrong input. Please type a number!")
       menuCorrectInput should be ("")
       browseWrongInput should be ("Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n")
-      browseCorrectInput should be (showCompany("EURUSD", "2023.08.17,23:51", 1000, getPriceForDateTime("2023.08.17,23:51", s"src/Symbols/EURUSD.csv")))
+      browseCorrectInput should be (showCompany("EURUSD", "2023.08.17,23:51", 1000, getPriceForDateTimeDouble("2023.08.17,23:51", s"src/Symbols/EURUSD.csv", 5)))
       investWrongInput should be ("Wrong input. Pleas type a numbers")
       investCorrectInput should be (currentTrade(new Trade(1.00,1.00,1.00,1.00,"2023.08.17,23:51", "EURUSD")))
     }
