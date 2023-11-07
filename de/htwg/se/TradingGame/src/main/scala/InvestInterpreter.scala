@@ -7,6 +7,8 @@ import java.time.LocalDate
 class InvestInterpreter(tickersymbol: String, dateTime: String, balance: String) extends Interpreter {
 
 
+    private var currentTradestore: Trade = _
+    var TradeDoneCalculationsstore: TradeDoneCalculations = _
     override val descriptor: String = "Please enter your entryTrade stopLossTrade takeProfitTrade riskTrade\n"
     
 
@@ -14,7 +16,16 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balance: String)
     val wrongInput: String = ".*"
 
 
-    def doInvest(input: String): (String, BrowseInterpreter) = (TradingMethods.currentTrade(new Trade(input.split(" ")(0).toDouble, input.split(" ")(1).toDouble, input.split(" ")(2).toDouble, input.split(" ")(3).toDouble, dateTime, tickersymbol)), new BrowseInterpreter(balance))
+    def doInvest(input: String): (String, BrowseInterpreter) = {
+        
+        this.currentTradestore = new Trade(input.split(" ")(0).toDouble, input.split(" ")(1).toDouble, input.split(" ")(2).toDouble, input.split(" ")(3).toDouble, dateTime, tickersymbol)
+        this.TradeDoneCalculationsstore = GetMarketData.calculateTrade(currentTradestore)
+        MainClass.trades.addOne(TradeDoneCalculationsstore)
+        
+        MainClass.balance = balance.toDouble
+        (TradingMethods.currentTrade(currentTradestore), new BrowseInterpreter(balance))
+    }
+        
 
     def doWrongInput(input: String): (String, InvestInterpreter) = ("Wrong input. Pleas type a numbers", this)
 

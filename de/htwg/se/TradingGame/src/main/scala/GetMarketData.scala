@@ -260,13 +260,19 @@ def didTradeWinnorLoose(trade: Trade): String = {
 
 }
 
-def calculateTradeProfit(trade: Trade, balance: Double): Double = {
+def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double = {
   
-  if(didTradeWinnorLoose(trade).equals("Trade hit take profit")){
-    balance * trade.riskTrade * 0.01
+  if(trade.TradeWinnorLoose.equals("Trade hit take profit")){
+    val entryPrice = trade.trade.entryTrade
+    val stopLossPrice = trade.trade.stopLossTrade
+    val takeProfitPrice = trade.trade.takeProfitTrade
+    val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
+    val distanceFromEntryToTakeProfit = math.abs(entryPrice - takeProfitPrice)
+    val factor = distanceFromEntryToTakeProfit / distanceFromEntryToStopLoss
+    (balance * trade.trade.riskTrade * 0.01) * factor
     
-  } else if(didTradeWinnorLoose(trade).equals("Trade hit stop loss")){
-    balance * trade.riskTrade * 0.01 * -1
+  } else if(trade.TradeWinnorLoose.equals("Trade hit stop loss")){
+    balance * trade.trade.riskTrade * 0.01 * -1
     
   } else {
     0.0
