@@ -10,6 +10,14 @@ class Trade(
   val ticker: String
 )
 
+class TradeDoneCalculations(
+  val trade : Trade,
+  val dateTradeTiggered: String,
+  val dateTradeDone: String,
+  val TradeWinnorLoose : String,
+  val tradeBuyorSell : Boolean
+)
+
 object TradingMethods {
   def showCompany(currentTicker: String, date: String, balance: Double, currentPrice: Double): String = {
     val output =

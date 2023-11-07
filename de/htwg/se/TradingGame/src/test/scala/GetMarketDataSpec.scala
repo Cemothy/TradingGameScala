@@ -189,7 +189,7 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
     val result = dateWhenTradehitTakeProfit(Trade(1.09999 , 0.3, 3.0, 2.0, "2023.08.11,11:53", "EURUSD"))
 
     // Assertio
-    result shouldEqual "Trade did not hit take profit buy"
+    result shouldEqual "Trade did not hit take profit"
 }
   "return the correct date when the trade hit the take profit after the trade was triggered for a sell" in {
     val testFilePath = "src/Symbols/EURUSD.csv"
@@ -214,7 +214,7 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
     val result = dateWhenTradehitStopLoss(Trade(1.09999 , 0.3, 3.0, 2.0, "2023.08.11,11:53", "EURUSD"))
 
     // Assertio
-    result shouldEqual "Trade did not hit stop loss buy"
+    result shouldEqual "Trade did not hit stop loss"
 }
   "return the correct date when the trade hit the stop loss after the trade was triggered for a sell" in {
     val testFilePath = "src/Symbols/EURUSD.csv"
@@ -223,5 +223,48 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
   }
 }
 
+"didTradeWinnorLoose" should {
+  "return true if the trade was a win" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = didTradeWinnorLoose(Trade(1.09999 , 0.9, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"))
+    result shouldEqual "Trade hit take profit"
+  }
+  "return false if the trade was a loss" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = didTradeWinnorLoose(Trade(1.09999 , 1.1001, 1.0, 2.0, "2023.08.11,11:53", "EURUSD"))
+    result shouldEqual "Trade hit stop loss"
+  }
+}
+
+"calculateTradeProfit" should {
+  "return the correct profit for a  win" in {
+    val result = calculateTradeProfit(Trade(1.09999 , 0.9, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"), 100.0)
+    result shouldEqual 2.0
+  }
+  "return the correct profit for a  loss" in {
+    val testFilePath = "src/Symbols/EURUSD.csv"
+    val result = calculateTradeProfit(Trade(1.09999 , 1.1001, 1.0, 3.0, "2023.08.11,11:53", "EURUSD"), 100.0)
+    result shouldEqual -3.0
+  }
+}
+
+  "calculateTrade" should {
+    "return a correct TrdeDoneCalculations object when given a Trade object" in {
+      val testFilePath = "src/Symbols/EURUSD.csv"
+      val result = calculateTrade(Trade(1.09999 , 1.1001, 1.0, 3.0, "2023.08.11,11:53", "EURUSD")
+      )
+      result.trade.entryTrade shouldEqual 1.09999
+      result.trade.stopLossTrade shouldEqual 1.1001
+      result.trade.takeProfitTrade shouldEqual 1.0
+      result.trade.riskTrade shouldEqual 3.0
+      result.trade.date shouldEqual "2023.08.11,11:53"
+      result.trade.ticker shouldEqual "EURUSD"
+      result.dateTradeTiggered shouldEqual "2023.08.11,11:54"
+      result.dateTradeDone shouldEqual "2023.08.11,11:55"
+      result.TradeWinnorLoose shouldEqual "Trade hit stop loss"
+      result.tradeBuyorSell shouldEqual false
+
+    }
+  }
 
 }

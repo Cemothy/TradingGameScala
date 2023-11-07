@@ -203,7 +203,7 @@ def dateWhenTradehitTakeProfit (trade: Trade): String = {
     }
     .toList
     .headOption
-    .getOrElse("Trade did not hit take profit buy") // If no matching line found, return 0.0
+    .getOrElse("Trade did not hit take profit") // If no matching line found, return 0.0
   }else{
     source.getLines()
     .collect {
@@ -211,7 +211,7 @@ def dateWhenTradehitTakeProfit (trade: Trade): String = {
     }
     .toList
     .headOption
-    .getOrElse("Trade did not hit take profit sell") // If no matching line found, return 0.0
+    .getOrElse("Trade did not hit take profit") // If no matching line found, return 0.0
   }
 }
 
@@ -226,7 +226,7 @@ def dateWhenTradehitStopLoss(trade: Trade): String = {
     }
     .toList
     .headOption
-    .getOrElse("Trade did not hit stop loss buy") // If no matching line found, return 0.0
+    .getOrElse("Trade did not hit stop loss") // If no matching line found, return 0.0
   }else{
     source.getLines()
     .collect {
@@ -234,13 +234,64 @@ def dateWhenTradehitStopLoss(trade: Trade): String = {
     }
     .toList
     .headOption
-    .getOrElse("Trade did not hit stop loss sell") // If no matching line found, return 0.0
+    .getOrElse("Trade did not hit stop loss") // If no matching line found, return 0.0
   }
 }
 
+
+def didTradeWinnorLoose(trade: Trade): String = {
+  var result: String = "Trade did not hit take profit or stop loss"
+  val dateWhenTradehitTakeProfit1 = dateWhenTradehitTakeProfit(trade)
+  val dateWhenTradehitStopLoss1 = dateWhenTradehitStopLoss(trade)
+  
+    if(dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit") && !dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss")){
+      result = "Trade hit stop loss"
+    } else if(dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss") && !dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit")){
+      result = "Trade hit take profit"
+    }else if(dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss") && dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit")){
+      result = "Trade did not hit take profit or stop loss"
+    } else if(LocalDateTime.parse(dateWhenTradehitTakeProfit1, formatter).isBefore(LocalDateTime.parse(dateWhenTradehitStopLoss1, formatter))){
+      result = "Trade hit take profit"
+    } else {
+      result = "Trade hit stop loss"
+    }
+
+  result
+
+}
+
+def calculateTradeProfit(trade: Trade, balance: Double): Double = {
+  
+  if(didTradeWinnorLoose(trade).equals("Trade hit take profit")){
+    balance * trade.riskTrade * 0.01
+    
+  } else if(didTradeWinnorLoose(trade).equals("Trade hit stop loss")){
+    balance * trade.riskTrade * 0.01 * -1
+    
+  } else {
+    0.0
+  }
+
 }
 
 
+
+def calculateTrade(trade: Trade): TradeDoneCalculations = {
+  val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
+  var dateWhenTradehitTakeProfitorStopLoss1 = "Trade did not hit take profit or stop loss"
+  val didTradeWinnorLoose1 = didTradeWinnorLoose(trade)
+  val tradeBuyorSell = isTradeBuyorSell(trade)
+  if(didTradeWinnorLoose1.equals("Trade hit take profit")){
+    dateWhenTradehitTakeProfitorStopLoss1 = dateWhenTradehitTakeProfit(trade)
+  } else if(didTradeWinnorLoose1.equals("Trade hit stop loss")){
+    dateWhenTradehitTakeProfitorStopLoss1 = dateWhenTradehitStopLoss(trade)
+  }
+
+  val tradeDoneCalculations = new TradeDoneCalculations(trade, dateWhenTradeTriggered1, dateWhenTradehitTakeProfitorStopLoss1, didTradeWinnorLoose1, tradeBuyorSell)
+  tradeDoneCalculations
+}
+
+}
 
 
 
