@@ -1,5 +1,5 @@
-package TradingGame
-import java.time.LocalDate
+package TradingGame.main.model 
+import TradingGame.main.model._
 
 class Trade(
   val entryTrade: Double,

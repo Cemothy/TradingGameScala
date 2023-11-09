@@ -1,4 +1,5 @@
-package TradingGame
+package TradingGame.main.model 
+import TradingGame.main.model._
 import java.time.LocalDate
 
 

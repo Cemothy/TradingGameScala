@@ -1,9 +1,6 @@
-package TradingGame 
-import MainClass._
-import TradingMethods._
+package TradingGame.main.model 
+import TradingGame.main.model._
 import java.time.LocalDate
-import GetMarketData._
-
 
 class BrowseInterpreter(balance: String) extends Interpreter {
 

@@ -1,4 +1,5 @@
-package TradingGame
+package TradingGame.main.model 
+import TradingGame.main.model._
 
 import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 

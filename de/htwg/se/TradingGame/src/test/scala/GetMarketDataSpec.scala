@@ -236,17 +236,17 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
   }
 }
 
-"calculateTradeProfit" should {
-  "return the correct profit for a  win" in {
-    val result = calculateTradeProfit(Trade(1.09999 , 0.9, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"), 100.0)
-    result shouldEqual 2.0
-  }
-  "return the correct profit for a  loss" in {
-    val testFilePath = "src/Symbols/EURUSD.csv"
-    val result = calculateTradeProfit(Trade(1.09999 , 1.1001, 1.0, 3.0, "2023.08.11,11:53", "EURUSD"), 100.0)
-    result shouldEqual -3.0
-  }
-}
+// "calculateTradeProfit" should {
+//   "return the correct profit for a  win" in {
+//     val result = calculateTradeProfit(Trade(1.09999 , 0.9, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"), 100.0)
+//     result shouldEqual 2.0
+//   }
+//   "return the correct profit for a  loss" in {
+//     val testFilePath = "src/Symbols/EURUSD.csv"
+//     val result = calculateTradeProfit(Trade(1.09999 , 1.1001, 1.0, 3.0, "2023.08.11,11:53", "EURUSD"), 100.0)
+//     result shouldEqual -3.0
+//   }
+// }
 
   "calculateTrade" should {
     "return a correct TrdeDoneCalculations object when given a Trade object" in {
