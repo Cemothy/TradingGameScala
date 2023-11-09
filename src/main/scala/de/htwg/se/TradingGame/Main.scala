@@ -1,8 +1,8 @@
-package TradingGame.main
+package TradingGame
 import scala.io.StdIn
 import scala.collection.mutable.ArrayBuffer
-import scala.Controller.Controller
-import TradingGame.main.scala.view.TUI
+import de.htwg.se.TradingGame.controller.Controller
+import de.htwg.se.TradingGame.view.TUI
 object MainClass {
 
   

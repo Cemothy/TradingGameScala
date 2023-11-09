@@ -1,4 +1,4 @@
-package TradingGame
+package de.htwg.se.TradingGame.model
 import org.scalatest._
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers._

@@ -1,8 +1,9 @@
-package TradingGame.main.model 
-import TradingGame.main.model._
+package de.htwg.se.TradingGame.model 
+import de.htwg.se.TradingGame.model._
 import scala.io.Source
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import scala.collection.mutable.ArrayBuffer
 object GetMarketData {
 
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
@@ -259,10 +260,10 @@ def didTradeWinnorLoose(trade: Trade): String = {
   result
 
 }
-
-def closeProgram: String = {
-    val trades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
+  val trades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
   var balance: Double = 10000.0
+def closeProgram: String = {
+
   for (trade <- trades) {
     println("__________________________________________________________")
     print(s"Entry Trade: ${trade.trade.entryTrade}  |  ")

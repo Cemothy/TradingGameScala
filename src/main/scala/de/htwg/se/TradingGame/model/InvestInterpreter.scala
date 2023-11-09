@@ -1,5 +1,5 @@
-package TradingGame.main.model 
-import TradingGame.main.model._
+package de.htwg.se.TradingGame.model 
+import de.htwg.se.TradingGame.model._
 import java.time.LocalDate
 
 
@@ -21,9 +21,9 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balance: String)
         
         this.currentTradestore = new Trade(input.split(" ")(0).toDouble, input.split(" ")(1).toDouble, input.split(" ")(2).toDouble, input.split(" ")(3).toDouble, dateTime, tickersymbol)
         this.TradeDoneCalculationsstore = GetMarketData.calculateTrade(currentTradestore)
-        MainClass.trades.addOne(TradeDoneCalculationsstore)
+        GetMarketData.trades.addOne(TradeDoneCalculationsstore)
         
-        MainClass.balance = balance.toDouble
+        GetMarketData.balance = balance.toDouble
         (TradingMethods.currentTrade(currentTradestore), new BrowseInterpreter(balance))
     }
         

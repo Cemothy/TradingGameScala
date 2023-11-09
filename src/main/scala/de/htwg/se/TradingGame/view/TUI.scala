@@ -1,9 +1,9 @@
-package scala.view
+package de.htwg.se.TradingGame.view
 import scala.io
 import scala.io.StdIn
-import scala.controller.Controller
-import scala.util.Observer
-import TradingGame.main.model.* 
+import de.htwg.se.TradingGame.controller.Controller
+import de.htwg.se.TradingGame.util.Observer
+import de.htwg.se.TradingGame.model.* 
 
 
 class TUI (controller: Controller) extends Observer{

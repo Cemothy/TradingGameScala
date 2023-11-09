@@ -1,4 +1,4 @@
-package de.htwg.se.TradingGame.main.util
+package de.htwg.se.TradingGame.util
 
 trait Observer {
   def update: Unit

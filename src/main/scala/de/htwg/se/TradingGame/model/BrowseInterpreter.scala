@@ -1,5 +1,9 @@
-package TradingGame.main.model 
-import TradingGame.main.model._
+package de.htwg.se.TradingGame.model 
+import de.htwg.se.TradingGame.model.MenuInterpreter
+import de.htwg.se.TradingGame.model.BrowseInterpreter
+import de.htwg.se.TradingGame.model.InvestInterpreter
+import de.htwg.se.TradingGame.model.TradingMethods._
+import de.htwg.se.TradingGame.model.GetMarketData._
 import java.time.LocalDate
 
 class BrowseInterpreter(balance: String) extends Interpreter {

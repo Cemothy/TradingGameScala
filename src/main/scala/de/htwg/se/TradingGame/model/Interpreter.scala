@@ -1,5 +1,5 @@
-package TradingGame.main.model 
-import TradingGame.main.model._
+package de.htwg.se.TradingGame.model 
+import de.htwg.se.TradingGame.model._
 
 import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 

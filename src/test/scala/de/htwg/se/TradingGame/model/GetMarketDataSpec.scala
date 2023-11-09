@@ -1,4 +1,4 @@
-package TradingGame
+package de.htwg.se.TradingGame.model
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import java.io.{File, PrintWriter}

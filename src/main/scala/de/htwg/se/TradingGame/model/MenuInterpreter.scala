@@ -1,5 +1,5 @@
-package TradingGame.main.model 
-import TradingGame.main.model._
+package de.htwg.se.TradingGame.model 
+import de.htwg.se.TradingGame.model._
 
 class MenuInterpreter extends Interpreter {
 
