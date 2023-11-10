@@ -1,6 +1,7 @@
 package de.htwg.se.TradingGame.model
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import de.htwg.se.TradingGame.model.GetMarketData.closeProgram
 
 class BrowseInterpreterSpec extends AnyWordSpec with Matchers {
   val interpreter: Interpreter = new BrowseInterpreter("1000")
@@ -26,5 +27,5 @@ class BrowseInterpreterSpec extends AnyWordSpec with Matchers {
       wrongInput._2 should be (interpreter)
     }
   }
-
+  
 }

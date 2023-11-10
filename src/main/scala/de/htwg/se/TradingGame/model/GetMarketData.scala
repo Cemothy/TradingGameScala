@@ -239,7 +239,7 @@ def dateWhenTradehitStopLoss(trade: Trade): String = {
     .getOrElse("Trade did not hit stop loss") // If no matching line found, return 0.0
   }
 }
-date
+  date
 }
 
 
@@ -266,39 +266,45 @@ def didTradeWinnorLoose(trade: Trade): String = {
 
 }
   val trades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
-  var balance: Double = 10000.0
+  var balance: Double = 0.0
 def closeProgram: String = {
 
-  for (trade <- trades) {
-    println("__________________________________________________________")
-    print(s"Entry Trade: ${trade.trade.entryTrade}  |  ")
-    print(s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  ")
-    print(s"Take Profit Trade: ${trade.trade.takeProfitTrade}  |  ")
-    print(s"Risk Trade: ${trade.trade.riskTrade}  |  ")
-    print(s"Date: ${trade.trade.date}  |  ")
-    print(s"Ticker: ${trade.trade.ticker}  |  ")
-    print(s"Date Trade Triggered: ${trade.dateTradeTiggered}  |  ")
-    print(s"Date Trade Done: ${trade.dateTradeDone}  |  ")
-    print(s"Trade Winner or Loser: ${trade.TradeWinnorLoose}  |  ")
-    print(s"Trade Buy or Sell: ${if (trade.tradeBuyorSell) "Buy" else "Sell"}  |  ")
-    println(s"Profit: $$${GetMarketData.calculateTradeProfit(trade, balance)}")
-    print("__________________________________________________________")
-    this.balance = balance + GetMarketData.calculateTradeProfit(trade, balance)
-    println("__________________________________________________________")
-    print(s"new Balance: $$$balance\n")
-    println("__________________________________________________________")
-  }
-  println("__________________________________________________________")
-  print(s"Final Balance: $$$balance\n")
-  println("__________________________________________________________")
-
-    println("Closing the program...")
+    println(doneTradeStringwithProfit)
     System.exit(0)
     "should not print"
   }
 
+def doneTradeStringwithProfit: String = {
+  var output = ""
+  for (trade <- trades) {
+    output += "__________________________________________________________\n"
+    output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
+    output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "
+    output += s"Take Profit Trade: ${trade.trade.takeProfitTrade}  |  "
+    output += s"Risk Trade: ${trade.trade.riskTrade}  |  "
+    output += s"Date: ${trade.trade.date}  |  "
+    output += s"Ticker: ${trade.trade.ticker}  |  "
+    output += s"Date Trade Triggered: ${trade.dateTradeTiggered}  |  "
+    output += s"Date Trade Done: ${trade.dateTradeDone}  |  "
+    output += s"Trade Winner or Loser: ${trade.TradeWinnorLoose}  |  "
+    output += s"Trade Buy or Sell: ${if (trade.tradeBuyorSell) "Buy" else "Sell"}  |  "
+    output += s"Profit: $$${GetMarketData.calculateTradeProfit(trade, balance)}\n"
+    output += "__________________________________________________________\n"
+    this.balance = balance + GetMarketData.calculateTradeProfit(trade, balance)
+    output += "__________________________________________________________\n"
+    output += s"new Balance: $$$balance\n"
+    output += "__________________________________________________________\n"
+  }
+  output += "__________________________________________________________\n"
+  output += s"Final Balance: $$$balance\n"
+  output += "__________________________________________________________\n"
+
+  output += "Closing the program..."
+  output
+}
+
 def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double = {
-  
+  var profit: Double = 0.0
   if(trade.TradeWinnorLoose.equals("Trade hit take profit")){
     val entryPrice = trade.trade.entryTrade
     val stopLossPrice = trade.trade.stopLossTrade
@@ -306,15 +312,14 @@ def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double 
     val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
     val distanceFromEntryToTakeProfit = math.abs(entryPrice - takeProfitPrice)
     val factor = distanceFromEntryToTakeProfit / distanceFromEntryToStopLoss
-    (balance * trade.trade.riskTrade * 0.01) * factor
+    profit = (balance * trade.trade.riskTrade * 0.01) * factor
+    profit = math.round(profit * 100.0) / 100.0
     
   } else if(trade.TradeWinnorLoose.equals("Trade hit stop loss")){
-    balance * trade.trade.riskTrade * 0.01 * -1
-    
-  } else {
-    0.0
+    profit = balance * trade.trade.riskTrade * 0.01 * -1
+    profit = math.round(profit * 100.0) / 100.0
   }
-
+  profit
 }
 
 

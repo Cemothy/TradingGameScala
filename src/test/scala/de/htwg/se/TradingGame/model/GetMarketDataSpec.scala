@@ -3,6 +3,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import java.io.{File, PrintWriter}
 import GetMarketData._
+import scala.collection.mutable.ArrayBuffer
 
 class GetMarketDataSpec extends AnyWordSpec with Matchers {
 
@@ -97,6 +98,33 @@ class GetMarketDataSpec extends AnyWordSpec with Matchers {
   }
   
 }
+
+"doneTradeStringwithProfit" should {
+  "return the correct string when the trade hit take profit" in {
+    val TradeDoneCalculationsstore = TradeDoneCalculations(Trade(1.1 , 1.0, 1.2, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit", false)
+    val TradeDoneCalculationsstore2 = TradeDoneCalculations(Trade(1.1 , 1.0, 1.2, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit", true)
+    GetMarketData.trades.addOne(TradeDoneCalculationsstore)
+    GetMarketData.trades.addOne(TradeDoneCalculationsstore2)
+    GetMarketData.balance = 1000.0
+    val result = doneTradeStringwithProfit
+    result should include("Entry Trade: 1.1")
+    result should include("Stop Loss Trade: 1.0")
+    result should include("Take Profit Trade: 1.2")
+    result should include("Risk Trade: 2.0")
+    result should include("Date: 2023.08.11,11:53")
+    result should include("Ticker: EURUSD")
+    result should include("Date Trade Triggered: 2023.08.11,11:54")
+    result should include("Date Trade Done: 2023.08.11,15:09")
+    result should include("Trade Winner or Loser: Trade hit take profit")
+    result should include("Trade Buy or Sell: Sell")
+    result should include("Profit: $20.0")
+    result should include("Balance: $1020.0")
+    result should include("Trade Buy or Sell: Buy")
+  }
+
+}
+
+
 
 "nextPossibleDateinFile" should {
   "return the next possible date in the file" in {

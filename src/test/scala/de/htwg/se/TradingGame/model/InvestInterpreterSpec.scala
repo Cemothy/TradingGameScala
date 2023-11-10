@@ -28,4 +28,19 @@ class InvestInterpreterSpec extends AnyWordSpec with Matchers {
     }
   }
 
+  "An InvestInterpreter" should {
+    "return a GameInterpreter if input is 100" in {
+      val interpreter: Interpreter = new InvestInterpreter("EURUSD","2023.08.17,23:51", "1000")
+      val (output, newInterpreter) = interpreter.processInputLine("100")
+      newInterpreter.isInstanceOf[Interpreter] should be(true)
+    }
+
+    "return an error message if input is not a number" in {
+      val interpreter: Interpreter = new InvestInterpreter("EURUSD","2023.08.17,23:51", "1000")
+      val (output, newInterpreter) = interpreter.processInputLine("something else")
+      output should be("Wrong input. Pleas type a numbers")
+      newInterpreter should be(interpreter)
+    }
+  }
+
 }
