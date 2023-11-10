@@ -4,7 +4,11 @@ import scala.io.Source
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
+import java.io.File
+
 object GetMarketData {
+
+val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
 
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
 
@@ -94,10 +98,10 @@ def getPriceForDateTimeString(dateTime: String, dataFilePath: String, ohlc: Inte
 
     price = source.getLines()
       .collect {
-        case line if line.startsWith(dateTime) => line.split(",")(ohlc) // Fetching the price
+        case line if line.startsWith(dateTime) || LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateTime, formatter)) => line.split(",")(ohlc) // Fetching the price
       }
       .toList
-      .lastOption
+      .headOption
       .getOrElse("0.0") // If no matching line found, return 0.0
       source.close()
       if(price.equals("0.0")){
@@ -165,7 +169,7 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
 
   def dateWhenTradeTriggered(trade: Trade): String = {
     var date: String = "Trade was not triggered"
-    val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
+    val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
     if(isTradeBuyorSell(trade)){
     source.getLines()
       .collect {
@@ -188,7 +192,7 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
 
 def dateWhenTradehitTakeProfit (trade: Trade): String = {
   var date: String = " Trade did not hit take profit"
-  val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
+  val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
   if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
     date = "Trade was not triggered"
@@ -216,7 +220,7 @@ def dateWhenTradehitTakeProfit (trade: Trade): String = {
 
 def dateWhenTradehitStopLoss(trade: Trade): String = {
   var date: String = " Trade did not hit stop loss"
-  val source = Source.fromFile(s"src/Symbols/${trade.ticker}.csv")
+  val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
   if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
     date = "Trade was not triggered"
@@ -313,11 +317,11 @@ def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double 
     val distanceFromEntryToTakeProfit = math.abs(entryPrice - takeProfitPrice)
     val factor = distanceFromEntryToTakeProfit / distanceFromEntryToStopLoss
     profit = (balance * trade.trade.riskTrade * 0.01) * factor
-    profit = math.round(profit * 100.0) / 100.0
+    profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
     
   } else if(trade.TradeWinnorLoose.equals("Trade hit stop loss")){
     profit = balance * trade.trade.riskTrade * 0.01 * -1
-    profit = math.round(profit * 100.0) / 100.0
+    profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
   profit
 }
