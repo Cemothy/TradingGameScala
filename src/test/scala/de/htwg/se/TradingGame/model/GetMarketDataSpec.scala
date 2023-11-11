@@ -174,8 +174,6 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
   }
 
   "return Trade was not triggered when no matching date and time are found for a buy" in {
-    val testFilePath = "testFileEmpty.csv"
-    val writer = new PrintWriter(new File(testFilePath))
   
     // Test scenario
     val result = dateWhenTradeTriggered(Trade(0.05 , 0.3, 1.00250, 2.0, "2023.08.17,23:51", "EURUSD"))
@@ -202,7 +200,6 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     result shouldEqual "2023.08.11,15:09"
   }
   "return Target not hit when no matching date and time are found for a buy" in {
-    val writer = new PrintWriter(new File(testFilePath))
   
     // Test scenario
     val result = dateWhenTradehitTakeProfit(Trade(1.09999 , 0.3, 3.0, 2.0, "2023.08.11,11:53", "EURUSD"))
@@ -224,8 +221,7 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     result shouldEqual "2023.08.11,12:15"
   }
   "return Target not hit when no matching date and time are found for a buy" in {
-    val testFilePath = "testFileEmpty.csv"
-    val writer = new PrintWriter(new File(testFilePath))
+
   
     // Test scenario
     val result = dateWhenTradehitStopLoss(Trade(1.09999 , 0.3, 3.0, 2.0, "2023.08.11,11:53", "EURUSD"))
