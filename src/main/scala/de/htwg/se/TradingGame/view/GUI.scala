@@ -91,8 +91,8 @@ object GUI extends JFXApp3 {
                                         
                                     val firstTime = dataBeforeDateTime.map(_._1).min
                                     val lastTime = dataBeforeDateTime.map(_._1).max
-                                val minValue = dataBeforeDateTime.map(_._2).min
-                                val maxValue = dataBeforeDateTime.map(_._2).max
+                                    val minValue = dataBeforeDateTime.map(_._2).min
+                                    val maxValue = dataBeforeDateTime.map(_._2).max
                                     // Create the y-axis with the desired range and tick unit
                                     val yAxis = new NumberAxis(minValue, maxValue, (maxValue - minValue) / 10)
                                     yAxis.setAutoRanging(false)
