@@ -95,7 +95,7 @@ def getPriceForDateTimeString(dateTime: String, dataFilePath: String, ohlc: Inte
   var price: String = "0.0"
   val source = Source.fromFile(dataFilePath)
 
-  if(isDateInFile(dateTime, dataFilePath)){
+  if(!isDateAfterLastDateinFile(dateTime, dataFilePath) && !isDateBeforefirstDateinFile(dateTime, dataFilePath)){
     price = source.getLines()
       .collect {
         case line if line.startsWith(dateTime) || LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateTime, formatter)) => line.split(",")(ohlc) // Fetching the price
