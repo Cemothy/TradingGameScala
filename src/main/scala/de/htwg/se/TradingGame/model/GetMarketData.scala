@@ -327,7 +327,26 @@ def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double 
   profit
 }
 
-
+def calculateTradecurrentProfit(trade: TradeDoneCalculations, balance: Double, date: String): Double = {
+  var profit: Double = 0.0
+  val datapath = new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.trade.ticker}.csv"
+  if(LocalDateTime.parse(date, formatter).isBefore(LocalDateTime.parse(trade.dateTradeTiggered, formatter))){
+    profit = 0.0
+  }else if(LocalDateTime.parse(date, formatter).isAfter(LocalDateTime.parse(trade.dateTradeDone, formatter))){
+    profit = calculateTradeProfit(trade, balance)
+  }else{
+    //calculate how much the trade is worth at the current date
+    val entryPrice = trade.trade.entryTrade
+    val stopLossPrice = trade.trade.stopLossTrade
+    val takeProfitPrice = trade.trade.takeProfitTrade
+    val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
+    val distanceFromEntryToCurrentPrice = entryPrice - getPriceForDateTimeDouble(date, datapath, 5)
+    val factor = distanceFromEntryToCurrentPrice / distanceFromEntryToStopLoss
+    profit = (balance * trade.trade.riskTrade * 0.01) * factor
+  }
+  profit
+    
+}
 
 def calculateTrade(trade: Trade): TradeDoneCalculations = {
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
