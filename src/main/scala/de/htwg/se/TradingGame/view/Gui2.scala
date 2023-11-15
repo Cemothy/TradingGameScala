@@ -22,7 +22,7 @@ import de.htwg.se.TradingGame.model.TradingMethods
 import de.htwg.se.TradingGame.model.GetMarketData
 import de.htwg.se.TradingGame.model.GetMarketData.calculateTrade
 import de.htwg.se.TradingGame.model.GetMarketData.calculateTradeProfit
-
+import de.htwg.se.TradingGame.model.GetMarketData.calculateTradecurrentProfit
 
 
 
@@ -35,9 +35,20 @@ object Gui2 extends JFXApp3 {
         val welcomeLabel = new Label("Welcome to the Tradinggame \n Please enter your balance:")
         val balanceLabel = new Label("Balance: ")
         var balanceString = 0.0
+        var startBalance = 0.0
         val balanceTextField = new TextField()
         val submitButton = new Button("Submit")
         val balanceHBox = new HBox(balanceLabel, new Label("0"))
+        val inputHBox = new HBox(balanceTextField, submitButton)
+        val tickerLabel = new Label("Ticker: ")
+        val tickerComboBox = new ComboBox(List("EURUSD", "AUDUSD"))
+        val tickerHBox = new HBox(tickerLabel, tickerComboBox)
+        val dateLabel = new Label("Date: ")
+        val dateTextField = new TextField()
+        val hourLabel = new Label("Hour: ")
+        val hourTextField = new TextField()
+        val submitDateTimeButton = new Button("Submit")
+        val dateTimeHBox = new HBox(dateLabel, dateTextField, hourLabel, hourTextField, submitDateTimeButton)
         val tradesTable = new TableView[TradeDoneCalculations](executedTrades) {
         columns ++= Seq(
             new TableColumn[TradeDoneCalculations, Double] {
@@ -82,22 +93,17 @@ object Gui2 extends JFXApp3 {
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "Profit/Loss"
-                cellValueFactory = cellData => ObjectProperty(calculateTradeProfit(cellData.value, balanceString).toString())
+                cellValueFactory = cellData => ObjectProperty(calculateTradeProfit(cellData.value, startBalance).toString())
+            },
+            new TableColumn[TradeDoneCalculations, String] {
+                text = "Current Profit/Loss"
+                cellValueFactory = cellData => ObjectProperty(calculateTradecurrentProfit(cellData.value, startBalance, s"${dateTextField.text.value},${hourTextField.text.value}").toString())
             },
                     )
                 }
                     
-                    
-                    val inputHBox = new HBox(balanceTextField, submitButton)
-                    val tickerLabel = new Label("Ticker: ")
-                    val tickerComboBox = new ComboBox(List("EURUSD", "AUDUSD"))
-                    val tickerHBox = new HBox(tickerLabel, tickerComboBox)
-                    val dateLabel = new Label("Date: ")
-                    val dateTextField = new TextField()
-                    val hourLabel = new Label("Hour: ")
-                    val hourTextField = new TextField()
-                    val submitDateTimeButton = new Button("Submit")
-                    val dateTimeHBox = new HBox(dateLabel, dateTextField, hourLabel, hourTextField, submitDateTimeButton)
+
+                   
                     val dataPointsLabel = new Label("Data Points: ")
                     val dataPointsTextField = new TextField()
                     val timeFrameLabel = new Label("Time Frame: ")
@@ -126,16 +132,17 @@ object Gui2 extends JFXApp3 {
 
                                         submitButton.onAction = _ => {
                                             balanceHBox.children.remove(1)
-                                            balanceHBox.children.add(new Label(balanceTextField.text.value))
+                                            balanceHBox.children.add(new Label(balanceTextField.text.value + "EUR" +"  Profit:"))
                                             balanceString = balanceTextField.text.value.toDouble
+                                            startBalance = balanceString
                                             vBox.children.remove(inputHBox)
-                                            vBox.children.add(tickerHBox)
                                             tickerComboBox.onAction = _ => {
                                                 graphVBox.children.remove(0)
                                                 graphVBox.children.add(0, new Label(tickerComboBox.value.value))
                                                 vBox.children.add(graphVBox)
                                             }
                                         }
+
 
                                         def filterData(data: List[(LocalDateTime, Double)], dateTime: LocalDateTime, dataPoints: Int, timeFrame: String): List[(LocalDateTime, Double)] = {
                                             val filteredData = timeFrame match {
@@ -150,6 +157,14 @@ object Gui2 extends JFXApp3 {
                                         }
 
                                         submitDateTimeButton.onAction = _ => {
+                                        
+                                            vBox.children.remove(inputHBox)
+                                            tickerComboBox.onAction = _ => {
+                                                graphVBox.children.remove(0)
+                                                graphVBox.children.add(0, new Label(tickerComboBox.value.value))
+                                                vBox.children.add(graphVBox)
+                                            }
+                                        
                                             val dateTime = LocalDateTime.parse(s"${dateTextField.text.value},${hourTextField.text.value}", DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))
                                             val symbol = tickerComboBox.value.value
                                             val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
@@ -201,6 +216,7 @@ object Gui2 extends JFXApp3 {
                                         
                                         val arrowButton = new Button(">")
                                         arrowButton.onAction = _ => {
+                                         
                                             val dateTime = LocalDateTime.parse(s"${dateTextField.text.value},${hourTextField.text.value}", DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))
                                             val symbol = tickerComboBox.value.value
                                             val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
