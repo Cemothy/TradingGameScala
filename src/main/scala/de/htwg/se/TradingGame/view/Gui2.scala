@@ -32,6 +32,12 @@ object Gui2 extends JFXApp3 {
 
 
     override def start(): Unit = {
+        val welcomeLabel = new Label("Welcome to the Tradinggame \n Please enter your balance:")
+        val balanceLabel = new Label("Balance: ")
+        var balanceString = 0.0
+        val balanceTextField = new TextField()
+        val submitButton = new Button("Submit")
+        val balanceHBox = new HBox(balanceLabel, new Label("0"))
         val tradesTable = new TableView[TradeDoneCalculations](executedTrades) {
         columns ++= Seq(
             new TableColumn[TradeDoneCalculations, Double] {
@@ -74,14 +80,14 @@ object Gui2 extends JFXApp3 {
                 text = "tradeBuyorSell"
                 cellValueFactory = cellData => ObjectProperty(cellData.value.tradeBuyorSell.toString())
             },
+            new TableColumn[TradeDoneCalculations, String] {
+                text = "Profit/Loss"
+                cellValueFactory = cellData => ObjectProperty(calculateTradeProfit(cellData.value, balanceString).toString())
+            },
                     )
                 }
                     
-                    val welcomeLabel = new Label("Welcome to the Tradinggame \n Please enter your balance:")
-                    val balanceLabel = new Label("Balance: ")
-                    val balanceTextField = new TextField()
-                    val submitButton = new Button("Submit")
-                    val balanceHBox = new HBox(balanceLabel, new Label("0"))
+                    
                     val inputHBox = new HBox(balanceTextField, submitButton)
                     val tickerLabel = new Label("Ticker: ")
                     val tickerComboBox = new ComboBox(List("EURUSD", "AUDUSD"))
@@ -111,7 +117,7 @@ object Gui2 extends JFXApp3 {
                     val yAxis = NumberAxis()
                     val lineChart = new LineChart(xAxis, yAxis)
                     val graphVBox = new VBox(new Label(""), lineChart, dateTimeDataPointsHBox, entryTakeProfitStopLossRiskHBox)
-                    val vBox = new VBox(welcomeLabel, tickerHBox, balanceHBox, graphVBox, tradesTable)
+                    val vBox = new VBox(welcomeLabel, inputHBox, tickerHBox, balanceHBox, graphVBox, tradesTable)
 
 
                                         vBox.setSpacing(10)
@@ -121,6 +127,7 @@ object Gui2 extends JFXApp3 {
                                         submitButton.onAction = _ => {
                                             balanceHBox.children.remove(1)
                                             balanceHBox.children.add(new Label(balanceTextField.text.value))
+                                            balanceString = balanceTextField.text.value.toDouble
                                             vBox.children.remove(inputHBox)
                                             vBox.children.add(tickerHBox)
                                             tickerComboBox.onAction = _ => {
@@ -185,9 +192,9 @@ object Gui2 extends JFXApp3 {
                                         val takeProfit = takeProfitTextField.text.value.toDouble
                                         val stopLoss = stopLossTextField.text.value.toDouble
                                         val risk = riskTextField.text.value.toDouble
-                                        val dateTime = LocalDateTime.parse(s"${dateTextField.text.value},${hourTextField.text.value}", DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))
+                                        val dateTime = s"${dateTextField.text.value},${hourTextField.text.value}"
                                         val ticker = tickerComboBox.value.value
-                                        val trade = calculateTrade(Trade(entry, stopLoss, takeProfit, risk, dateTime.toString, ticker))
+                                        val trade = calculateTrade(Trade(entry, stopLoss, takeProfit, risk, dateTime, ticker))
                                         executedTrades += trade
                                         tradesTable.refresh()
                                     }
