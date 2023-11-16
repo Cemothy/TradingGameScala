@@ -340,11 +340,28 @@ def calculateTradecurrentProfit(trade: TradeDoneCalculations, balance: Double, d
     val stopLossPrice = trade.trade.stopLossTrade
     val takeProfitPrice = trade.trade.takeProfitTrade
     val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
-    val distanceFromEntryToCurrentPrice = entryPrice - getPriceForDateTimeDouble(date, datapath, 5)
+    val priceofcurrentdate = getPriceForDateTimeDouble(date, datapath, 5)
+    val distanceFromEntryToCurrentPrice = math.abs(entryPrice - priceofcurrentdate)
     val factor = distanceFromEntryToCurrentPrice / distanceFromEntryToStopLoss
-    profit = (balance * trade.trade.riskTrade * 0.01) * factor
-  }
-  profit
+    if(trade.tradeBuyorSell){
+      if(priceofcurrentdate > entryPrice){
+        profit = (balance * trade.trade.riskTrade * 0.01) * factor
+        profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+      } else {
+        profit = (balance * trade.trade.riskTrade * 0.01) * factor * -1
+        profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+      }
+    } else {
+      if(priceofcurrentdate < entryPrice){
+        profit = (balance * trade.trade.riskTrade * 0.01) * factor
+        profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+      } else {
+        profit = (balance * trade.trade.riskTrade * 0.01) * factor * -1
+        profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+      }
+    }
+    }
+    profit
     
 }
 

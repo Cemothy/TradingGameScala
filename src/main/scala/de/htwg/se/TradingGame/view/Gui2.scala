@@ -132,7 +132,8 @@ object Gui2 extends JFXApp3 {
 
                                         submitButton.onAction = _ => {
                                             balanceHBox.children.remove(1)
-                                            balanceHBox.children.add(new Label(balanceTextField.text.value + "EUR" +"  Profit:"))
+                                            balanceHBox.children.remove(0)
+                                            balanceHBox.children.add(new Label("Balance: " + balanceTextField.text.value + "EUR" +"  Profit:"))
                                             balanceString = balanceTextField.text.value.toDouble
                                             startBalance = balanceString
                                             vBox.children.remove(inputHBox)
@@ -158,6 +159,17 @@ object Gui2 extends JFXApp3 {
 
                                         submitDateTimeButton.onAction = _ => {
                                         
+                                            if(executedTrades.length > 0){
+                                                balanceHBox.children.remove(0)
+                                                var calculatecurrentProfit = 0.0
+                                                balanceString = startBalance
+                                                executedTrades.foreach(trade => {
+                                                    calculatecurrentProfit += calculateTradecurrentProfit(trade, startBalance, s"${dateTextField.text.value},${hourTextField.text.value}")
+                                                    
+                                                })
+                                                balanceString += calculatecurrentProfit
+                                                balanceHBox.children.add(new Label(balanceString + "EUR" +"  Profit: " + calculatecurrentProfit + "EUR"))
+                                            }
                                             vBox.children.remove(inputHBox)
                                             tickerComboBox.onAction = _ => {
                                                 graphVBox.children.remove(0)
