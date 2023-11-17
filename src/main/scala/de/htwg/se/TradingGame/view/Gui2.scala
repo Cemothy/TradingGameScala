@@ -9,7 +9,7 @@ import scalafx.application.JFXApp3.PrimaryStage
 import javafx.geometry.Insets
 import scalafx.scene.Scene
 import scalafx.scene.chart.LineChart
-import scalafx.scene.chart.NumberAxis
+import scalafx.scene.chart.{CategoryAxis, LineChart, NumberAxis, XYChart}
 import scalafx.scene.control.{Button, ComboBox, Label, TextField, TableColumn, TableView}
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout.{HBox, VBox}
@@ -23,8 +23,16 @@ import de.htwg.se.TradingGame.model.GetMarketData
 import de.htwg.se.TradingGame.model.GetMarketData.calculateTrade
 import de.htwg.se.TradingGame.model.GetMarketData.calculateTradeProfit
 import de.htwg.se.TradingGame.model.GetMarketData.calculateTradecurrentProfit
+import scalafx.scene.input.MouseEvent
+import scalafx.scene.shape.Line
+import scalafx.scene.layout.BorderPane
+import scalafx.scene.control._
+import scalafx.scene.text.Font                                       
+import scala.collection.mutable.ListBuffer                                        
+import javafx.event.EventHandler
 
 
+                                            
 
 object Gui2 extends JFXApp3 {
 
@@ -49,6 +57,11 @@ object Gui2 extends JFXApp3 {
         val hourTextField = new TextField()
         val submitDateTimeButton = new Button("Submit")
         val dateTimeHBox = new HBox(dateLabel, dateTextField, hourLabel, hourTextField, submitDateTimeButton)
+                                                
+
+        
+
+
         val tradesTable = new TableView[TradeDoneCalculations](executedTrades) {
         columns ++= Seq(
             new TableColumn[TradeDoneCalculations, Double] {
@@ -125,7 +138,50 @@ object Gui2 extends JFXApp3 {
                     val graphVBox = new VBox(new Label(""), lineChart, dateTimeDataPointsHBox, entryTakeProfitStopLossRiskHBox)
                     val vBox = new VBox(welcomeLabel, inputHBox, tickerHBox, balanceHBox, graphVBox, tradesTable)
 
+                    val getEntryButton = new Button("get entry")
+                    val getProfitButton = new Button("get Profit")
+                    val getStoplossButton = new Button("get Stoploss")
+                    var getEntry = false
+                    var getProfit = false
+                    var getStoploss = false
+                    var entry = 0.0
+                    var takeProfit = 0.0
+                    var stopLoss = 0.0
 
+                    getEntryButton.onAction = _ => {
+                        getEntry = true
+                        getProfit = false
+                        getStoploss = false
+                    }
+
+                    getProfitButton.onAction = _ => {
+                        getEntry = false
+                        getProfit = true
+                        getStoploss = false
+                    }
+
+                    getStoplossButton.onAction = _ => {
+                        getEntry = false
+                        getProfit = false
+                        getStoploss = true
+                    }
+
+                    lineChart.setOnMouseClicked(new EventHandler[javafx.scene.input.MouseEvent] {
+                        override def handle(event:javafx.scene.input.MouseEvent): Unit = {
+                            if (getEntry) {
+                                entry = yAxis.getValueForDisplay(event.getY).doubleValue()
+                                entryTextField.text.value = entry.toString
+                            } else if (getProfit) {
+                                takeProfit = yAxis.getValueForDisplay(event.getY).doubleValue()
+                                takeProfitTextField.text.value = takeProfit.toString
+                            } else if (getStoploss) {
+                                stopLoss = yAxis.getValueForDisplay(event.getY).doubleValue()
+                                stopLossTextField.text.value = stopLoss.toString
+                            }
+                        }
+                    })
+
+                                                
                                         vBox.setSpacing(10)
 
                                         vBox.setPadding(new Insets(10))
@@ -143,7 +199,6 @@ object Gui2 extends JFXApp3 {
                                                 vBox.children.add(graphVBox)
                                             }
                                         }
-
 
                                         def filterData(data: List[(LocalDateTime, Double)], dateTime: LocalDateTime, dataPoints: Int, timeFrame: String): List[(LocalDateTime, Double)] = {
                                             val filteredData = timeFrame match {
@@ -197,19 +252,7 @@ object Gui2 extends JFXApp3 {
                                                 yAxis.setLowerBound(filteredData.map(_._2).min)
                                                 yAxis.setUpperBound(filteredData.map(_._2).max)
                                                 yAxis.setTickUnit((yAxis.getUpperBound() - yAxis.getLowerBound()))
-                                                val tooltip = new Tooltip()
-                                                lineChart.setOnMouseMoved((event: MouseEvent) => {
-                                                    if (event.x >= 0 && event.x <= xAxis.getWidth() && event.y >= 0 && event.y <= yAxis.getHeight()) {
-                                                        val xValue = xAxis.getValueForDisplay(event.x)
-                                                        val yValue = yAxis.getValueForDisplay(event.y)
-                                                        val xTime = LocalDateTime.ofEpochSecond(xValue.longValue(), 0, java.time.ZoneOffset.UTC)
-                                                        val yPrice = BigDecimal(yValue.doubleValue()).setScale(5, BigDecimal.RoundingMode.HALF_UP).toDouble
-                                                        tooltip.setText(s"Time: ${xTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))}, Price: $yPrice")
-                                                        tooltip.show(lineChart, event.screenX, event.screenY)
-                                                    } else {
-                                                        tooltip.hide()
-                                                    }
-                                                })
+                                                
                                             }
                                         }
                                         
@@ -228,51 +271,47 @@ object Gui2 extends JFXApp3 {
                                         
                                         val arrowButton = new Button(">")
                                         arrowButton.onAction = _ => {
-                                         
+                                            if (executedTrades.length > 0) {
+                                                balanceHBox.children.remove(0)
+                                                var calculatecurrentProfit = 0.0
+                                                balanceString = startBalance
+                                                executedTrades.foreach(trade => {
+                                                    calculatecurrentProfit += calculateTradecurrentProfit(trade, startBalance, s"${dateTextField.text.value},${hourTextField.text.value}")
+                                                })
+                                                balanceString += calculatecurrentProfit
+                                                balanceHBox.children.add(new Label(balanceString + "EUR" + "  Profit: " + calculatecurrentProfit + "EUR"))
+                                            }
+                                            val timeFrame = timeFrameComboBox.value.value
                                             val dateTime = LocalDateTime.parse(s"${dateTextField.text.value},${hourTextField.text.value}", DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))
+                                            val newDateTime = timeFrame match {
+                                                case "1min" => dateTime.plusMinutes(1)
+                                                case "5min" => dateTime.plusMinutes(5)
+                                                case "15min" => dateTime.plusMinutes(15)
+                                                case "30min" => dateTime.plusMinutes(30)
+                                                case "1hour" => dateTime.plusHours(1)
+                                                case "4hour" => dateTime.plusHours(4)
+                                                case "1day" => dateTime.plusDays(1)
+                                                case "1week" => dateTime.plusWeeks(1)
+                                            }
+                                            dateTextField.text.value = newDateTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+                                            hourTextField.text.value = newDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
                                             val symbol = tickerComboBox.value.value
                                             val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
                                             val file = new java.io.File(Path).getParent + s"/Symbols/$symbol.csv"
-                                            val fileObj = new File(file)
-                                            if (fileObj.exists()) {
-                                                val dataPoints = dataPointsTextField.text.value.toInt
-                                                val timeFrame = timeFrameComboBox.value.value
-                                                val data = io.Source.fromFile(file).getLines().toList.drop(1).map(_.split(",")).map(arr => (LocalDateTime.parse(arr(0)+ "," +  arr(1), DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")), arr(5).toDouble))
-                                                val filteredData = filterData(data, dateTime, dataPoints + 1, timeFrame)
-                                                val series = new javafx.scene.chart.XYChart.Series[Number, Number]()
-                                                filteredData.foreach(d => series.getData.add(new javafx.scene.chart.XYChart.Data[Number, Number](d._1.toEpochSecond(java.time.ZoneOffset.UTC), d._2)))
-                                                lineChart.getData.clear()
-                                                lineChart.getData.add(series)
-                                                xAxis.setAutoRanging(false)
-                                                xAxis.setLowerBound(filteredData.head._1.toEpochSecond(java.time.ZoneOffset.UTC))
-                                                xAxis.setUpperBound(filteredData.last._1.toEpochSecond(java.time.ZoneOffset.UTC))
-                                                yAxis.setAutoRanging(false)
-                                                yAxis.setLowerBound(filteredData.map(_._2).min)
-                                                yAxis.setUpperBound(filteredData.map(_._2).max)
+                                            val newDateTimeinFile = GetMarketData.nextPossibleDateinFile(newDateTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")), file)
+                                            val priceOfNewDate = GetMarketData.getPriceForDateTimeDouble(newDateTimeinFile, file, 5)
+                                                val series = lineChart.getData.get(0)
+                                                series.getData.add(new javafx.scene.chart.XYChart.Data[Number, Number](LocalDateTime.parse(newDateTimeinFile, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")).toEpochSecond(java.time.ZoneOffset.UTC), priceOfNewDate))
+                                                xAxis.setUpperBound(LocalDateTime.parse(newDateTimeinFile, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")).toEpochSecond(java.time.ZoneOffset.UTC))
+                                                yAxis.setLowerBound(math.min(yAxis.getLowerBound(), priceOfNewDate))
+                                                yAxis.setUpperBound(math.max(yAxis.getUpperBound(), priceOfNewDate))
                                                 yAxis.setTickUnit((yAxis.getUpperBound() - yAxis.getLowerBound()))
-                                                val tooltip = new Tooltip()
-                                                lineChart.setOnMouseMoved((event: MouseEvent) => {
-                                                    val xValue = xAxis.getValueForDisplay(event.x)
-                                                    val yValue = yAxis.getValueForDisplay(event.y)
-                                                    val xTime = LocalDateTime.ofEpochSecond(xValue.longValue(), 0, java.time.ZoneOffset.UTC)
-                                                    val yPrice = BigDecimal(yValue.doubleValue()).setScale(5, BigDecimal.RoundingMode.HALF_UP).toDouble
-                                                    tooltip.setText(s"Time: ${xTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))}, Price: $yPrice")
-                                                    tooltip.show(lineChart, event.screenX, event.screenY)
-                                                })
-                                                if (timeFrame == "4hour") {
-                                                    val newDateTime = dateTime.plusHours(4)
-                                                    dateTextField.text = newDateTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                                                    hourTextField.text = newDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-                                                } else {
-                                                    val newDateTime = dateTime.plusMinutes(timeFrame.dropRight(3).toInt)
-                                                    dateTextField.text = newDateTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                                                    hourTextField.text = newDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-                                                }
                                             }
-                                        }
+                                        
+
 
                                         val arrowHBox = new HBox(arrowButton)
-                                        graphVBox.children.add(arrowHBox)
+                                        graphVBox.children.addAll(arrowHBox,  getEntryButton, getProfitButton, getStoplossButton)
 
                                         stage = new PrimaryStage {
                                             title = "Tradinggame"
@@ -280,4 +319,4 @@ object Gui2 extends JFXApp3 {
                                         }
                                     }
                                 }
-                                
+ 
