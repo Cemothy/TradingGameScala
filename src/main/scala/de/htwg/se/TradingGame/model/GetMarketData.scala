@@ -174,7 +174,7 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
     if(isTradeBuyorSell(trade)){
     source.getLines()
       .collect {
-        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.date, formatter))  && trade.entryTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.datestart, formatter))  && trade.entryTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
       }
       .toList
       .headOption
@@ -182,7 +182,7 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
     }else{
       source.getLines()
       .collect {
-        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.date, formatter))  && trade.entryTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.datestart, formatter))  && trade.entryTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
       }
       .toList
       .headOption
@@ -286,13 +286,13 @@ def doneTradeStringwithProfit: String = {
     output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
     output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "
     output += s"Take Profit Trade: ${trade.trade.takeProfitTrade}  |  "
-    output += s"Risk Trade: ${trade.trade.riskTrade}  |  "
-    output += s"Date: ${trade.trade.date}  |  "
+    output += s"Risk Trade: ${trade.trade.risk}  |  "
+    output += s"Date: ${trade.trade.datestart}  |  "
     output += s"Ticker: ${trade.trade.ticker}  |  "
-    output += s"Date Trade Triggered: ${trade.dateTradeTiggered}  |  "
+    output += s"Date Trade Triggered: ${trade.dateTradeTriggered}  |  "
     output += s"Date Trade Done: ${trade.dateTradeDone}  |  "
-    output += s"Trade Winner or Loser: ${trade.TradeWinnorLoose}  |  "
-    output += s"Trade Buy or Sell: ${if (trade.tradeBuyorSell) "Buy" else "Sell"}  |  "
+    output += s"Trade Winner or Loser: ${trade.tradeWinOrLose}  |  "
+    output += s"Trade Buy or Sell: ${if (trade.trade.takeProfitTrade > trade.trade.stopLossTrade) "Buy" else "Sell"}  |  "
     output += s"Profit: $$${GetMarketData.calculateTradeProfit(trade, balance)}\n"
     output += "__________________________________________________________\n"
     this.balance = balance + GetMarketData.calculateTradeProfit(trade, balance)
@@ -310,18 +310,18 @@ def doneTradeStringwithProfit: String = {
 
 def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double = {
   var profit: Double = 0.0
-  if(trade.TradeWinnorLoose.equals("Trade hit take profit")){
+  if(trade.tradeWinOrLose.equals("Trade hit take profit")){
     val entryPrice = trade.trade.entryTrade
     val stopLossPrice = trade.trade.stopLossTrade
     val takeProfitPrice = trade.trade.takeProfitTrade
     val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
     val distanceFromEntryToTakeProfit = math.abs(entryPrice - takeProfitPrice)
     val factor = distanceFromEntryToTakeProfit / distanceFromEntryToStopLoss
-    profit = (balance * trade.trade.riskTrade * 0.01) * factor
+    profit = (balance * trade.trade.risk * 0.01) * factor
     profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
     
-  } else if(trade.TradeWinnorLoose.equals("Trade hit stop loss")){
-    profit = balance * trade.trade.riskTrade * 0.01 * -1
+  } else if(trade.tradeWinOrLose.equals("Trade hit stop loss")){
+    profit = balance * trade.trade.risk * 0.01 * -1
     profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
   profit
@@ -330,7 +330,7 @@ def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double 
 def calculateTradecurrentProfit(trade: TradeDoneCalculations, balance: Double, date: String): Double = {
   var profit: Double = 0.0
   val datapath = new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.trade.ticker}.csv"
-  if(LocalDateTime.parse(date, formatter).isBefore(LocalDateTime.parse(trade.dateTradeTiggered, formatter))){
+  if(LocalDateTime.parse(date, formatter).isBefore(LocalDateTime.parse(trade.dateTradeTriggered, formatter))){
     profit = 0.0
   }else if(LocalDateTime.parse(date, formatter).isAfter(LocalDateTime.parse(trade.dateTradeDone, formatter))){
     profit = calculateTradeProfit(trade, balance)
@@ -342,7 +342,7 @@ def calculateTradecurrentProfit(trade: TradeDoneCalculations, balance: Double, d
     val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
     val distanceFromEntryToCurrentPrice = entryPrice - getPriceForDateTimeDouble(date, datapath, 5)
     val factor = distanceFromEntryToCurrentPrice / distanceFromEntryToStopLoss
-    profit = (balance * trade.trade.riskTrade * 0.01) * factor
+    profit = (balance * trade.trade.risk * 0.01) * factor
   }
   profit
     
@@ -358,8 +358,8 @@ def calculateTrade(trade: Trade): TradeDoneCalculations = {
   } else if(didTradeWinnorLoose1.equals("Trade hit stop loss")){
     dateWhenTradehitTakeProfitorStopLoss1 = dateWhenTradehitStopLoss(trade)
   }
-
-  val tradeDoneCalculations = new TradeDoneCalculations(trade, dateWhenTradeTriggered1, dateWhenTradehitTakeProfitorStopLoss1, didTradeWinnorLoose1, tradeBuyorSell)
+  val isbuyorselltrade = new TradeisBuy(trade, tradeBuyorSell)
+  val tradeDoneCalculations = new TradeDoneCalculations(isbuyorselltrade, dateWhenTradeTriggered1, dateWhenTradehitTakeProfitorStopLoss1, didTradeWinnorLoose1)
   tradeDoneCalculations
 }
 

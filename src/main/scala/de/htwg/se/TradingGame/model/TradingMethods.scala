@@ -1,22 +1,9 @@
 package de.htwg.se.TradingGame.model 
 import de.htwg.se.TradingGame.model._
 
-class Trade(
-  val entryTrade: Double,
-  val stopLossTrade: Double,
-  val takeProfitTrade: Double,
-  val riskTrade: Double,
-  val date: String,
-  val ticker: String
-)
 
-class TradeDoneCalculations(
-  val trade : Trade,
-  val dateTradeTiggered: String,
-  val dateTradeDone: String,
-  val TradeWinnorLoose : String,
-  val tradeBuyorSell : Boolean
-)
+
+
 
 object TradingMethods {
   def showCompany(currentTicker: String, date: String, balance: Double, currentPrice: Double): String = {
@@ -41,7 +28,7 @@ object TradingMethods {
          |Entry: $$${trade.entryTrade}
          |StopLoss: $$${trade.stopLossTrade}
          |TakeProfit: $$${trade.takeProfitTrade}
-         |Risk (in percent): ${trade.riskTrade}%
+         |Risk (in percent): ${trade.risk}%
          |""".stripMargin
 
     output

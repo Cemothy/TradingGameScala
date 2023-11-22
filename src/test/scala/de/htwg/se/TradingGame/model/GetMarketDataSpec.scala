@@ -8,8 +8,55 @@ import de.htwg.se.TradingGame.model._
 class GetMarketDataSpec extends AnyWordSpec with Matchers {
 
 
+
 val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/GetMarketDataSpec.scala").getAbsolutePath
 val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EURUSD.csv"
+
+
+  "calculateTradecurrentProfit" should {
+    "return 0.0 if the current date is before the trade was triggered" in {
+      val trade = TradeDoneCalculations(Trade(1.09999, 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:55", "2023.08.11,15:09", "Trade hit take profit", false)
+      val balance = 1000.0
+      val date = "2023.08.11,11:52"
+
+      val result = calculateTradecurrentProfit(trade, balance, date)
+
+      result shouldEqual 0.0
+    }
+
+    "return the calculated trade profit if the current date is after the trade was done" in {
+      val trade = TradeDoneCalculations(Trade(1.09999, 1.099, 5.0, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:55", "2023.08.11,15:09" , "Trade hit stop loss", true)
+      val balance = 100.0
+      val date = "2023.09.11,15:10"
+
+      val result = calculateTradecurrentProfit(trade, balance, date)
+
+      // Calculate the expected trade profit based on the trade details
+      val expectedProfit = -2.0
+
+      result shouldEqual expectedProfit
+    }
+
+    "return the calculated trade profit at the current date if it's between the trade triggered and trade done dates" in {
+      val trade = TradeDoneCalculations(Trade(1.09999, 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:55", "2023.08.11,15:09" , "Trade hit take profit", false)
+      val balance = 1000.0
+      val date = "2023.08.11,14:00"
+
+      val result = calculateTradecurrentProfit(trade, balance, date)
+
+      // Calculate the expected trade profit based on the trade details
+      val entryPrice = trade.trade.entryTrade
+      val stopLossPrice = trade.trade.stopLossTrade
+      val takeProfitPrice = trade.trade.takeProfitTrade
+      val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
+      val distanceFromEntryToCurrentPrice = entryPrice - getPriceForDateTimeDouble(date, testFilePath, 5)
+      val factor = distanceFromEntryToCurrentPrice / distanceFromEntryToStopLoss
+      val expectedProfit = (balance * trade.trade.riskTrade * 0.01) * factor
+
+      result shouldEqual expectedProfit
+    }
+  }
+
 
 "getLastDateofFile" should{
   "return the last date of the file" in {
@@ -234,6 +281,8 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     result shouldEqual "2023.08.11,15:26"
   }
 }
+
+
 
 
 "didTradeWinnorLoose" should {
