@@ -1,7 +1,7 @@
 package de.htwg.se.TradingGame.model 
 import de.htwg.se.TradingGame.model._
 import java.time.LocalDate
-
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 
 //InvestInterpreter should read entryTrade, stopLossTrade, takeProfitTrade, riskTrade from terminal input
 

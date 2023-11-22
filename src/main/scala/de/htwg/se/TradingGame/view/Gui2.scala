@@ -3,7 +3,7 @@ import de.htwg.se.TradingGame.model._
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
 import javafx.geometry.Insets
