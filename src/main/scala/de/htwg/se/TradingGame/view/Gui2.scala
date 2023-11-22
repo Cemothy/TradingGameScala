@@ -78,11 +78,11 @@ object Gui2 extends JFXApp3 {
             },
             new TableColumn[TradeDoneCalculations, Double] {
                 text = "Risk %"
-                cellValueFactory = cellData => ObjectProperty(cellData.value.trade.riskTrade)
+                cellValueFactory = cellData => ObjectProperty(cellData.value.trade.risk)
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "Date/Time"
-                cellValueFactory = cellData => ObjectProperty(cellData.value.trade.date)
+                cellValueFactory = cellData => ObjectProperty(cellData.value.trade.datestart)
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "Ticker"
@@ -90,7 +90,7 @@ object Gui2 extends JFXApp3 {
                         },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "dateTradeTiggered"
-                cellValueFactory = cellData => ObjectProperty(cellData.value.dateTradeTiggered)
+                cellValueFactory = cellData => ObjectProperty(cellData.value.dateTradeTriggered)
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "dateTradeDone"
@@ -98,11 +98,11 @@ object Gui2 extends JFXApp3 {
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "TradeWinnorLoose"
-                cellValueFactory = cellData => ObjectProperty(cellData.value.TradeWinnorLoose)
+                cellValueFactory = cellData => ObjectProperty(cellData.value.tradeWinOrLose)
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "tradeBuyorSell"
-                cellValueFactory = cellData => ObjectProperty(cellData.value.tradeBuyorSell.toString())
+                cellValueFactory = cellData => ObjectProperty((cellData.value.trade.takeProfitTrade > cellData.value.trade.stopLossTrade).toString())
             },
             new TableColumn[TradeDoneCalculations, String] {
                 text = "Profit/Loss"
