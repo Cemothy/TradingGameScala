@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import TradingMethods._
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 
 class TradingChampionsSpec extends AnyWordSpec {
 

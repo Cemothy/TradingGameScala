@@ -1,5 +1,6 @@
 package de.htwg.se.TradingGame.model 
 import de.htwg.se.TradingGame.model._
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 
 
 

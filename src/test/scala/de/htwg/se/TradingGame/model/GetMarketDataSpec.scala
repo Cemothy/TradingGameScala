@@ -5,6 +5,8 @@ import java.io.{File, PrintWriter}
 import GetMarketData._
 import scala.collection.mutable.ArrayBuffer
 import de.htwg.se.TradingGame.model._
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
+import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern._
 class GetMarketDataSpec extends AnyWordSpec with Matchers {
 
 
@@ -15,7 +17,7 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
 
   "calculateTradecurrentProfit" should {
     "return 0.0 if the current date is before the trade was triggered" in {
-      val trade = TradeDoneCalculations(Trade(1.09999, 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:55", "2023.08.11,15:09", "Trade hit take profit", false)
+      val trade = TradeDoneCalculations(TradeisBuy(Trade(1.09999, 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), false), "2023.08.11,11:55", "2023.08.11,15:09", "Trade hit take profit")
       val balance = 1000.0
       val date = "2023.08.11,11:52"
 
@@ -25,7 +27,7 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     }
 
     "return the calculated trade profit if the current date is after the trade was done" in {
-      val trade = TradeDoneCalculations(Trade(1.09999, 1.099, 5.0, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:55", "2023.08.11,15:09" , "Trade hit stop loss", true)
+      val trade = TradeDoneCalculations(TradeisBuy(Trade(1.09999, 1.099, 5.0, 2.0, "2023.08.11,11:53", "EURUSD"), true), "2023.08.11,11:55", "2023.08.11,15:09" , "Trade hit stop loss")
       val balance = 100.0
       val date = "2023.09.11,15:10"
 
@@ -38,7 +40,7 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     }
 
     "return the calculated trade profit at the current date if it's between the trade triggered and trade done dates" in {
-      val trade = TradeDoneCalculations(Trade(1.09999, 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:55", "2023.08.11,15:09" , "Trade hit take profit", false)
+      val trade = TradeDoneCalculations(TradeisBuy(Trade(1.09999, 1.0650, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), false), "2023.08.11,11:55", "2023.08.11,15:09" , "Trade hit take profit")
       val balance = 1000.0
       val date = "2023.08.11,14:00"
 
@@ -51,7 +53,7 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
       val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
       val distanceFromEntryToCurrentPrice = entryPrice - getPriceForDateTimeDouble(date, testFilePath, 5)
       val factor = distanceFromEntryToCurrentPrice / distanceFromEntryToStopLoss
-      val expectedProfit = (balance * trade.trade.riskTrade * 0.01) * factor
+      val expectedProfit = (balance * trade.trade.risk * 0.01) * factor
 
       result shouldEqual expectedProfit
     }
@@ -140,8 +142,8 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
 
 "doneTradeStringwithProfit" should {
   "return the correct string when the trade hit take profit" in {
-    val TradeDoneCalculationsstore = TradeDoneCalculations(Trade(1.1 , 1.0, 1.2, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit", false)
-    val TradeDoneCalculationsstore2 = TradeDoneCalculations(Trade(1.1 , 1.0, 1.2, 2.0, "2023.08.11,11:53", "EURUSD"), "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit", true)
+    val TradeDoneCalculationsstore = TradeDoneCalculations(TradeisBuy(Trade(1.1 , 1.0, 1.2, 2.0, "2023.08.11,11:53", "EURUSD"), false), "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit")
+    val TradeDoneCalculationsstore2 = TradeDoneCalculations(TradeisBuy(Trade(1.1 , 1.0, 1.2, 2.0, "2023.08.11,11:53", "EURUSD"),true), "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit")
     GetMarketData.trades.addOne(TradeDoneCalculationsstore)
     GetMarketData.trades.addOne(TradeDoneCalculationsstore2)
     GetMarketData.balance = 1000.0
@@ -155,7 +157,6 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     result should include("Date Trade Triggered: 2023.08.11,11:54")
     result should include("Date Trade Done: 2023.08.11,15:09")
     result should include("Trade Winner or Loser: Trade hit take profit")
-    result should include("Trade Buy or Sell: Sell")
     result should include("Profit: $20.0")
     result should include("Balance: $1020.0")
     result should include("Trade Buy or Sell: Buy")
@@ -323,22 +324,22 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
 
  "calculateTradeProfit" should {
     "return the correct profit when the trade hits take profit" in {
-      val trade = Trade(1.09999 , 1.09909, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD")
-      val tradeDoneCalculations = TradeDoneCalculations(trade, "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit", false)
+      val trade = TradeisBuy(Trade(1.09999 , 1.09909, 1.10044, 2.0, "2023.08.11,11:53", "EURUSD"), false)
+      val tradeDoneCalculations = TradeDoneCalculations(trade, "2023.08.11,11:54", "2023.08.11,15:09", "Trade hit take profit")
       val balance = 1000.0
       val result = calculateTradeProfit(tradeDoneCalculations, balance)
       result shouldEqual 10.0
     }
     "return the correct profit when the trade hits stop loss" in {
-      val trade = Trade(1.09999 , 1.1001, 1.0, 3.0, "2023.08.11,11:53", "EURUSD")
-      val tradeDoneCalculations = TradeDoneCalculations(trade, "2023.08.11,11:54", "2023.08.11,12:15", "Trade hit stop loss", false)
+      val trade = TradeisBuy(Trade(1.09999 , 1.1001, 1.0, 3.0, "2023.08.11,11:53", "EURUSD"), false)
+      val tradeDoneCalculations = TradeDoneCalculations(trade, "2023.08.11,11:54", "2023.08.11,12:15", "Trade hit stop loss")
       val balance = 10000.0
       val result = calculateTradeProfit(tradeDoneCalculations, balance)
       result shouldEqual -300.0
     }
     "return 0.0 when the trade neither hits take profit nor stop loss" in {
-      val trade = Trade(1.09999 , 1.0, 2.0, 2.0, "2023.08.11,11:53", "EURUSD")
-      val tradeDoneCalculations = TradeDoneCalculations(trade, "Trade was not triggered", "Trade did not hit take profit or stop loss", "Trade did not hit take profit or stop loss", false)
+      val trade = TradeisBuy(Trade(1.09999 , 1.0, 2.0, 2.0, "2023.08.11,11:53", "EURUSD"), false)
+      val tradeDoneCalculations = TradeDoneCalculations(trade, "Trade was not triggered", "Trade did not hit take profit or stop loss", "Trade did not hit take profit or stop loss")
       val balance = 10000.0
       val result = calculateTradeProfit(tradeDoneCalculations, balance)
       result shouldEqual 0.0
@@ -354,13 +355,13 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
       result.trade.entryTrade shouldEqual 1.09999
       result.trade.stopLossTrade shouldEqual 1.1001
       result.trade.takeProfitTrade shouldEqual 1.0
-      result.trade.riskTrade shouldEqual 3.0
-      result.trade.date shouldEqual "2023.08.11,11:53"
+      result.trade.risk shouldEqual 3.0
+      result.trade.datestart shouldEqual "2023.08.11,11:53"
       result.trade.ticker shouldEqual "EURUSD"
-      result.dateTradeTiggered shouldEqual "2023.08.11,11:54"
+      result.dateTradeTriggered shouldEqual "2023.08.11,11:54"
       result.dateTradeDone shouldEqual "2023.08.11,11:55"
-      result.TradeWinnorLoose shouldEqual "Trade hit stop loss"
-      result.tradeBuyorSell shouldEqual false
+      result.tradeWinOrLose shouldEqual "Trade hit stop loss"
+
 
     }
     "return a correct TrdeDoneCalculations object when given a Trade object and it hit Take Profit" in {
@@ -369,13 +370,12 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
       result.trade.entryTrade shouldEqual 1.09999
       result.trade.stopLossTrade shouldEqual 1.0
       result.trade.takeProfitTrade shouldEqual 1.10001
-      result.trade.riskTrade shouldEqual 3.0
-      result.trade.date shouldEqual "2023.08.11,11:53"
+      result.trade.risk shouldEqual 3.0
+      result.trade.datestart shouldEqual "2023.08.11,11:53"
       result.trade.ticker shouldEqual "EURUSD"
-      result.dateTradeTiggered shouldEqual "2023.08.11,11:55"
+      result.dateTradeTriggered shouldEqual "2023.08.11,11:55"
       result.dateTradeDone shouldEqual "2023.08.11,11:56"
-      result.TradeWinnorLoose shouldEqual "Trade hit take profit"
-      result.tradeBuyorSell shouldEqual true
+      result.tradeWinOrLose shouldEqual "Trade hit take profit"
 
     }
     

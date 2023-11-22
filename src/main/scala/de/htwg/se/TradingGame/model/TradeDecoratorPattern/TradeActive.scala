@@ -1,4 +1,4 @@
-package de.htwg.se.TradingGame.model
+package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 import de.htwg.se.TradingGame.model._
 
 class TradeActive(

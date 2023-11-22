@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import java.io.File
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 
 object GetMarketData {
 
