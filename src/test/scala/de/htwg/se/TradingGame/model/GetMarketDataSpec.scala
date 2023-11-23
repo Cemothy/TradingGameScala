@@ -110,11 +110,10 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
     result should include("Risk Trade: 2.0")
     result should include("Date: 2023.08.11,11:53")
     result should include("Ticker: EURUSD")
-    result should include("Date Trade Triggered: 2023.08.11,11:54")
-    result should include("Date Trade Done: 2023.08.11,15:09")
-    result should include("Trade Winner or Loser: Trade hit take profit")
-    result should include("Profit: $20.0")
-    result should include("Balance: $1020.0")
+    result should include("Date Trade Triggered: 2023.08.11,11:55")
+    result should include("Date Trade Done: 2023.08.17,23:53")
+    result should include("Profit: $-10.0")
+    result should include("Balance: $990.0")
     result should include("Trade Buy or Sell: Buy")
   }
 

@@ -12,8 +12,9 @@ class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade)
   val creator: ProfitCalculationStrategyCreator = tradeWinOrLose match {
     case "Trade hit take profit" => new TakeProfitCalculationStrategyCreator()
     case "Trade hit stop loss" => new StopLossCalculationStrategyCreator()
-    // Add more cases if needed
-  }
+    case "Trade did not hit take profit or stop loss" => new StopLossCalculationStrategyCreator()
+    case _ => StopLossCalculationStrategyCreator()
+}
 
   val strategy: ProfitCalculationStrategy = creator.createProfitCalculationStrategy(trade)
   val profit: Double = strategy.calculateProfit(trade)
