@@ -10,7 +10,7 @@ class StopLossCalculationStrategyVolume extends ProfitCalculationStrategy {
     val tradewithvolume = trade.asInstanceOf[TradeWithVolume]
     val profit1 = math.abs(trade.entryTrade - trade.stopLossTrade) * tradewithvolume.volume * -1
 
-    val profit = BigDecimal(profit1).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    val profit = BigDecimal(profit1).setScale(5, BigDecimal.RoundingMode.HALF_UP).toDouble
     profit
   }
 }
