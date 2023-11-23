@@ -5,7 +5,7 @@ import TradingMethods._
 import java.time.LocalDate
 import de.htwg.se.TradingGame.model.GetMarketData._
 import java.io.FileInputStream
-import de.htwg.se.TradingGame.view.TUI
+import de.htwg.se.TradingGame.view.TUI.TUI
 import de.htwg.se.TradingGame.controller.Controller
 
 

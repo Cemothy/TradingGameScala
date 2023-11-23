@@ -1,4 +1,4 @@
-package de.htwg.se.TradingGame.view
+package de.htwg.se.TradingGame.view.GUI
 import scalafx.scene.shape.{Rectangle, Line}
 import scalafx.scene.paint.Color
 import scalafx.scene.Group

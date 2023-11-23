@@ -1,8 +1,7 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
-class TradeisBuy( 
-  trade: TradeComponent,
-  val isBuy: Boolean 
-) extends TradeDecorator(trade) {
+import de.htwg.se.TradingGame.model.GetMarketData.isTradeBuyorSell
 
+class TradeisBuy(trade: TradeComponent) extends TradeDecorator(trade) {
+  val isTradeBuy: Boolean = isTradeBuyorSell(trade)
 }
