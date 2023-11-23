@@ -9,21 +9,24 @@ import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.Label
 
 object BalanceStage extends JFXApp3 {
-    override def start(): Unit = {
-        stage = createStage()
-    }
-    def createStage(): PrimaryStage = {
-    val startButton = new Button("Finish Backtesting")
+  override def start(): Unit = {
+    stage = createStage()
+  }
+  def createStage(): PrimaryStage = {
+    val startButton = new Button("Start Backtesting")
+    val balanceLabel = new Label("What Balance do you want to start with?")
+    val balanceInput = new TextField()
 
     val stage = new PrimaryStage {
-    title = "Backtesting Stage"
-    scene = new Scene(new VBox(startButton))
+      title = "Balance Stage"
+      scene = new Scene(new VBox(balanceLabel, balanceInput, startButton))
+    }
+
+    startButton.setOnAction(_ => {
+      stage.hide()
+      BacktestStage.createStage().show()
+    })
+
+    stage
   }
-  startButton.setOnAction(_ => {
-    stage.hide()
-    BacktestEvaluation.createStage().show()
-  }
-  )
-  stage
-}
 }

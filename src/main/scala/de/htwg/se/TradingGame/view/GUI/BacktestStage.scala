@@ -66,6 +66,7 @@ object BacktestStage extends JFXApp3 {
         splitPane1.items.addAll(splitPane2, table)
 
 
+        
 
         val horizontalBox = new HBox(leftButtons, splitPane1, rightButtons)
         HBox.setHgrow(splitPane1, Priority.Always)
