@@ -15,6 +15,43 @@ val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/GetMark
 val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EURUSD.csv"
 
 
+"datewhenTradeisdone" should {
+    "return 'Trade was not triggered' if the trade was not triggered" in {
+      val trade = Trade(0.1, 0.1, 5.0, 5.0, "2023.02.11,11:53", "EURUSD")
+      val result = GetMarketData.datewhenTradeisdone(trade)
+      result shouldEqual "Trade was not triggered"
+    }
+
+    "return 'Trade did not hit take profit or stop loss' if neither take profit nor stop loss was hit" in {
+      val trade = Trade(1.07, 0.1, 3.0, 2.0, "2023.02.11,11:53", "EURUSD")
+      val result = GetMarketData.datewhenTradeisdone(trade)
+      result shouldEqual "Trade did not hit take profit or stop loss"
+    }
+
+    "return the date when take profit was hit if stop loss was not hit" in {
+      val trade = Trade(1.07, 0.1, 1.075, 2.0, "2023.02.11,11:53", "EURUSD")
+      val result = GetMarketData.datewhenTradeisdone(trade)
+      result shouldEqual "2023.02.14,10:59"
+    }
+
+    "return the date when stop loss was hit if take profit was not hit" in {
+      val trade = Trade( 1.07, 1.065, 5.0, 2.0, "2023.02.11,11:53", "EURUSD")
+      val result = GetMarketData.datewhenTradeisdone(trade)
+      result shouldEqual "2023.02.17,04:03"
+    }
+    "return the date when take profit was hit if stop loss was hit after take profit" in {
+      val trade = Trade(1.07, 1.05, 1.075, 2.0, "2023.02.11,11:53", "EURUSD")
+      val result = GetMarketData.datewhenTradeisdone(trade)
+      result shouldEqual "2023.02.14,10:59"
+    }
+
+    "return the date when stop loss was hit if take profit was hit after stop loss" in {
+      val trade = Trade(1.07, 1.069, 1.08, 2.0, "2023.02.11,11:53", "EURUSD")
+      val result = GetMarketData.datewhenTradeisdone(trade)
+      result shouldEqual "2023.02.13,00:03"
+    }
+
+  }
 
 "getLastDateofFile" should{
   "return the last date of the file" in {
@@ -118,6 +155,7 @@ val testFilePath = new java.io.File(GetMarketData.Path).getParent + "/Symbols/EU
   }
 
 }
+
 
 
 
