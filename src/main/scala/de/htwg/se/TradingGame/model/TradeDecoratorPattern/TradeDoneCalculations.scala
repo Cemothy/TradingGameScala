@@ -11,6 +11,11 @@ class TradeDoneCalculations(
   val endProfit: Double
 ) extends TradeDecorator(trade) {
 
+
+
+
+
+
   val creator: ProfitCalculationStrategyCreator = trade match {
     case _: TradeWithVolume =>
       new VolumeProfitCalculationStrategyCreator()
