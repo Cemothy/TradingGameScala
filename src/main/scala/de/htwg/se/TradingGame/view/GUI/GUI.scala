@@ -1,4 +1,4 @@
-package de.htwg.se.TradingGame.view
+package de.htwg.se.TradingGame.view.GUI
 import scala.io
 import scala.io.StdIn
 import de.htwg.se.TradingGame.controller.Controller

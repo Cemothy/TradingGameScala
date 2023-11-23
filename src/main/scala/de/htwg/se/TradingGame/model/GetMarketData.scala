@@ -150,7 +150,7 @@ def isDateAfterLastDateinFile(dateTime: String, dataFilePath: String): Boolean =
 }
 
 //isTradeBuyorSell: true = buy, false = sell
-def isTradeBuyorSell(trade : Trade) : Boolean = {
+def isTradeBuyorSell(trade : TradeComponent) : Boolean = {
   if(trade.takeProfitTrade > trade.stopLossTrade){
     true
   } else {
@@ -169,7 +169,7 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
   //* @return String
 
 
-  def dateWhenTradeTriggered(trade: Trade): String = {
+  def dateWhenTradeTriggered(trade: TradeComponent): String = {
     var date: String = "Trade was not triggered"
     val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
     if(isTradeBuyorSell(trade)){
@@ -192,7 +192,7 @@ def isTradeBuyorSell(trade : Trade) : Boolean = {
   
 }
 
-def dateWhenTradehitTakeProfit (trade: Trade): String = {
+def dateWhenTradehitTakeProfit (trade: TradeComponent): String = {
   var date: String = " Trade did not hit take profit"
   val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
@@ -220,7 +220,7 @@ def dateWhenTradehitTakeProfit (trade: Trade): String = {
   date
 }
 
-def dateWhenTradehitStopLoss(trade: Trade): String = {
+def dateWhenTradehitStopLoss(trade: TradeComponent): String = {
   var date: String = " Trade did not hit stop loss"
   val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
@@ -248,8 +248,27 @@ def dateWhenTradehitStopLoss(trade: Trade): String = {
   date
 }
 
+def datewhenTradeisdone (trade: TradeComponent): String = {
+  val dateWhenTradehitTakeProfit1 = dateWhenTradehitTakeProfit(trade)
+  val dateWhenTradehitStopLoss1 = dateWhenTradehitStopLoss(trade)
+  
+  if (dateWhenTradeTriggered(trade).equals("Trade was not triggered")) {
+    "Trade was not triggered"
+  } else if (dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss") && dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit")) {
+    "Trade did not hit take profit or stop loss"
+  } else if (dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss")) {
+    dateWhenTradehitTakeProfit1
+  } else if (dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit")) {
+    dateWhenTradehitStopLoss1
+  } else if (LocalDateTime.parse(dateWhenTradehitTakeProfit1, formatter).isBefore(LocalDateTime.parse(dateWhenTradehitStopLoss1, formatter))) {
+    dateWhenTradehitTakeProfit1
+  } else {
+    dateWhenTradehitStopLoss1
+  }
+}
+  
 
-def didTradeWinnorLoose(trade: Trade): String = {
+def didTradeWinnorLoose(trade: TradeComponent): String = {
   var result: String = "Trade did not hit take profit or stop loss"
   val dateWhenTradehitTakeProfit1 = dateWhenTradehitTakeProfit(trade)
   val dateWhenTradehitStopLoss1 = dateWhenTradehitStopLoss(trade)
@@ -294,9 +313,9 @@ def doneTradeStringwithProfit: String = {
     output += s"Date Trade Done: ${trade.dateTradeDone}  |  "
     output += s"Trade Winner or Loser: ${trade.tradeWinOrLose}  |  "
     output += s"Trade Buy or Sell: ${if (trade.trade.takeProfitTrade > trade.trade.stopLossTrade) "Buy" else "Sell"}  |  "
-    output += s"Profit: $$${GetMarketData.calculateTradeProfit(trade, balance)}\n"
+    output += s"Profit: $$${trade.endProfit * balance}\n"
     output += "__________________________________________________________\n"
-    this.balance = balance + GetMarketData.calculateTradeProfit(trade, balance)
+    this.balance = balance + trade.endProfit * balance
     output += "__________________________________________________________\n"
     output += s"new Balance: $$$balance\n"
     output += "__________________________________________________________\n"
@@ -309,60 +328,11 @@ def doneTradeStringwithProfit: String = {
   output
 }
 
-def calculateTradeProfit(trade: TradeDoneCalculations, balance: Double): Double = {
-  var profit: Double = 0.0
-  if(trade.tradeWinOrLose.equals("Trade hit take profit")){
-    val entryPrice = trade.trade.entryTrade
-    val stopLossPrice = trade.trade.stopLossTrade
-    val takeProfitPrice = trade.trade.takeProfitTrade
-    val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
-    val distanceFromEntryToTakeProfit = math.abs(entryPrice - takeProfitPrice)
-    val factor = distanceFromEntryToTakeProfit / distanceFromEntryToStopLoss
-    profit = (balance * trade.trade.risk * 0.01) * factor
-    profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-    
-  } else if(trade.tradeWinOrLose.equals("Trade hit stop loss")){
-    profit = balance * trade.trade.risk * 0.01 * -1
-    profit = BigDecimal(profit).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-  }
-  profit
-}
 
-def calculateTradecurrentProfit(trade: TradeDoneCalculations, balance: Double, date: String): Double = {
-  var profit: Double = 0.0
-  val datapath = new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.trade.ticker}.csv"
-  if(LocalDateTime.parse(date, formatter).isBefore(LocalDateTime.parse(trade.dateTradeTriggered, formatter))){
-    profit = 0.0
-  }else if(LocalDateTime.parse(date, formatter).isAfter(LocalDateTime.parse(trade.dateTradeDone, formatter))){
-    profit = calculateTradeProfit(trade, balance)
-  }else{
-    //calculate how much the trade is worth at the current date
-    val entryPrice = trade.trade.entryTrade
-    val stopLossPrice = trade.trade.stopLossTrade
-    val takeProfitPrice = trade.trade.takeProfitTrade
-    val distanceFromEntryToStopLoss = math.abs(entryPrice - stopLossPrice)
-    val distanceFromEntryToCurrentPrice = entryPrice - getPriceForDateTimeDouble(date, datapath, 5)
-    val factor = distanceFromEntryToCurrentPrice / distanceFromEntryToStopLoss
-    profit = (balance * trade.trade.risk * 0.01) * factor
-  }
-  profit
-    
-}
 
-def calculateTrade(trade: Trade): TradeDoneCalculations = {
-  val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
-  var dateWhenTradehitTakeProfitorStopLoss1 = "Trade did not hit take profit or stop loss"
-  val didTradeWinnorLoose1 = didTradeWinnorLoose(trade)
-  val tradeBuyorSell = isTradeBuyorSell(trade)
-  if(didTradeWinnorLoose1.equals("Trade hit take profit")){
-    dateWhenTradehitTakeProfitorStopLoss1 = dateWhenTradehitTakeProfit(trade)
-  } else if(didTradeWinnorLoose1.equals("Trade hit stop loss")){
-    dateWhenTradehitTakeProfitorStopLoss1 = dateWhenTradehitStopLoss(trade)
-  }
-  val isbuyorselltrade = new TradeisBuy(trade, tradeBuyorSell)
-  val tradeDoneCalculations = new TradeDoneCalculations(isbuyorselltrade, dateWhenTradeTriggered1, dateWhenTradehitTakeProfitorStopLoss1, didTradeWinnorLoose1)
-  tradeDoneCalculations
-}
+
+
+
 
 }
 
