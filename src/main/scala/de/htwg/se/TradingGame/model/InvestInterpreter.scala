@@ -20,7 +20,7 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balance: String)
     def doInvest(input: String): (String, BrowseInterpreter) = {
         
         this.currentTradestore = new Trade(input.split(" ")(0).toDouble, input.split(" ")(1).toDouble, input.split(" ")(2).toDouble, input.split(" ")(3).toDouble, dateTime, tickersymbol)
-        this.TradeDoneCalculationsstore = GetMarketData.calculateTrade(currentTradestore)
+        this.TradeDoneCalculationsstore = new TradeDoneCalculations(currentTradestore)     //GetMarketData.calculateTrade(currentTradestore)
         GetMarketData.trades.addOne(TradeDoneCalculationsstore)
         
         GetMarketData.balance = balance.toDouble
