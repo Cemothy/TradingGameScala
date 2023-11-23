@@ -1,25 +1,36 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
 import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern._
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 
 class TradeDoneCalculations(
   trade: TradeComponent,
   val dateTradeTriggered: String,
   val dateTradeDone: String,
   val tradeWinOrLose: String,
+  val endProfit: Double
 ) extends TradeDecorator(trade) {
 
-    if(trade.isInstanceOf[TradeActive]) {
-      val tradeActive = trade.asInstanceOf[TradeActive]
-      val strategy: ProfitCalculationStrategy = tradeWinOrLose match {
-        case "Trade hit take profit" => new TakeProfitCalculationStrategy()
-        case "Trade hit stop loss" => new StopLossCalculationStrategy()
+  val creator: ProfitCalculationStrategyCreator = trade match {
+    case _: TradeWithVolume =>
+      new VolumeProfitCalculationStrategyCreator()
+    case _ =>
+      new RiskProfitCalculationStrategyCreator()
+  }
+
+  val strategy: ProfitCalculationStrategy = creator.createProfitCalculationStrategy(trade)
+
+  val profit: Double = strategy.calculateProfit(trade)
+
+  trade match {
+    case activeTrade: TradeActive => {
+      activeTrade.isActive = false
+      if(!activeTrade.isActive){
+      activeTrade.setcurrentProfitto(0.0)
+      endProfit = profit
       }
-
-      val profit: Double = strategy.calculateProfit(trade)
-
-      tradeActive.setcurrentProfitto(profit)
     }
-
-  
+    case _ =>
+      // Handle other cases if needed
+  }
 }

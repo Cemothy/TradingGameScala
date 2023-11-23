@@ -3,7 +3,7 @@ import de.htwg.se.TradingGame.model._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model.FileChooser.getSymbolPath
 // Concrete Strategy A
-class TakeProfitCalculationStrategy extends ProfitCalculationStrategy {
+class TakeProfitCalculationStrategyVolume extends ProfitCalculationStrategy {
   def calculateProfit(trade: TradeComponent): Double = {
             val entryPrice = trade.entryTrade
             val stopLossPrice = trade.stopLossTrade
