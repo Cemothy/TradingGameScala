@@ -1,3 +1,4 @@
+package de.htwg.se.TradingGame.view.GUI
 import scalafx.application.JFXApp3
 import scalafx.scene.Scene
 import scalafx.scene.control.Label
@@ -32,12 +33,7 @@ object guiobject extends JFXApp3 {
             height = 700
             scene = new Scene {
                 
-                val rootPane = new Pane()
                 val lineChartPane = new Pane()
-                val buttonPane = new VBox() // Create a VBox for buttons
-                buttonPane.layoutX = 10 // Set the layoutX position of the button pane
-                buttonPane.layoutY = 10 // Set the layoutY position of the button pane
-                buttonPane.spacing = 10 // Set the spacing between buttons
                 val xAxis = NumberAxis()
                 xAxis.tickLabelFormatter = StringConverter.toStringConverter((epochSecond: Number) => {
                 val instant = Instant.ofEpochSecond(epochSecond.longValue)
@@ -103,29 +99,11 @@ object guiobject extends JFXApp3 {
                 var addHighLowLineMode = false // Flag to indicate if "high/low line" button is clicked
 
                 // Button to enable "add line" mode
-                val addLineButton = new Button("Add Line")
-                addLineButton.layoutX = 10
-                addLineButton.layoutY = 10
-                addLineButton.prefWidth = 50
-                addLineButton.prefHeight = 50
-                addLineButton.onAction = () => {
-                    addLineMode = true
-                    addHighLowLineMode = false
-                }
-                var horizontalLines: List[Line] = List()
+               
+               
 
-                // Button to enable "high/low line" mode
-                val highLowLineButton = new Button("High/Low Line")
-                highLowLineButton.layoutX = 10
-                highLowLineButton.layoutY = 70
-                highLowLineButton.prefWidth = 50
-                highLowLineButton.prefHeight = 50
-                highLowLineButton.onAction = () => {
-                    addHighLowLineMode = true
-                    addLineMode = false
-                }
-                var highLowLines: List[Line] = List()
-
+              
+                
                 // Horizontal line
                 val crosshairVerticalLine = new Line ()
                 crosshairVerticalLine.startX = 0
@@ -144,10 +122,10 @@ object guiobject extends JFXApp3 {
                 crosshairHorizontalLine.mouseTransparent = true
 
                 lineChartPane.children.addAll(crosshairVerticalLine, crosshairHorizontalLine)
-                rootPane.children.addAll(buttonPane, lineChartPane) // Add button pane to the root pane
-                content = rootPane
+                
+                content = lineChartPane
 
-                buttonPane.children.addAll(addLineButton, highLowLineButton) // Add the buttons to the button pane
+                
 
                 var lastPoint: Point2D = Point2D.Zero
 
@@ -181,62 +159,8 @@ object guiobject extends JFXApp3 {
                     startX = point.x
                     startY = point.y
 
-                    if (addLineMode) {
-                        // Create a horizontal line
-                        val line = new Line()
-                        line.startX = 0
-                        line.startY = event.sceneY
-                        line.endX = lineChart.width.value
-                        line.endY = event.sceneY
-
-                        horizontalLines = line :: horizontalLines
-                        lineChartPane.children.add(line)
-                        addLineMode = false
-
-                        // Add event handlers for dragging the line
-                        line.onMousePressed = (event: MouseEvent) => {
-                            startX = event.sceneX
-                            startY = event.sceneY
-                        }
-
-                        line.onMouseDragged = (event: MouseEvent) => {
-                            val deltaY = event.sceneY - startY
-                            line.startY = line.startY.value + deltaY
-                            line.endY = line.endY.value + deltaY
-                            startY = event.sceneY
-                        }
-                    }
-
-                    if (addHighLowLineMode) {
-                        // Create a horizontal line starting at the x-axis position of the mouse and going to the right until the end of the chart
-                        val line = new Line()
-                        line.startX = point.x
-                        line.startY = event.sceneY
-                        line.endX = lineChart.width.value
-                        line.endY = event.sceneY
-
-
-                        highLowLines = line :: highLowLines
-                        lineChartPane.children.add(line)
-                        addHighLowLineMode = false
-
-                        // Add event handlers for dragging the line
-                        line.onMousePressed = (event: MouseEvent) => {
-                            startX = event.sceneX
-                            startY = event.sceneY
-                        }
-
-                        line.onMouseDragged = (event: MouseEvent) => {
-                            val deltaX = event.sceneX - startX
-                            val deltaY = event.sceneY - startY
-                            line.startX = line.startX.value + deltaX
-                            line.startY = line.startY.value + deltaY
-                            line.endX = line.endX.value + deltaX
-                            line.endY = line.endY.value + deltaY
-                            startX = event.sceneX
-                            startY = event.sceneY
-                        }
-                    }
+                   
+                   
                 }
 
                 lineChart.onMouseDragged = (event: MouseEvent) => {
@@ -307,19 +231,6 @@ object guiobject extends JFXApp3 {
                     xAxis.delegate.setLowerBound(xAxisLowerBound - xDiff)
                     xAxis.delegate.setUpperBound(xAxisUpperBound - xDiff)
 
-                    horizontalLines.foreach { line =>
-                        line.startY = point.y + (line.startY.value - startY)
-                        line.endY = point.y + (line.startY.value - startY)
-                    }
-
-                    val deltaX = point.x - startX
-                     highLowLines.foreach { line =>
-                        line.startX = line.startX.value + deltaX
-                        line.endX = lineChart.width.value
-                        line.startY = point.y + (line.startY.value - startY)
-                        line.endY = point.y + (line.startY.value - startY)
-                    }
-
                     crosshairVerticalLine.startX = crosshairVerticalLine.startX.value + xDiffPixels
                     crosshairVerticalLine.endX = crosshairVerticalLine.endX.value + xDiffPixels
                     crosshairHorizontalLine.startY = crosshairHorizontalLine.startY.value + yDiffPixels
@@ -346,28 +257,15 @@ object guiobject extends JFXApp3 {
                     // Zoom out
                     val newLowerBound = xAxisLowerBound - zoomStep
                     xAxis.delegate.setLowerBound(newLowerBound)
-                    highLowLines.foreach { line =>
-                        //make it so the xaxis in the linechart stays the same for each highlowline
-                        line.startX =  line.startX.value + zoomhighlowlines
-                    }
+                    
                 } else {
                     // Zoom in
                     val newLowerBound = xAxisLowerBound + zoomStep
                     xAxis.delegate.setLowerBound(newLowerBound)
-                    highLowLines.foreach { line =>
-                        //make it so the xaxis in the linechart stays the same for each highlowline
-                        line.startX =  line.startX.value - zoomhighlowlines
-                }
-
+                    
                 }
             }
-                    lineChart.verticalGridLinesVisible = false
-                    lineChart.horizontalGridLinesVisible = false
-                    lineChartPane.prefWidth <== rootPane.width  // Bind the width property of the line chart pane to the width property of the scene
-                    lineChartPane.prefHeight <== rootPane.height
-                // Bind the width and height properties of the line chart to the width and height properties of the scene
-
-                    lineChartPane.layoutX = addLineButton.prefWidth.value  // Set the layoutY position of the line chart pane
+                
                     updateYAxis()
             }
         }
