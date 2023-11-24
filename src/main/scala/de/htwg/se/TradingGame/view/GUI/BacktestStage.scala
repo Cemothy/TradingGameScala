@@ -12,6 +12,7 @@ import scalafx.scene.chart.{LineChart, NumberAxis, XYChart}
 import scalafx.scene.layout.Priority
 import scalafx.scene.control.SplitPane
 import scalafx.geometry.Orientation
+import de.htwg.se.TradingGame.view.GUI.LinechartPane
 
 
 object BacktestStage extends JFXApp3 {
@@ -37,13 +38,10 @@ object BacktestStage extends JFXApp3 {
             new Button("Button 3")
         )
 
-        val xAxis = new NumberAxis()
-        val yAxis = new NumberAxis()
-        val chart = new LineChart(xAxis, yAxis)
-        chart.maxWidth = Double.MaxValue
-        chart.maxHeight = Double.MaxValue
-        val chartpane = new VBox(chart)
-        VBox.setVgrow(chart, Priority.Always)
+ 
+        val chartpane = new LinechartPane()
+        chartpane.initializeLineChart()
+        VBox.setVgrow(chartpane, Priority.Always)
 
 
         val inputBox = new VBox(
@@ -59,6 +57,7 @@ object BacktestStage extends JFXApp3 {
         splitPane2.orientation = Orientation.Horizontal
         splitPane2.items.addAll(chartpane, inputBox)
         SplitPane.setResizableWithParent(inputBox, false)
+        
 
         val table = new TableView[String]()
         val splitPane1 = new SplitPane()
