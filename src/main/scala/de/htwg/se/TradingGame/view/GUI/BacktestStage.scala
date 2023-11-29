@@ -13,7 +13,8 @@ import scalafx.scene.layout.Priority
 import scalafx.scene.control.SplitPane
 import scalafx.geometry.Orientation
 import de.htwg.se.TradingGame.view.GUI.LinechartPane
-
+import scalafx.scene.layout.Region
+import de.htwg.se.TradingGame.view.GUI.BalanceStage._
 
 object BacktestStage extends JFXApp3 {
     override def start(): Unit = {
@@ -53,16 +54,22 @@ object BacktestStage extends JFXApp3 {
             new TextField()
         )
 
+        val balanceLabel = new Label(s"Balance: ${balance}")
+        val profitLabel = new Label("Profit: $0       ")
+        val spacer = new Region()
+        HBox.setHgrow(spacer, Priority.Always)
+        val balanceProfitBox = new HBox(balanceLabel, spacer, profitLabel)
+        
         val splitPane2 = new SplitPane()
         splitPane2.orientation = Orientation.Horizontal
         splitPane2.items.addAll(chartpane, inputBox)
         SplitPane.setResizableWithParent(inputBox, false)
-        
 
         val table = new TableView[String]()
+        val tablewithlabel = new VBox(balanceProfitBox, table)
         val splitPane1 = new SplitPane()
         splitPane1.orientation = Orientation.Vertical
-        splitPane1.items.addAll(splitPane2, table)
+        splitPane1.items.addAll(splitPane2, tablewithlabel)
 
 
         

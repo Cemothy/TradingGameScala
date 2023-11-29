@@ -9,6 +9,7 @@ import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.Label
 
 object BalanceStage extends JFXApp3 {
+  var balance: Double = 0.0
   override def start(): Unit = {
     stage = createStage()
   }
@@ -23,6 +24,7 @@ object BalanceStage extends JFXApp3 {
     }
 
     startButton.setOnAction(_ => {
+      balance = balanceInput.text.value.toDouble
       stage.hide()
       BacktestStage.createStage().show()
     })
