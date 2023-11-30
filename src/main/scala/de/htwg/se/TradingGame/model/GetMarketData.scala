@@ -290,7 +290,7 @@ def didTradeWinnorLoose(trade: TradeComponent): String = {
   result
 
 }
-  val trades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
+  val trades: ArrayBuffer[Trade] = ArrayBuffer.empty[Trade]
   var balance: Double = 0.0
 def closeProgram: String = {
 
@@ -301,7 +301,8 @@ def closeProgram: String = {
 
 def doneTradeStringwithProfit: String = {
   var output = ""
-  for (trade <- trades) {
+  for (currentTrade <- trades) {
+    val trade = new TradeDoneCalculations(currentTrade)
     output += "__________________________________________________________\n"
     output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
     output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "

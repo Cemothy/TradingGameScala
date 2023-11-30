@@ -7,9 +7,10 @@ import de.htwg.se.TradingGame.model.GetMarketData._
 import java.time.LocalDate
 import java.io.File
 
-class BrowseInterpreter(balance: String) extends Interpreter {
+class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
-    
+
+    override val balance = balanceInput 
     override val descriptor: String = "Please Enter the Tickersymbol of your choice: EURUSD Date: YYYY.MM.DD,HH:MM \n\nto Stop : Q\n\n"
 
     val quit: String = "Q"
