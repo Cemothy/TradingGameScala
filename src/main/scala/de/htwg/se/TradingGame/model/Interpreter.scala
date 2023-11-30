@@ -5,6 +5,7 @@ import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 
 trait Interpreter {
 
+  val balance: String
   val actions: Map[String, String => (String,Interpreter)]
 
   val descriptor: String
