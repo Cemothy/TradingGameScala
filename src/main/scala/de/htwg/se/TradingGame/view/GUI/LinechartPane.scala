@@ -18,10 +18,27 @@ class LinechartPane extends StackPane {
   val xAxis: NumberAxis = new NumberAxis()
   val yAxis: NumberAxis = new NumberAxis()
   val lineChart: LineChart[Number, Number] = new LineChart[Number, Number](xAxis, yAxis)
+  private var currentSelectedTimeframe: String = "1m"
+  private var selectedTicker: String = "EURUSD"
+  private val chartDataLoader: ChartDataLoader = new ChartDataLoader()
+  var selectedDate: java.time.LocalDateTime = java.time.LocalDateTime.now()
+
+  def updateDate(selectedDate: java.time.LocalDateTime): Unit = {
+  val updatedDate = selectedDate
+  this.selectedDate = updatedDate
+  chartDataLoader.loadDataAndUpdateChart(lineChart, xAxis, yAxis, selectedTicker, 1000, currentSelectedTimeframe, updatedDate)
+}
+
+  def updateTimeframe(selectedTimeframe: String): Unit = {
+    currentSelectedTimeframe = selectedTimeframe
+    // Reload the chart data with the new timeframe
 
 
+    chartDataLoader.loadDataAndUpdateChart(lineChart, xAxis, yAxis, selectedTicker, 1000, selectedTimeframe, selectedDate)
+  }
 
-  def initializeLineChart(): Unit = {
+  def initializeLineChart(ticker: String): Unit = {
+    selectedTicker = ticker
     // Set up the line chart and crosshair lines
     lineChart.setAnimated(false)
     lineChart.setCreateSymbols(false)
@@ -33,11 +50,13 @@ class LinechartPane extends StackPane {
     xAxis.delegate.setAutoRanging(false)
     yAxis.delegate.setAutoRanging(false)
 
-
+    children.clear()
     children.addAll(lineChart)
     
-    val chartDataLoader = new ChartDataLoader()
-    chartDataLoader.loadDataAndUpdateChart(lineChart, xAxis, yAxis, "EURUSD", 1000)
+
+
+
+    chartDataLoader.loadDataAndUpdateChart(lineChart, xAxis, yAxis, ticker, 1000, currentSelectedTimeframe, selectedDate)
     updateYAxis()
     
 
