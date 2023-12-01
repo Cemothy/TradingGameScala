@@ -1,26 +1,36 @@
 package de.htwg.se.TradingGame.view.GUI
 
+import de.htwg.se.TradingGame.view.GUI.BalanceStage._
+import de.htwg.se.TradingGame.view.GUI.LinechartPane
+import scalafx.Includes._
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
-import scalafx.scene.Scene
-import scalafx.scene.control.{Button, Alert, TextField, TableView}
-import scalafx.scene.layout.{HBox, VBox}
-import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.Label
-import scalafx.scene.input.KeyCode.B
-import scalafx.scene.chart.{LineChart, NumberAxis, XYChart}
-import scalafx.scene.layout.Priority
-import scalafx.scene.control.SplitPane
 import scalafx.geometry.Orientation
-import de.htwg.se.TradingGame.view.GUI.LinechartPane
+import scalafx.scene.Scene
+import scalafx.scene.chart.LineChart
+import scalafx.scene.chart.NumberAxis
+import scalafx.scene.chart.XYChart
+import scalafx.scene.control.Alert
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.Button
+import scalafx.scene.control.Label
+import scalafx.scene.control.SplitPane
+import scalafx.scene.control.TableView
+import scalafx.scene.control.TextField
+import scalafx.scene.input.KeyCode.B
+import scalafx.scene.input.MouseEvent
+import scalafx.scene.layout.HBox
+import scalafx.scene.layout.Pane
+import scalafx.scene.layout.Priority
 import scalafx.scene.layout.Region
-import de.htwg.se.TradingGame.view.GUI.BalanceStage._
+import scalafx.scene.layout.StackPane
+import scalafx.scene.layout.VBox
 
 object BacktestStage extends JFXApp3 {
     override def start(): Unit = {
         stage = createStage()
     }
-
+    val crosshairPane = new Pane()
     def createStage(): PrimaryStage = {
         val endButton = new Button("Finish Backtesting")
         val Button1 = new Button("Button1")
@@ -39,10 +49,22 @@ object BacktestStage extends JFXApp3 {
             new Button("Button 3")
         )
 
+
  
         val chartpane = new LinechartPane()
         chartpane.initializeLineChart()
         VBox.setVgrow(chartpane, Priority.Always)
+
+        
+       
+
+       
+
+        val chartWithCrosshair = new ChartDragHandler(chartpane, crosshairPane)
+
+
+
+
 
 
         val inputBox = new VBox(
@@ -62,7 +84,7 @@ object BacktestStage extends JFXApp3 {
         
         val splitPane2 = new SplitPane()
         splitPane2.orientation = Orientation.Horizontal
-        splitPane2.items.addAll(chartpane, inputBox)
+        splitPane2.items.addAll(chartWithCrosshair, inputBox)
         SplitPane.setResizableWithParent(inputBox, false)
 
         val table = new TableView[String]()
