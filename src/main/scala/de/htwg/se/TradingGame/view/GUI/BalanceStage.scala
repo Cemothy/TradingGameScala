@@ -1,14 +1,23 @@
 package de.htwg.se.TradingGame.view.GUI
 
+import de.htwg.se.TradingGame.controller.Controller
+import de.htwg.se.TradingGame.util.Observer
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, Alert, TextField}
-import scalafx.scene.layout.{HBox, VBox}
+import scalafx.scene.control.Alert
 import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.Button
 import scalafx.scene.control.Label
+import scalafx.scene.control.TextField
+import scalafx.scene.layout.HBox
+import scalafx.scene.layout.VBox
 
-object BalanceStage extends JFXApp3 {
+class BalanceStage(controller: Controller) extends JFXApp3 with Observer {
+
+
+  override def update: Unit = ???
+
   var balance: Double = 0.0
   override def start(): Unit = {
     stage = createStage()
