@@ -58,6 +58,7 @@ class LinechartPane extends StackPane {
 
     chartDataLoader.loadDataAndUpdateChart(lineChart, xAxis, yAxis, ticker, 1000, currentSelectedTimeframe, selectedDate)
     updateYAxis()
+    updateXAxis()
     
 
     // Add event handlers for mouse enter and exit
@@ -73,6 +74,16 @@ class LinechartPane extends StackPane {
     val tickUnit = range / tickCount
 
     yAxis.setTickUnit(tickUnit)
+  }
+  private def updateXAxis(): Unit = {
+    // Update the Y-axis tick labels
+    val tickCount = 10 // Adjust this value to control the number of tick labels
+    val xAxisLowerBound = xAxis.getLowerBound
+    val xAxisUpperBound = xAxis.getUpperBound
+    val range = xAxisUpperBound - xAxisLowerBound
+    val tickUnit = range / tickCount
+
+    xAxis.setTickUnit(tickUnit)
   }
 
 }
