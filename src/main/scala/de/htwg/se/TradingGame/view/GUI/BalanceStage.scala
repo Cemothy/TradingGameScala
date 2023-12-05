@@ -13,31 +13,33 @@ import scalafx.scene.control.TextField
 import scalafx.scene.layout.HBox
 import scalafx.scene.layout.VBox
 
-class BalanceStage(controller: Controller) extends JFXApp3 with Observer {
+class BalanceStage(controller: Controller){
 
 
-  override def update: Unit = ???
+  
 
   var balance: Double = 0.0
-  override def start(): Unit = {
-    stage = createStage()
-  }
+
   def createStage(): PrimaryStage = {
-    val startButton = new Button("Start Backtesting")
-    val balanceLabel = new Label("What Balance do you want to start with?")
-    val balanceInput = new TextField()
+  val startButton = new Button("Start Backtesting")
+  val balanceLabel = new Label("What Balance do you want to start with?")
+  val balanceInput = new TextField()
 
-    val stage = new PrimaryStage {
-      title = "Balance Stage"
-      scene = new Scene(new VBox(balanceLabel, balanceInput, startButton))
-    }
+  val stage = new PrimaryStage
+    stage.title = "Balance Stage"
+    stage.scene = new Scene(new VBox(balanceLabel, balanceInput, startButton))
+  
 
-    startButton.setOnAction(_ => {
-      balance = balanceInput.text.value.toDouble
-      stage.hide()
-      BacktestStage.createStage().show()
-    })
+  startButton.setOnAction(_ => {
+    balance = balanceInput.text.value.toDouble
+    controller.computeInput(balanceInput.text.value)
+    controller.printDesctriptor()
+    stage.hide()
+    new BacktestStage(controller).createStage().show()
+  })
 
-    stage
-  }
+  stage
+}
+
+    
 }

@@ -1,10 +1,12 @@
 package de.htwg.se.TradingGame.view.GUI
 
-import de.htwg.se.TradingGame.view.GUI.BalanceStage._
+import de.htwg.se.TradingGame.controller.Controller
+import de.htwg.se.TradingGame.view.GUI.BalanceStage
 import de.htwg.se.TradingGame.view.GUI.LinechartPane
 import scalafx.Includes._
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
+import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Orientation
 import scalafx.scene.Scene
 import scalafx.scene.chart.LineChart
@@ -13,7 +15,11 @@ import scalafx.scene.chart.XYChart
 import scalafx.scene.control.Alert
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.Button
+import scalafx.scene.control.ComboBox
+import scalafx.scene.control.DatePicker
 import scalafx.scene.control.Label
+import scalafx.scene.control.Spinner
+import scalafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory
 import scalafx.scene.control.SplitPane
 import scalafx.scene.control.TableView
 import scalafx.scene.control.TextField
@@ -25,16 +31,11 @@ import scalafx.scene.layout.Priority
 import scalafx.scene.layout.Region
 import scalafx.scene.layout.StackPane
 import scalafx.scene.layout.VBox
-import scalafx.collections.ObservableBuffer
-import scalafx.scene.control.ComboBox
-import scalafx.scene.control.DatePicker
-import scalafx.scene.control.Spinner
-import scalafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory
 
-object BacktestStage extends JFXApp3 {
-    override def start(): Unit = {
-        stage = createStage()
-    }
+import java.time.format.DateTimeFormatter
+
+class BacktestStage(controller: Controller){
+
     val crosshairPane = new Pane()
     def createStage(): PrimaryStage = {
         val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1day", "1week")
@@ -77,30 +78,53 @@ object BacktestStage extends JFXApp3 {
         chartpane.initializeLineChart(tickerComboBox.value.value)
         VBox.setVgrow(chartpane, Priority.Always)
 
-
+        
         val chartWithCrosshair = new ChartDragHandler(chartpane, crosshairPane)
         val applyDateButton = new Button("Apply Date")
+
         applyDateButton.setOnAction(_ => {
-        val selectedDate = dateInput.getValue // Get the selected date from the date picker
-        val selectedHour = hourSpinner.getValue // Get the selected hour from the spinner
-        val selectedMinute = minuteSpinner.getValue // Get the selected minute from the spinner
-        val dateTime = selectedDate.atTime(selectedHour, selectedMinute) // Combine the date and time into a LocalDateTime object
-        chartpane.updateDate(dateTime)
+            val selectedDate = dateInput.getValue // Get the selected date from the date picker
+            val selectedHour = hourSpinner.getValue // Get the selected hour from the spinner
+            val selectedMinute = minuteSpinner.getValue // Get the selected minute from the spinner
+            val dateTime = selectedDate.atTime(selectedHour, selectedMinute) // Combine the date and time into a LocalDateTime object
+            chartpane.updateDate(dateTime)
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+            val formattedDate = selectedDate.format(formatter)
+            val browseinput = s"${tickerComboBox.value.value} ${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
+            controller.computeInput(browseinput)
+            controller.printDesctriptor()
         })
+        val entry = new TextField()
+        val stoploss = new TextField()
+        val takeprofit = new TextField()
+        val risk = new TextField()
+        val enterTradeButton = new Button("Enter Trade")
+        enterTradeButton.setOnAction(_ => {
+            val investinput = s"${entry.text.value} ${stoploss.text.value} ${takeprofit.text.value} ${risk.text.value}"
+            controller.computeInput(investinput)
+            controller.printDesctriptor()
+        })
+
+
+
         val inputBox = new VBox(
             dateBox,
             hourBox,
             minuteBox,
             applyDateButton,
-            new Label("Input 1"),
-            new TextField(),
-            new Label("Input 2"),
-            new TextField(),
-            new Label("Input 3"),
-            new TextField()
+            new Label("Entry Price: "),
+            entry,
+            new Label("Stop Loss: "),
+            stoploss,
+            new Label("Take Profit:"),
+            takeprofit,
+            new Label("Risk in %:"),
+            risk,
+            enterTradeButton
         )
 
-        val balanceLabel = new Label(s"Balance: ${balance}")
+        val balanceLabel = new Label(s"Balance: ")
         val profitLabel = new Label("Profit: $0       ")
         val spacer = new Region()
         HBox.setHgrow(spacer, Priority.Always)
@@ -134,6 +158,8 @@ object BacktestStage extends JFXApp3 {
         endButton.setOnAction(_ => {
             stage.hide()
             BacktestEvaluation.createStage().show()
+            controller.computeInput("Q")
+            controller.printDesctriptor()
         })
         tickerComboBox.value.onChange { (_, _, newTicker) =>
             chartpane.initializeLineChart(newTicker)
