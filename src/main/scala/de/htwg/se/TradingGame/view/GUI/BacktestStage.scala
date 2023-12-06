@@ -2,7 +2,6 @@ package de.htwg.se.TradingGame.view.GUI
 
 import de.htwg.se.TradingGame.controller.Controller
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
-import de.htwg.se.TradingGame.view.GUI.LinechartPane
 import scalafx.Includes._
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
@@ -34,6 +33,13 @@ import scalafx.scene.layout.VBox
 
 import java.time.format.DateTimeFormatter
 
+object BacktestStage extends JFXApp3 {
+    val controller = new Controller()
+    override def start(): Unit = 
+        val stage = new BacktestStage(controller).createStage()
+        stage.show()
+
+}
 class BacktestStage(controller: Controller){
 
     val crosshairPane = new Pane()

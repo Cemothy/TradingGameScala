@@ -5,6 +5,15 @@ import scalafx.scene.input.MouseEvent
 import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.Pane
 import scalafx.scene.layout.StackPane
+import scalafx.scene.control.Label
+import scalafx.scene.paint.Color
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.time.LocalDateTime
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.Duration
+import java.time.format.DateTimeFormatter
 
 class ChartDragHandler(chartpane: LinechartPane, crosshairPane: Pane) extends StackPane {
     var dragStartX: Double = 0
@@ -30,8 +39,79 @@ class ChartDragHandler(chartpane: LinechartPane, crosshairPane: Pane) extends St
         dragStartY = me.getY
     }
 
+
+    def calculateDate(x: Double): String = {
+        // Get the height of the chart pane
+        val chartWidh = chartpane.width.value
+
+        // Calculate the ratio of the y position to the chart height
+        val ratio = x / chartWidh
+
+        // Get the range of your prices
+        val dateRange = chartpane.xAxis.delegate.getUpperBound - chartpane.xAxis.delegate.getLowerBound
+
+        // Calculate the price corresponding to the y position
+        val price = (1 - ratio) * dateRange + chartpane.xAxis.delegate.getLowerBound
+
+        // Format the price as a string
+        val date = LocalDateTime.ofInstant(Instant.ofEpochMilli(price.longValue * 1000), ZoneOffset.UTC)
+        val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+        val formattedDate = date.format(formatter)
+        formattedDate
+    }
+
+    def calculatePrice(y: Double): String = {
+    // Get the height of the chart pane
+        val chartHeight = chartpane.height.value
+
+        // Calculate the ratio of the y position to the chart height
+        val ratio = y / chartHeight
+
+        // Get the range of your prices
+        val priceRange = chartpane.yAxis.delegate.getUpperBound - chartpane.yAxis.delegate.getLowerBound
+
+        // Calculate the price corresponding to the y position
+        val price = (1 - ratio) * priceRange + chartpane.yAxis.delegate.getLowerBound
+
+        // Format the price as a string
+        f"$price%.5f"
+    }
+    val dateLabel = new Label {
+        textFill = Color.Black
+        style = "-fx-background-color: white; -fx-padding: 5;"
+
+    }
+
+    val priceLabel = new Label {
+        textFill = Color.Black
+        style = "-fx-background-color: white; -fx-padding: 5;"
+    }
+    val datepane = new Pane()
+    val pricepane = new Pane()
+    datepane.mouseTransparent = true
+    pricepane.mouseTransparent = true
+    datepane.children.add(dateLabel)
+    pricepane.children.add(priceLabel)
+    chartWithCrosshair.children.addAll(datepane, pricepane)
+    dateLabel.mouseTransparent = true
+    priceLabel.mouseTransparent = true
+
+    def updatedatepriceLabel (me: MouseEvent): Unit = {
+        val date = calculateDate(me.getX)
+        val price = calculatePrice(me.getY)
+        dateLabel.text = date
+        priceLabel.text = price
+        dateLabel.layoutX = me.getX
+        dateLabel.layoutY = chartpane.height.value - dateLabel.height.value - 10 
+        priceLabel.layoutX = 0
+        priceLabel.layoutY = me.getY
+    }
+
+
     crosshairPane.onMouseMoved = (me: MouseEvent) => {
         crosshair.updateCrosshair(me)
+        updatedatepriceLabel(me)
+
     }
 
     crosshairPane.onMouseDragged = (me: MouseEvent) => {
@@ -102,6 +182,7 @@ class ChartDragHandler(chartpane: LinechartPane, crosshairPane: Pane) extends St
 
         }
         crosshair.updateCrosshair(me)
+        updatedatepriceLabel(me)
 
         // Update the start points for the next drag event
         dragStartX = dragEndX
