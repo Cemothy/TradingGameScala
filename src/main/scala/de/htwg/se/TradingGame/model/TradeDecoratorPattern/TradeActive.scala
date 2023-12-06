@@ -7,7 +7,7 @@ class TradeActive(
   var _currentProfit: Double
 ) extends TradeDecorator(trade) {
   def currentProfit: Double = _currentProfit
-
+  
   def setcurrentProfitto(value: Double): Unit = {
     _currentProfit = value
   }

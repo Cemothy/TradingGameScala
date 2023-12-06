@@ -8,6 +8,7 @@ class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade)
   val dateTradeTriggered: String = dateWhenTradeTriggered(trade)
   val tradeWinOrLose: String = didTradeWinnorLoose(trade)
   val dateTradeDone: String = datewhenTradeisdone(trade)
+  var currentprofit: Double = 0.0
 
   val creator: ProfitCalculationStrategyCreator = tradeWinOrLose match {
     case "Trade hit take profit" => new TakeProfitCalculationStrategyCreator()
@@ -17,7 +18,7 @@ class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade)
 }
 
   val strategy: ProfitCalculationStrategy = creator.createProfitCalculationStrategy(trade)
-  val profit: Double = strategy.calculateProfit(trade)
 
-  val endProfit: Double = profit
+
+  val endProfit: Double = strategy.calculateProfit(trade)
 }

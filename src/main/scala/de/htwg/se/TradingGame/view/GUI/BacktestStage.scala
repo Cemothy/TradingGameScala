@@ -1,10 +1,22 @@
 package de.htwg.se.TradingGame.view.GUI
 
 import de.htwg.se.TradingGame.controller.Controller
+import de.htwg.se.TradingGame.model.GetMarketData
+import de.htwg.se.TradingGame.model.GetMarketData._
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
+import javafx.event.ActionEvent
+import javafx.event.EventHandler
+import javafx.scene.shape.Line
 import scalafx.Includes._
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
+import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Orientation
 import scalafx.scene.Scene
@@ -20,6 +32,8 @@ import scalafx.scene.control.Label
 import scalafx.scene.control.Spinner
 import scalafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory
 import scalafx.scene.control.SplitPane
+import scalafx.scene.control.TableColumn
+import scalafx.scene.control.TableColumn.CellDataFeatures
 import scalafx.scene.control.TableView
 import scalafx.scene.control.TextField
 import scalafx.scene.input.KeyCode.B
@@ -41,9 +55,86 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-
+    val chartpane = new LinechartPane()
     val crosshairPane = new Pane()
+     val dateInput = new DatePicker()
+    val dateLabel = new Label("Date: ")
+    val dateBox = new HBox(dateLabel, dateInput)
+    val hourSpinner = new Spinner[Int](0, 23, 0)
+    val minuteSpinner = new Spinner[Int](0, 59, 0)
     def createStage(): PrimaryStage = {
+        val entryCollum = new TableColumn[TradeDoneCalculations, Double] {
+            text = "Entry Price"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
+                ObjectProperty(features.value.entryTrade)
+                }
+            }
+        val stoplossCollum = new TableColumn[TradeDoneCalculations, Double] {
+            text = "Stop Loss"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
+                ObjectProperty(features.value.stopLossTrade)
+                }
+            }
+        val takeprofitCollum = new TableColumn[TradeDoneCalculations, Double] {
+            text = "Take Profit"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
+                ObjectProperty(features.value.takeProfitTrade)
+                }
+            }
+        val riskCollum = new TableColumn[TradeDoneCalculations, Double] {
+            text = "Risk"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
+                ObjectProperty(features.value.risk)
+                }
+            }
+        val dateCollum = new TableColumn[TradeDoneCalculations, String] {
+            text = "Date"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, String]) => 
+                ObjectProperty(features.value.datestart)
+                }
+            }
+        val tickerCollum = new TableColumn[TradeDoneCalculations, String] {
+            text = "Ticker"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, String]) => 
+                ObjectProperty(features.value.ticker)
+                }
+            }
+        val volumeCollum = new TableColumn[TradeDoneCalculations, Double] {
+            text = "Volume"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
+                ObjectProperty(new TradeWithVolume(features.value, controller.balance).volume)
+            }
+        }
+        val tradebuysell = new TableColumn[TradeDoneCalculations, String] {
+            text = "Type"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, String]) => 
+                ObjectProperty(new TradeisBuy(features.value).isTradeBuy)
+            }
+        }
+
+
+        val currentProfit = new TableColumn[TradeDoneCalculations, Double] {
+            text = "currentProfit"
+            cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
+                ObjectProperty(features.value.currentprofit)
+            }
+            }
+         
+        def updatecurrentProfit(trade: TradeDoneCalculations): Unit = {
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+            val formattedDate = dateInput.getValue.format(formatter)
+            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, chartpane.lastPrice , s"$formattedDate,${String.format("%02d",hourSpinner.getValue)}:${String.format("%02d",minuteSpinner.getValue)}")
+        }
+
+        val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
+        tradesBuffer ++= GetMarketData.donetrades
+
+
+
+        val table = new TableView[TradeDoneCalculations](tradesBuffer) {
+        columns ++= List(dateCollum, tradebuysell, volumeCollum, riskCollum, tickerCollum, entryCollum, stoplossCollum, takeprofitCollum, currentProfit)
+        }
+
         val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1day", "1week")
         val timeframeComboBox = new ComboBox[String](timeframeOptions)
         timeframeComboBox.value = "1m"
@@ -54,40 +145,26 @@ class BacktestStage(controller: Controller){
         val Button2 = new Button("Button2")
         val topButtons = new HBox(endButton, tickerComboBox,timeframeComboBox, Button1, Button2)
 
-        val dateInput = new DatePicker()
-        val dateLabel = new Label("Date: ")
-        val dateBox = new HBox(dateLabel, dateInput)
-        val hourSpinner = new Spinner[Int](0, 23, 0)
-        val minuteSpinner = new Spinner[Int](0, 59, 0)
+       
 
         val hourLabel = new Label("Hour: ")
         val minuteLabel = new Label("Minute: ")
 
         val hourBox = new HBox(hourLabel, hourSpinner)
         val minuteBox = new HBox(minuteLabel, minuteSpinner)
-
-        val leftButtons = new VBox(
-            new Button("Button 1"),
-            new Button("Button 2"),
-            new Button("Button 3")
-        )
-
-        val rightButtons = new VBox(
-            new Button("Button 1"),
-            new Button("Button 2"),
-            new Button("Button 3")
-        )
+        
 
 
  
-        val chartpane = new LinechartPane()
+
         chartpane.initializeLineChart(tickerComboBox.value.value)
         VBox.setVgrow(chartpane, Priority.Always)
 
         
         val chartWithCrosshair = new ChartDragHandler(chartpane, crosshairPane)
         val applyDateButton = new Button("Apply Date")
-
+        var summprofit = 0.0
+        val profitLabel = new Label(s"Profit: $summprofit       ")
         applyDateButton.setOnAction(_ => {
             val selectedDate = dateInput.getValue // Get the selected date from the date picker
             val selectedHour = hourSpinner.getValue // Get the selected hour from the spinner
@@ -100,6 +177,16 @@ class BacktestStage(controller: Controller){
             val browseinput = s"${tickerComboBox.value.value} ${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
             controller.computeInput(browseinput)
             controller.printDesctriptor()
+            tradesBuffer.clear()
+               tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+                updatecurrentProfit(trade)
+                trade
+            })
+            // Update summprofit
+            summprofit = tradesBuffer.map(_.currentprofit).sum
+            profitLabel.text = s"Profit: $summprofit"
+
+            table.refresh()
         })
         val entry = new TextField()
         val stoploss = new TextField()
@@ -110,9 +197,30 @@ class BacktestStage(controller: Controller){
             val investinput = s"${entry.text.value} ${stoploss.text.value} ${takeprofit.text.value} ${risk.text.value}"
             controller.computeInput(investinput)
             controller.printDesctriptor()
+
+            tradesBuffer.clear()
+            tradesBuffer ++= GetMarketData.donetrades
+           
+            table.refresh()
+
         })
 
+        val tradeBoxButton = new Button("Trade Box")
+        tradeBoxButton.onAction = () => {
+            // Call createLongPositionBox with appropriate parameters
+            chartpane.createLongPositionBox(entry.text.value.toDouble, stoploss.text.value.toDouble, takeprofit.text.value.toDouble)
+        }
+        val leftButtons = new VBox(
+            tradeBoxButton,
+            new Button("Button 2"),
+            new Button("Button 3")
+        )
 
+        val rightButtons = new VBox(
+            new Button("Button 1"),
+            new Button("Button 2"),
+            new Button("Button 3")
+        )
 
         val inputBox = new VBox(
             dateBox,
@@ -129,9 +237,10 @@ class BacktestStage(controller: Controller){
             risk,
             enterTradeButton
         )
+        
 
-        val balanceLabel = new Label(s"Balance: ")
-        val profitLabel = new Label("Profit: $0       ")
+        val balanceLabel = new Label(s"Balance: ${controller.balance}")
+        
         val spacer = new Region()
         HBox.setHgrow(spacer, Priority.Always)
         val balanceProfitBox = new HBox(balanceLabel, spacer, profitLabel)
@@ -141,7 +250,7 @@ class BacktestStage(controller: Controller){
         splitPane2.items.addAll(chartWithCrosshair, inputBox)
         SplitPane.setResizableWithParent(inputBox, false)
 
-        val table = new TableView[String]()
+        
         val tablewithlabel = new VBox(balanceProfitBox, table)
         val splitPane1 = new SplitPane()
         splitPane1.orientation = Orientation.Vertical

@@ -286,7 +286,34 @@ def didTradeWinnorLoose(trade: TradeComponent): String = {
   result
 
 }
-  val trades: ArrayBuffer[Trade] = ArrayBuffer.empty[Trade]
+
+def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, currentPrice: Double, currentDate: String): Unit= {
+  trade.currentprofit = 0.0
+  val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+  val parsedCurrentDate = LocalDateTime.parse(currentDate, formatter)
+  val parsedDateTradeTriggered = LocalDateTime.parse(trade.dateTradeTriggered, formatter)
+  val parsedDateTradeDone = LocalDateTime.parse(trade.dateTradeDone, formatter)
+
+  
+  if(parsedCurrentDate.isAfter(parsedDateTradeTriggered)) {
+    if(parsedCurrentDate.isBefore(parsedDateTradeDone)) {
+      trade.currentprofit = BigDecimal((currentPrice - trade.entryTrade) * volume).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    } else {
+      if(trade.tradeWinOrLose == "Trade hit take profit") {
+        trade.currentprofit = BigDecimal(scala.math.abs((trade.takeProfitTrade - trade.entryTrade) * volume)).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+      }else if(trade.tradeWinOrLose == "Trade hit stop loss"){
+        trade.currentprofit = BigDecimal(scala.math.abs((trade.stopLossTrade - trade.entryTrade) * volume) * -1).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+      } else {
+        trade.currentprofit = 0.0
+      }
+    }
+  }
+}
+
+
+
+  val trades: ArrayBuffer[TradeComponent] = ArrayBuffer.empty[TradeComponent]
+  val donetrades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
   var balance: Double = 0.0
 def closeProgram: String = {
 
@@ -297,8 +324,7 @@ def closeProgram: String = {
 
 def doneTradeStringwithProfit: String = {
   var output = ""
-  for (currentTrade <- trades) {
-    val trade = new TradeDoneCalculations(currentTrade)
+  for (trade <- donetrades) {
     output += "__________________________________________________________\n"
     output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
     output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "
