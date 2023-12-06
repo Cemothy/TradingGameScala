@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class ChartDataLoader {
+  var lastPrice = 0.0
   def loadDataAndUpdateChart(lineChart: LineChart[Number, Number], xAxis: NumberAxis, yAxis: NumberAxis, ticker: String, datapoints: Int, timeframe: String, selectedDate: LocalDateTime): Unit = {
     val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
     val file = new java.io.File(Path).getParent + s"/Symbols/${ticker}.csv"
@@ -42,7 +43,8 @@ class ChartDataLoader {
       val range = maxValue - minValue
       yAxis.setLowerBound(minValue - range * 0.1) // Set lower bound to 10% below the minimum value
       yAxis.setUpperBound(maxValue + range * 0.1) // Set upper bound to 10% above the maximum value
-      yAxis.setTickUnit(range * 1.2) // Set tick unit to 20% of the range
+      yAxis.setTickUnit(range * 1.2) // Set tick unit to 20% of the rangeffeatures
+      lastPrice = data.takeRight(visibleDataPoints).last._2
     }
   }
 }

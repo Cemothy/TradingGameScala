@@ -17,6 +17,7 @@ class SetCommand(input: String, controller: Controller) extends Command {
 
   override def undoStep: Unit = 
     GetMarketData.trades.trimEnd(1)
+    GetMarketData.donetrades.trimEnd(1)
     controller.interpreter = new BrowseInterpreter(interpreter.balance)
 
   override def redoStep: Unit = 
