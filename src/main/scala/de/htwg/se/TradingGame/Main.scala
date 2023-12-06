@@ -9,10 +9,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.StdIn
 
 object MainClass extends JFXApp3 {
-
-
- 
-
   val controller = new Controller()
   val tui = new TUI(controller)
   val gui = new GUI(controller)
