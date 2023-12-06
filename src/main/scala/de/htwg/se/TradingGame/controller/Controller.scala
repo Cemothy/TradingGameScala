@@ -7,6 +7,7 @@ import de.htwg.se.TradingGame.util.UndoManager
 class Controller() extends Observable{
  var interpreter: Interpreter = new MenuInterpreter
  var output:String = ""
+ var balance:Double = 0.0
  private val undoManager = new UndoManager
 
   def computeInput(input:String):Unit =
@@ -16,6 +17,9 @@ class Controller() extends Observable{
       case _ => doStep(input)
     
   def doStep(input:String):Unit =
+    if(interpreter.isInstanceOf[MenuInterpreter]){
+      balance = input.toDouble
+    }
     undoManager.doStep(new SetCommand(input, this))
     notifyObservers
 
