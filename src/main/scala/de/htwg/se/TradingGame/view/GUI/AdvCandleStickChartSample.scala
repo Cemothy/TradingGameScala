@@ -36,7 +36,7 @@ import scala.language.postfixOps
 
 
 object AdvCandleStickChartSample extends JFXApp3 {
- case class CandleStick(day: Int, open: Double, close: Double, high: Double, low: Double, average: Double)
+ case class CandleStick(day: Double, open: Double, close: Double, high: Double, low: Double)
   
     override def start(): Unit = {
         stage = new JFXApp3.PrimaryStage {
@@ -44,39 +44,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
             scene = new Scene {
             root = {
             
-                val data = Array[CandleStick](
-                CandleStick(1, 25, 20, 32, 16, 20),
-                CandleStick(2, 26, 30, 33, 22, 25),
-                CandleStick(3, 30, 38, 40, 20, 32),
-                CandleStick(4, 24, 30, 34, 22, 30),
-                CandleStick(5, 26, 36, 40, 24, 32),
-                CandleStick(6, 28, 38, 45, 25, 34),
-                CandleStick(7, 36, 30, 44, 28, 39),
-                CandleStick(8, 30, 18, 36, 16, 31),
-                CandleStick(9, 40, 50, 52, 36, 41),
-                CandleStick(10, 30, 34, 38, 28, 36),
-                CandleStick(11, 24, 12, 30, 8, 32.4),
-                CandleStick(12, 28, 40, 46, 25, 31.6),
-                CandleStick(13, 28, 18, 36, 14, 32.6),
-                CandleStick(14, 38, 30, 40, 26, 30.6),
-                CandleStick(15, 28, 33, 40, 28, 30.6),
-                CandleStick(16, 25, 10, 32, 6, 30.1),
-                CandleStick(17, 26, 30, 42, 18, 27.3),
-                CandleStick(18, 20, 18, 30, 10, 21.9),
-                CandleStick(19, 20, 10, 30, 5, 21.9),
-                CandleStick(20, 26, 16, 32, 10, 17.9),
-                CandleStick(21, 38, 40, 44, 32, 18.9),
-                CandleStick(22, 26, 40, 41, 12, 18.9),
-                CandleStick(23, 30, 18, 34, 10, 18.9),
-                CandleStick(24, 12, 23, 26, 12, 18.2),
-                CandleStick(25, 30, 40, 45, 16, 18.9),
-                CandleStick(26, 25, 35, 38, 20, 21.4),
-                CandleStick(27, 24, 12, 30, 8, 19.6),
-                CandleStick(28, 23, 44, 46, 15, 22.2),
-                CandleStick(29, 28, 18, 30, 12, 23),
-                CandleStick(30, 28, 18, 30, 12, 23.2),
-                CandleStick(31, 28, 18, 30, 12, 22)
-                )
+                val data = AllTickerArrays.candleSticks
             
                 createChart(data)
             
@@ -90,11 +58,22 @@ object AdvCandleStickChartSample extends JFXApp3 {
     val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")
     if (cssURL != null) {
         val css = cssURL.toExternalForm
-        val xAxis = new NumberAxis("Day", 0, 32, 1) {
-        minorTickCount = 0
+
+        val minDatay = candleData.minBy(_.low).low
+        val maxDatay = candleData.maxBy(_.high).high
+
+        val firstCandle = candleData.head.day
+        val minDatax = (candleData.minBy(_.day).day)
+        val maxDatax = (candleData.maxBy(_.day).day)
+
+
+        val xAxis = new NumberAxis(minDatax, maxDatax,2) {
         }
-        val yAxis = NumberAxis("Price")
-    
+
+        val yAxis = new NumberAxis(minDatay, maxDatay, 0.0001) {
+
+        }
+        
         val seriesData = candleData.map { d => 
             val data = XYChart.Data[Number, Number](d.day, d.open, d)
             XYChart.Series[Number, Number](ObservableBuffer(data))
@@ -174,15 +153,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
                 case _ =>
                 }
 
-                seriesPath.foreach {
-                p =>
-                    val yAverage = yAxis.displayPosition(dayValues.average)
-                    if (p.elements.isEmpty) {
-                    p.elements += MoveTo(x, yAverage)
-                    } else {
-                    p.elements += LineTo(x, yAverage)
-                    }
-                }
+                
             case _ =>
             }
         }

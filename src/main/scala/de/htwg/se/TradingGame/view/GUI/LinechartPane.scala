@@ -13,8 +13,9 @@ import scalafx.scene.layout.Pane
 import scalafx.scene.layout.Priority
 import scalafx.scene.layout.StackPane
 import scalafx.scene.layout.VBox
-import scalafx.scene.shape.{Rectangle, Line}
 import scalafx.scene.paint.Color
+import scalafx.scene.shape.Line
+import scalafx.scene.shape.Rectangle
 
 class LinechartPane extends StackPane {
   val xAxis: NumberAxis = new NumberAxis()
@@ -50,7 +51,7 @@ class LinechartPane extends StackPane {
       stroke = Color.Green
     }
 
-  children.addAll(box, profitLine)
+    children.addAll(box, profitLine)
 }
   def updateDate(selectedDate: java.time.LocalDateTime): Unit = {
   val updatedDate = selectedDate
