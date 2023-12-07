@@ -55,7 +55,7 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-    val chartpane = new LinechartPane()
+    val chartpane = new CandleStickPane()
     val crosshairPane = new Pane()
      val dateInput = new DatePicker()
     val dateLabel = new Label("Date: ")
@@ -208,7 +208,7 @@ class BacktestStage(controller: Controller){
         val tradeBoxButton = new Button("Trade Box")
         tradeBoxButton.onAction = () => {
             // Call createLongPositionBox with appropriate parameters
-            chartpane.createLongPositionBox(entry.text.value.toDouble, stoploss.text.value.toDouble, takeprofit.text.value.toDouble)
+            
         }
         val leftButtons = new VBox(
             tradeBoxButton,

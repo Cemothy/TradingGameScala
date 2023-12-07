@@ -13,7 +13,7 @@ class TickerSelection {
     val tickerDropdown = new ComboBox[String](tickerOptions)
     tickerDropdown.promptText = "Select Ticker"
     if (tickerOptions.nonEmpty) {
-      tickerDropdown.value = tickerOptions.head
+      tickerDropdown.value = tickerOptions.last
     }
     
     tickerDropdown

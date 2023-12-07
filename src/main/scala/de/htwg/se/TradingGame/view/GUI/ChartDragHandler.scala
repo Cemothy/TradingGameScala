@@ -1,21 +1,22 @@
 package de.htwg.se.TradingGame.view.GUI
 
 import scalafx.Includes._
+import scalafx.scene.control.Label
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.Pane
 import scalafx.scene.layout.StackPane
-import scalafx.scene.control.Label
 import scalafx.scene.paint.Color
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.time.LocalDateTime
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.Duration
-import java.time.format.DateTimeFormatter
 
-class ChartDragHandler(chartpane: LinechartPane, crosshairPane: Pane) extends StackPane {
+import java.text.SimpleDateFormat
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Date
+
+class ChartDragHandler(chartpane: CandleStickPane, crosshairPane: Pane) extends StackPane {
     var dragStartX: Double = 0
     var dragStartY: Double = 0
     val crosshair = new Crosshair(crosshairPane) // Pass the crosshairPane instead of chartpane
@@ -114,7 +115,7 @@ class ChartDragHandler(chartpane: LinechartPane, crosshairPane: Pane) extends St
 
     }
 
-    crosshairPane.onMouseDragged = (me: MouseEvent) => {
+    chartpane.onMouseDragged = (me: MouseEvent) => {
         val dragEndX = me.getX
         val dragEndY = me.getY
 

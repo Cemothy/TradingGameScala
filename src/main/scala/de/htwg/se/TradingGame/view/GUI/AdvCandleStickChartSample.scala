@@ -53,7 +53,9 @@ object AdvCandleStickChartSample extends JFXApp3 {
         }
     }
  
-  protected def createChart(candleData: Array[CandleStick]): CandleStickChart = {
+ import scala.collection.mutable.ListBuffer
+
+    def createChart(candleData: ListBuffer[CandleStick]): CandleStickChart = {
     //Style Sheet loaded from external
     val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")
     if (cssURL != null) {
@@ -66,29 +68,26 @@ object AdvCandleStickChartSample extends JFXApp3 {
         val minDatax = (candleData.minBy(_.day).day)
         val maxDatax = (candleData.maxBy(_.day).day)
 
-
         val xAxis = new NumberAxis(minDatax, maxDatax,2) {
         }
 
         val yAxis = new NumberAxis(minDatay, maxDatay, 0.0001) {
-
         }
-        
+
         val seriesData = candleData.map { d => 
-            val data = XYChart.Data[Number, Number](d.day, d.open, d)
-            XYChart.Series[Number, Number](ObservableBuffer(data))
+        val data = XYChart.Data[Number, Number](d.day, d.open, d)
+        XYChart.Series[Number, Number](ObservableBuffer(data))
         }
 
         new CandleStickChart(xAxis, yAxis) {
-            title = "Custom Candle Stick Chart"
-            data = ObservableBuffer(seriesData: _*)
-            getStylesheets += css
+        data = ObservableBuffer(seriesData.toSeq: _*)
+        getStylesheets += css
         }
     } else {
         println("Resource not found: AdvCandleStickChartSample.css")
         null
     }
-  }
+    }
 
 
 
