@@ -19,7 +19,15 @@ class BrowseInterpreter(balance: String) extends Interpreter {
 
 
 
-    def doTickersymbol(input: String): (String, InvestInterpreter) = (showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)), new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance))
+    def doTickersymbol(input: String): (String, InvestInterpreter) = {
+        val price = getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)
+        val companyInfo = price match {
+            case Some(x) => showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, x)
+            case None => showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, 0.0)
+        }
+        val interpreter = new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance)
+        (companyInfo, interpreter)
+    }
 
     def doWrongInput(input: String): (String, BrowseInterpreter) = ("Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n", this)
 

@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import java.io.File
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
+import scala.util.Try
 
 object GetMarketData {
 
@@ -82,42 +83,28 @@ def getFirsDateofFile (dataFilePath: String): String = {
   firstDate.split(",")(0) + "," + firstDate.split(",")(1)
 
 }
-def getPriceForDateTimeDouble(dateTime: String, dataFilePath: String, ohlc: Integer): Double = {
-  val priceString = getPriceForDateTimeString(dateTime, dataFilePath, ohlc)
-
-  if(priceString.equals("date is after last date of file") || priceString.equals("date is before first date of file")){
-    0.0
-  } else { 
-    priceString.toDouble
+def getPriceForDateTimeDouble(dateTime: String, dataFilePath: String, ohlc: Integer): Option[Double] = {
+  getPriceForDateTimeString(dateTime, dataFilePath, ohlc).flatMap { priceString =>
+    Try(priceString.toDouble).toOption
   }
 }
 
-def getPriceForDateTimeString(dateTime: String, dataFilePath: String, ohlc: Integer): String = {
-  var price: String = "0.0"
-  val source = Source.fromFile(dataFilePath)
-
-  if(!isDateAfterLastDateinFile(dateTime, dataFilePath) && !isDateBeforefirstDateinFile(dateTime, dataFilePath)){
-    price = source.getLines()
+def getPriceForDateTimeString(dateTime: String, dataFilePath: String, ohlc: Integer): Option[String] = {
+  val source = scala.io.Source.fromFile(dataFilePath)
+  try {
+    Some(source.getLines()
       .collect {
         case line if line.startsWith(dateTime) || LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateTime, formatter)) => line.split(",")(ohlc) // Fetching the price
       }
       .toList
       .headOption
-      .getOrElse("0.0") // If no matching line found, return 0.0
-      source.close()
-    }
-      if(price.equals("0.0")){
-        if(isDateAfterLastDateinFile(dateTime, dataFilePath)){
-          price = "date is after last date of file"
-        } else if(isDateBeforefirstDateinFile(dateTime, dataFilePath)){
-          price = "date is before first date of file"
-        }
-        } else {
-        price
-      }
-      
-      price
-      }
+      .getOrElse("0.0")) // If no matching line found, return 0.0
+  } catch {
+    case _: Exception => None
+  } finally {
+    source.close()
+  }
+}
 
 def isDateBeforefirstDateinFile(dateTime: String, dataFilePath: String): Boolean = {
   var dateBeforeFirstDate: Boolean = false
