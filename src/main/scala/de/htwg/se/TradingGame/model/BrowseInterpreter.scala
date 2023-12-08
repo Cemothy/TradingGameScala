@@ -6,6 +6,9 @@ import de.htwg.se.TradingGame.model.TradingMethods._
 import de.htwg.se.TradingGame.model.GetMarketData._
 import java.time.LocalDate
 import java.io.File
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
@@ -20,11 +23,18 @@ class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
 
 
-    def doTickersymbol(input: String): (String, InvestInterpreter) = {
-        val price = getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)
-        val companyInfo = showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, price)
-        val interpreter = new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance)
-        (companyInfo, interpreter)
+    def doTickersymbol(input: String): (String, Interpreter) = {
+        val result = Try {
+            val price = getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)
+            val companyInfo = showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, price)
+            val interpreter = new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance)
+            (companyInfo, interpreter)
+        }
+
+        result match {
+            case Success(value) => value
+            case Failure(exception) => ("Date is not in file", this)
+        }
     }
 
     def doWrongInput(input: String): (String, BrowseInterpreter) = ("Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n", this)

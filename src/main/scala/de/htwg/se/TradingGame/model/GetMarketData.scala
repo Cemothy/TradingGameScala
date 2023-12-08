@@ -85,10 +85,7 @@ def getFirsDateofFile (dataFilePath: String): String = {
 }
 def getPriceForDateTimeDouble(dateTime: String, dataFilePath: String, ohlc: Integer): Double = {
   val price = getPriceForDateTimeString(dateTime, dataFilePath, ohlc)
-  val companyInfo = price match {
-            case Some(x) => x.toDouble
-            case None => 0.0
-        }
+  val companyInfo = price.getOrElse(throw new Exception("Price not available")).toDouble
   companyInfo
 }
 
