@@ -9,6 +9,7 @@ import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.createChart
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
@@ -38,12 +39,14 @@ import scalafx.scene.control.TableView
 import scalafx.scene.control.TextField
 import scalafx.scene.input.KeyCode.B
 import scalafx.scene.input.MouseEvent
+import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.HBox
 import scalafx.scene.layout.Pane
 import scalafx.scene.layout.Priority
 import scalafx.scene.layout.Region
 import scalafx.scene.layout.StackPane
 import scalafx.scene.layout.VBox
+import scalafx.scene.paint.Color
 
 import java.time.format.DateTimeFormatter
 
@@ -55,8 +58,90 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-    val chartpane = new CandleStickPane()
+   val data = AllTickerArrays.candleSticks
+    val chart = createChart(data)
+    val chartPane = new DraggableCandleStickChart(chart)
+    var dragStartX: Double = 0
+    var dragStartY: Double = 0
     val crosshairPane = new Pane()
+    val crosshair = new Crosshair(crosshairPane) // Pass the crosshairPane instead of chartPane
+    crosshair.createCrosshair()
+    val dateLabelcross = new Label {
+    textFill = Color.Black
+    style = "-fx-background-color: white; -fx-padding: 5;"
+
+    }
+
+    val priceLabelcross = new Label {
+        textFill = Color.Black
+        style = "-fx-background-color: white; -fx-padding: 5;"
+    }
+    val chartWithCrosshair = new StackPane()
+    chartWithCrosshair.children.addAll(chartPane, crosshairPane)
+    val datepane = new Pane()
+    val pricepane = new Pane()
+    datepane.mouseTransparent = true
+    pricepane.mouseTransparent = true
+    datepane.children.add(dateLabelcross)
+    pricepane.children.add(priceLabelcross)
+    chartWithCrosshair.children.addAll(datepane, pricepane)
+    dateLabelcross.mouseTransparent = true
+    priceLabelcross.mouseTransparent = true
+
+
+
+
+    crosshairPane.onMouseExited = (me: MouseEvent) => {
+        crosshairPane.setVisible(false)
+    }
+
+    chartWithCrosshair.onMouseEntered = (me: MouseEvent) => {
+        crosshairPane.setVisible(true)
+    }
+
+    def calculateDate(x: Double): String = {
+    // Your logic to calculate the date based on the x-coordinate goes here.
+    // This is just a placeholder implementation.
+    "Some Date"
+    }
+    
+    chartWithCrosshair.onMouseClicked = (me: MouseEvent) => {
+        chartPane.plotHorizontalLine(me)
+    }
+
+
+    chartWithCrosshair.onMouseMoved = (me: MouseEvent) => {
+        crosshair.updateCrosshair(me)
+        val date = calculateDate(me.getX)
+        val price = chartPane.calculateYPrice(me)
+
+        // Update the labels
+        dateLabelcross.text = date
+        priceLabelcross.text = price
+
+        // Position the labels
+        dateLabelcross.layoutX = me.getX
+        dateLabelcross.layoutY = chartPane.height.value - dateLabelcross.height.value
+        priceLabelcross.layoutX = 0
+        priceLabelcross.layoutY = me.getY
+    }
+    chartWithCrosshair.onMousePressed = (me: MouseEvent) => {
+        chartPane.updateOnMousePress(me)
+    }
+
+    chartWithCrosshair.onMouseDragged = (me: MouseEvent) => {
+        chartPane.updateOnDrag(me)
+        crosshair.updateCrosshair(me)
+    }
+
+    chartWithCrosshair.onMouseReleased = (me: MouseEvent) => {
+        chartPane.updateOnMouseRelease()
+    }
+
+    chartWithCrosshair.onScroll = (me: ScrollEvent) => {
+        chartPane.updateOnScroll(me)
+    }
+
      val dateInput = new DatePicker()
     val dateLabel = new Label("Date: ")
     val dateBox = new HBox(dateLabel, dateInput)
@@ -123,7 +208,7 @@ class BacktestStage(controller: Controller){
         def updatecurrentProfit(trade: TradeDoneCalculations): Unit = {
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formattedDate = dateInput.getValue.format(formatter)
-            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, chartpane.lastPrice , s"$formattedDate,${String.format("%02d",hourSpinner.getValue)}:${String.format("%02d",minuteSpinner.getValue)}")
+            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, 1.1 , s"$formattedDate,${String.format("%02d",hourSpinner.getValue)}:${String.format("%02d",minuteSpinner.getValue)}")
         }
 
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
@@ -157,11 +242,11 @@ class BacktestStage(controller: Controller){
 
  
 
-        chartpane.initializeLineChart(tickerComboBox.value.value)
-        VBox.setVgrow(chartpane, Priority.Always)
+        
+        VBox.setVgrow(chartPane, Priority.Always)
 
         
-        val chartWithCrosshair = new ChartDragHandler(chartpane, crosshairPane)
+
         val applyDateButton = new Button("Apply Date")
         var summprofit = 0.0
         val profitLabel = new Label(s"Profit: $summprofit       ")
@@ -170,7 +255,7 @@ class BacktestStage(controller: Controller){
             val selectedHour = hourSpinner.getValue // Get the selected hour from the spinner
             val selectedMinute = minuteSpinner.getValue // Get the selected minute from the spinner
             val dateTime = selectedDate.atTime(selectedHour, selectedMinute) // Combine the date and time into a LocalDateTime object
-            chartpane.updateDate(dateTime)
+
 
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formattedDate = selectedDate.format(formatter)
@@ -277,13 +362,13 @@ class BacktestStage(controller: Controller){
             controller.printDesctriptor()
         })
         tickerComboBox.value.onChange { (_, _, newTicker) =>
-            chartpane.initializeLineChart(newTicker)
+
             }
 
         timeframeComboBox.onAction = () => {
             val selectedTimeframe = timeframeComboBox.value.value
             // Update the line chart with the selected timeframe
-            chartpane.updateTimeframe(selectedTimeframe)
+
             }
 
         stage

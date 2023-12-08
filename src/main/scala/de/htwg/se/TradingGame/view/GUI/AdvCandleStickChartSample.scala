@@ -18,11 +18,17 @@ import scalafx.scene.Node
 import scalafx.scene.Scene
 import scalafx.scene.chart.Axis
 import scalafx.scene.chart.NumberAxis
+import scalafx.scene.chart.ValueAxis
 import scalafx.scene.chart.XYChart
 import scalafx.scene.control.Label
 import scalafx.scene.control.Tooltip
+import scalafx.scene.input.MouseEvent
+import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.GridPane
+import scalafx.scene.layout.Pane
 import scalafx.scene.layout.Region
+import scalafx.scene.layout.StackPane
+import scalafx.scene.paint.Color
 import scalafx.scene.shape.Line
 import scalafx.scene.shape.LineTo
 import scalafx.scene.shape.MoveTo
@@ -32,28 +38,249 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
+class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
+    private var currentSelectedTimeframe: String = "1m"
+    private var selectedTicker: String = "EURUSD"
+    private val chartDataLoader: ChartDataLoader = new ChartDataLoader()
+    var lastPrice = chartDataLoader.lastPrice
+    var selectedDate: java.time.LocalDateTime = java.time.LocalDateTime.now()
+    var lines: mutable.ListBuffer[Line] = mutable.ListBuffer()
+    children.add(candleStickChart)
+        
+    var dragStartX: Double = 0
+    var dragStartY: Double = 0
 
+    def calculateYPrice(me: MouseEvent): String = {
+        // Get the height of the chart pane
+        val chartHeight = candleStickChart.height.value
+
+        // Calculate the ratio of the y position to the chart height
+        val ratio = me.getY / chartHeight
+
+        val yAxis = candleStickChart.yAxis.delegate
+
+        val getLowerBoundMethody = yAxis.getClass.getMethod("getLowerBound")
+        val yAxisLowerBound = getLowerBoundMethody.invoke(yAxis).asInstanceOf[Double]
+
+        val getUpperBoundMethody = yAxis.getClass.getMethod("getUpperBound")
+        val yAxisUpperBound = getUpperBoundMethody.invoke(yAxis).asInstanceOf[Double]
+        // Get the range of your prices
+        val priceRange = yAxisUpperBound - yAxisLowerBound
+
+        // Calculate the price corresponding to the y position
+        val price = (1 - ratio) * priceRange + yAxisLowerBound
+
+        // Format the price as a string
+        f"$price%.5f"
+    }
+
+
+    def plotHorizontalLine(me: MouseEvent): Unit = {
+        // Get the y-coordinate from the mouse event
+        val y = me.getY - 15
+
+        // Get the width of the chart
+        val chartWidth = candleStickChart.width.value
+
+        // Create a new Line object
+        val line = new Line(){
+            startX = 0
+            endX = chartWidth * 4
+            startY = y
+            endY = y
+        }
+        lines += line
+        candleStickChart.addCustomNode(line)
+
+        // Set the stroke color and width of the line
+        line.setStroke(Color.BLACK)
+        line.setStrokeWidth(2)
+    }
+
+
+    
+
+
+    def updateOnMousePress(me: MouseEvent): Unit ={
+        dragStartX = me.getX
+        dragStartY = me.getY
+    }
+
+    def updateAllLines(pointY: Double, startY: Double): Unit = {
+        for (line <- lines) {
+            line.setStartY(pointY + (line.getStartY - startY))
+            line.setEndY(pointY + (line.getEndY - startY))
+        }
+    }
+    def updateOnDrag(me: MouseEvent): Unit ={
+        val dragEndX = me.getX
+        val dragEndY = me.getY
+
+        // Calculate the difference between the start and end points
+        val diffX = dragEndX - dragStartX
+        val diffY = dragEndY - dragStartY
+
+        if (dragEndX < 50) {
+            val zoomFactor = 0.01 // Adjust this value to control the zoom speed
+            val dragY = dragEndY - dragStartY
+            val yAxis = candleStickChart.yAxis.delegate
+
+            val getLowerBoundMethody = yAxis.getClass.getMethod("getLowerBound")
+            val yAxisLowerBound = getLowerBoundMethody.invoke(yAxis).asInstanceOf[Double]
+
+            val getUpperBoundMethody = yAxis.getClass.getMethod("getUpperBound")
+            val yAxisUpperBound = getUpperBoundMethody.invoke(yAxis).asInstanceOf[Double]
+
+            val range = yAxisUpperBound - yAxisLowerBound
+            val zoomStep = range * zoomFactor
+
+            if (dragY < 0) {
+                // Dragging up, show lower numbers
+                val newLowerBound = yAxisLowerBound + zoomStep
+                val newUpperBound = yAxisUpperBound - zoomStep
+
+                val setLowerBoundMethodY = yAxis.getClass.getMethod("setLowerBound", classOf[Double])
+                setLowerBoundMethodY.invoke(yAxis, newLowerBound.asInstanceOf[AnyRef])
+
+                val setUpperBoundMethodY = yAxis.getClass.getMethod("setUpperBound", classOf[Double])
+                setUpperBoundMethodY.invoke(yAxis, newUpperBound.asInstanceOf[AnyRef])
+            } else {
+                // Dragging down, show higher numbers
+                val newLowerBound = yAxisLowerBound - zoomStep
+                val newUpperBound = yAxisUpperBound + zoomStep
+
+                val setLowerBoundMethodY = yAxis.getClass.getMethod("setLowerBound", classOf[Double])
+                setLowerBoundMethodY.invoke(yAxis, newLowerBound.asInstanceOf[AnyRef])
+
+                val setUpperBoundMethodY = yAxis.getClass.getMethod("setUpperBound", classOf[Double])
+                setUpperBoundMethodY.invoke(yAxis, newUpperBound.asInstanceOf[AnyRef])
+            }
+        } else {
+            val yAxis = candleStickChart.yAxis.delegate
+            val getLowerBoundMethody = yAxis.getClass.getMethod("getLowerBound")
+            val yAxisLowerBound = getLowerBoundMethody.invoke(yAxis).asInstanceOf[Double]
+
+            val getUpperBoundMethody = yAxis.getClass.getMethod("getUpperBound")
+            val yAxisUpperBound = getUpperBoundMethody.invoke(yAxis).asInstanceOf[Double]
+            // Calculate the pixel-to-y-axis-unit ratio
+            val yAxisHeight = candleStickChart.yAxis.delegate.getHeight
+            val yAxisRange = yAxisUpperBound - yAxisLowerBound
+            val pixelToYAxisUnitRatio = yAxisRange / yAxisHeight
+
+            // Calculate the y-difference in pixels
+            val yDiffPixels = dragEndY - dragStartY
+
+            // Convert the y-difference in pixels to the y-difference in y-axis units
+            val yDiff = yDiffPixels * pixelToYAxisUnitRatio
+
+            // Adjust the bounds for the Y-axis
+        
+
+            
+            val xAxis = candleStickChart.xAxis.delegate
+            val setLowerBoundMethodY = yAxis.getClass.getMethod("setLowerBound", classOf[Double])
+            setLowerBoundMethodY.invoke(yAxis, (yAxisLowerBound + yDiff).asInstanceOf[AnyRef])
+
+            val setUpperBoundMethodY = yAxis.getClass.getMethod("setUpperBound", classOf[Double])
+            setUpperBoundMethodY.invoke(yAxis, (yAxisUpperBound + yDiff).asInstanceOf[AnyRef])
+
+            val getLowerBoundMethodx = xAxis.getClass.getMethod("getLowerBound")
+            val xAxisLowerBound = getLowerBoundMethodx.invoke(xAxis).asInstanceOf[Double]
+
+            val getUpperBoundMethodx = xAxis.getClass.getMethod("getUpperBound")
+            val xAxisUpperBound = getUpperBoundMethodx.invoke(xAxis).asInstanceOf[Double]
+            // Calculate the pixel-to-x-axis-unit ratio
+            val xAxisWidth = candleStickChart.xAxis.delegate.getWidth
+            val xAxisRange = xAxisUpperBound - xAxisLowerBound
+            val pixelToXAxisUnitRatio = xAxisRange / xAxisWidth
+
+            // Calculate the x-difference in pixels
+            val xDiffPixels = dragEndX - dragStartX
+
+            // Convert the x-difference in pixels to the x-difference in x-axis units
+            val xDiff = xDiffPixels * pixelToXAxisUnitRatio
+
+            // Adjust the bounds for the X-axis
+
+
+        
+
+            val setLowerBoundMethodX = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
+            setLowerBoundMethodX.invoke(xAxis, (xAxisLowerBound - xDiff).asInstanceOf[AnyRef])
+
+            val setUpperBoundMethodX = xAxis.getClass.getMethod("setUpperBound", classOf[Double])
+            setUpperBoundMethodX.invoke(xAxis, (xAxisUpperBound - xDiff).asInstanceOf[AnyRef])
+            updateAllLines(dragEndY, dragStartY)
+        }
+        
+
+        // Update the start points for the next drag event
+        dragStartX = dragEndX
+        dragStartY = dragEndY
+    }
+
+    def updateOnMouseRelease(): Unit ={
+        dragStartX = 0
+        dragStartY = 0
+    }
+
+    def updateOnScroll(event: ScrollEvent): Unit ={
+    val zoomFactor = 0.1 // Adjust this value to control the zoom speed
+
+    val deltaY = event.deltaY
+    val xAxis = candleStickChart.getXAxis
+
+    val getLowerBoundMethod = xAxis.getClass.getMethod("getLowerBound")
+    val xAxisLowerBound = getLowerBoundMethod.invoke(xAxis).asInstanceOf[Double]
+
+    val getUpperBoundMethod = xAxis.getClass.getMethod("getUpperBound")
+    val xAxisUpperBound = getUpperBoundMethod.invoke(xAxis).asInstanceOf[Double]
+
+    val range = xAxisUpperBound - xAxisLowerBound
+    val zoomStep = range * zoomFactor
+    val xAxisWidth = candleStickChart.xAxis.delegate.getWidth
+    val zoomhighlowlines = xAxisWidth * zoomFactor
+    if (deltaY < 0) {
+        // Zoom out
+        val newLowerBound = xAxisLowerBound - zoomStep
+        AdvCandleStickChartSample.updateCandleStickChartAxis(candleStickChart, newLowerBound)
+    } else {
+        // Zoom in
+        val newLowerBound = xAxisLowerBound + zoomStep
+        AdvCandleStickChartSample.updateCandleStickChartAxis(candleStickChart, newLowerBound)
+    }
+    }
+}
 
 
 object AdvCandleStickChartSample extends JFXApp3 {
  case class CandleStick(day: Double, open: Double, close: Double, high: Double, low: Double)
   
     override def start(): Unit = {
-        stage = new JFXApp3.PrimaryStage {
-            title = "Adv Candle Stick Chart Example"
-            scene = new Scene {
-            root = {
-            
-                val data = AllTickerArrays.candleSticks
-            
-                createChart(data)
-            
-            }
-            }
+    stage = new JFXApp3.PrimaryStage {
+      title = "Adv Candle Stick Chart Example"
+      scene = new Scene {
+        root = {
+          val data = AllTickerArrays.candleSticks
+          val chart = createChart(data)
+          val draggableChart = new DraggableCandleStickChart(chart)
+          draggableChart
         }
+      }
     }
+  }
+
  
  import scala.collection.mutable.ListBuffer
+
+    def updateCandleStickChartAxis(chart: CandleStickChart, xLower: Double): Unit = {
+
+        val xAxis = chart.getXAxis
+        val setLowerBoundMethodx = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
+        setLowerBoundMethodx.invoke(xAxis, xLower.asInstanceOf[AnyRef])
+
+    }
+
 
     def createChart(candleData: ListBuffer[CandleStick]): CandleStickChart = {
     //Style Sheet loaded from external
@@ -98,7 +325,9 @@ object AdvCandleStickChartSample extends JFXApp3 {
     xAxis.animated = false
     yAxis.animated = false
 
-
+    def addCustomNode(node: Node): Unit = {
+            getPlotChildren.add(node)
+        }
 
 
     def title: String = getTitle
@@ -118,7 +347,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
     def yAxis = getYAxis
 
     /** Called to update and layout the content for the plot */
-    override protected def layoutPlotChildren(): Unit = {
+    override def layoutPlotChildren(): Unit = {
         if (data == null) {
         return
         }
@@ -142,8 +371,11 @@ object AdvCandleStickChartSample extends JFXApp3 {
                     val yHigh = yAxis.displayPosition(dayValues.high)
                     val yLow = yAxis.displayPosition(dayValues.low)
                     val candleWidth = xAxis match {
-                    case xa: jfxsc.NumberAxis => xa.displayPosition(xa.tickUnit()) * 0.90
-                    case _ => -1
+                        case xa: jfxsc.NumberAxis => 
+                            val pos1 = xa.displayPosition(1)
+                            val pos2 = xa.displayPosition(2)
+                            (pos2 - pos1) * 0.90
+                        case _ => -1
                     }
                     candle.update(yClose - yOpen, yHigh - yOpen, yLow - yOpen, candleWidth)
                     candle.updateTooltip(item.YValue().doubleValue, dayValues.close, dayValues.high, dayValues.low)
@@ -159,9 +391,9 @@ object AdvCandleStickChartSample extends JFXApp3 {
         }
     }
 
-    override protected def dataItemChanged(item: jfxsc.XYChart.Data[Number, Number]): Unit = {}
+    override def dataItemChanged(item: jfxsc.XYChart.Data[Number, Number]): Unit = {}
 
-    override protected def dataItemAdded(series: jfxsc.XYChart.Series[Number, Number],
+    override def dataItemAdded(series: jfxsc.XYChart.Series[Number, Number],
                                             itemIndex: Int, item: jfxsc.XYChart.Data[Number, Number]): Unit = {
         val candle = Candle(getData.indexOf(series), item, itemIndex)
         if (shouldAnimate) {
@@ -178,7 +410,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
         }
     }
 
-    override protected def dataItemRemoved(item: jfxsc.XYChart.Data[Number, Number], series: jfxsc.XYChart.Series[Number, Number]): Unit = {
+    override def dataItemRemoved(item: jfxsc.XYChart.Data[Number, Number], series: jfxsc.XYChart.Series[Number, Number]): Unit = {
         val candle = item.node()
         if (shouldAnimate) {
         new FadeTransition(500 ms, candle) {
@@ -192,7 +424,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
         }
     }
 
-    override protected def seriesAdded(series: jfxsc.XYChart.Series[Number, Number], seriesIndex: Int): Unit = {
+    override def seriesAdded(series: jfxsc.XYChart.Series[Number, Number], seriesIndex: Int): Unit = {
         for (j <- 0 until series.data().size) {
         val item = series.data()(j)
         val candle = Candle(seriesIndex, item, j)
@@ -215,7 +447,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
         plotChildren += seriesPath
     }
 
-    override protected def seriesRemoved(series: jfxsc.XYChart.Series[Number, Number]): Unit = {
+    override def seriesRemoved(series: jfxsc.XYChart.Series[Number, Number]): Unit = {
         for (d <- series.getData) {
         val candle = d.node()
         if (shouldAnimate) {
@@ -236,7 +468,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
          * ranging then we compile a list of all data that the given axis has to plot and call invalidateRange() on the
          * axis passing it that data.
          */
-    override protected def updateAxisRange(): Unit = {
+    override def updateAxisRange(): Unit = {
 
         if (xAxis.isAutoRanging) {
         val xData = for (series <- data; seriesData <- series.data()) yield seriesData.XValue()
