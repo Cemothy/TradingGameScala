@@ -21,10 +21,7 @@ class BrowseInterpreter(balance: String) extends Interpreter {
 
     def doTickersymbol(input: String): (String, InvestInterpreter) = {
         val price = getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)
-        val companyInfo = price match {
-            case Some(x) => showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, x)
-            case None => showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, 0.0)
-        }
+        val companyInfo = showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, price)
         val interpreter = new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance)
         (companyInfo, interpreter)
     }

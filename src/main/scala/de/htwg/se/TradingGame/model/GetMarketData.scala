@@ -83,28 +83,37 @@ def getFirsDateofFile (dataFilePath: String): String = {
   firstDate.split(",")(0) + "," + firstDate.split(",")(1)
 
 }
-def getPriceForDateTimeDouble(dateTime: String, dataFilePath: String, ohlc: Integer): Option[Double] = {
-  getPriceForDateTimeString(dateTime, dataFilePath, ohlc).flatMap { priceString =>
-    Try(priceString.toDouble).toOption
-  }
+def getPriceForDateTimeDouble(dateTime: String, dataFilePath: String, ohlc: Integer): Double = {
+  val price = getPriceForDateTimeString(dateTime, dataFilePath, ohlc)
+  val companyInfo = price match {
+            case Some(x) => x.toDouble
+            case None => 0.0
+        }
+  companyInfo
 }
 
+
 def getPriceForDateTimeString(dateTime: String, dataFilePath: String, ohlc: Integer): Option[String] = {
-  val source = scala.io.Source.fromFile(dataFilePath)
-  try {
-    Some(source.getLines()
+  if (isDateInFile(dateTime, dataFilePath)) {
+    val source = scala.io.Source.fromFile(dataFilePath)
+    val result = Some(source.getLines()
       .collect {
         case line if line.startsWith(dateTime) || LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateTime, formatter)) => line.split(",")(ohlc) // Fetching the price
       }
       .toList
       .headOption
       .getOrElse("0.0")) // If no matching line found, return 0.0
-  } catch {
-    case _: Exception => None
-  } finally {
     source.close()
+    result
+  } else {
+    None
   }
 }
+    
+
+  
+  
+
 
 def isDateBeforefirstDateinFile(dateTime: String, dataFilePath: String): Boolean = {
   var dateBeforeFirstDate: Boolean = false
