@@ -15,7 +15,7 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
     val firstline = Source.fromFile(file).getLines().take(1).toList.head
     val firstValues = firstline.split(",")
     val firstCandleEpochSec = LocalDateTime.parse(s"${firstValues(0)},${firstValues(1)}", formatter).atZone(ZoneId.systemDefault()).toEpochSecond()
-
+    var endDate: LocalDateTime = LocalDateTime.now() // add this line
     def parseTimeFrame(timeFrame: String): Int = {
         val unit = timeFrame.takeRight(1)
         val value = timeFrame.dropRight(1).toInt
@@ -36,23 +36,30 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
      def setTimeFrame(newTimeFrame: String): Unit = {
         timeFrame = newTimeFrame
         timeFrameMinutes = parseTimeFrame(timeFrame)
-        AdvCandleStickChartSample.distancecandles = timeFrameMinutes
-        candleSticks = calculateCandleSticks()
+        AdvCandleStickChartSample.distancecandles = timeFrameMinutes * 60
+        candleSticks = calculateCandleSticks()  
     }
     var timeFrameMinutes = parseTimeFrame(timeFrame)
     var candleSticks: ListBuffer[CandleStick] = ListBuffer()
+    def setDate(date: String): Unit = {
+        endDate = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm"))
+        candleSticks = calculateCandleSticks()
+    }
     def calculateCandleSticks(): ListBuffer[CandleStick] = {
-    val lines = Source.fromFile(file).getLines().toList
-    val rawCandles = ListBuffer(lines.tail.takeRight(500*timeFrameMinutes).map { line =>
-        val values = line.split(",")
-        CandleStick(
-            day = (LocalDateTime.parse(s"${values(0)},${values(1)}", formatter).atZone(ZoneId.systemDefault()).toEpochSecond() - firstCandleEpochSec) /60,
-            open = values(2).toDouble,
-            close = values(5).toDouble,
-            high = values(3).toDouble,
-            low = values(4).toDouble,
-        )
-    }: _*)
+        val lines = Source.fromFile(file).getLines().toList
+        val rawCandles = ListBuffer(lines.tail.takeRight(500*timeFrameMinutes).map { line =>
+            val values = line.split(",")
+            val candleDate = LocalDateTime.parse(s"${values(0)},${values(1)}", formatter).atZone(ZoneId.systemDefault())
+            if (candleDate.isBefore(endDate)) {
+                CandleStick(
+                    day = (candleDate.toEpochSecond()),
+                    open = values(2).toDouble,
+                    close = values(5).toDouble,
+                    high = values(3).toDouble,
+                    low = values(4).toDouble,
+                )
+            } else null
+        }.filter(_ != null): _*)
 
     val groupedCandles = rawCandles.grouped(timeFrameMinutes).toList
 

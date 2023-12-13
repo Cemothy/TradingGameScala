@@ -558,6 +558,8 @@ object AdvCandleStickChartSample extends JFXApp3 {
     // Add the new data to the chart
     chart.data = ObservableBuffer(seriesData.toSeq: _*)
 }
+
+    
     def createChart(candleData: ListBuffer[CandleStick]): CandleStickChart = {
     //Style Sheet loaded from external
     val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")

@@ -264,6 +264,12 @@ class BacktestStage(controller: Controller){
             }
         val tickerDropdown = new TickerSelection()
         val tickerComboBox = tickerDropdown.createTickerDropdown()
+        tickerComboBox.value.onChange { (_, _, newTicker) =>
+            data.setTicker(newTicker)
+            
+            clearAndAddData(chart, data.getCandleSticks)
+            
+            }
         val endButton = new Button("Finish Backtesting")
         val Button1 = new Button("Button1")
         val Button2 = new Button("Button2")
@@ -287,6 +293,7 @@ class BacktestStage(controller: Controller){
         
 
         val applyDateButton = new Button("Apply Date")
+        
         var summprofit = 0.0
         val profitLabel = new Label(s"Profit: $summprofit       ")
         applyDateButton.setOnAction(_ => {
@@ -299,6 +306,8 @@ class BacktestStage(controller: Controller){
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formattedDate = selectedDate.format(formatter)
             val browseinput = s"${tickerComboBox.value.value} ${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
+            val dateinput = s"${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
+            setDate(dateinput)
             controller.computeInput(browseinput)
             controller.printDesctriptor()
             tradesBuffer.clear()
