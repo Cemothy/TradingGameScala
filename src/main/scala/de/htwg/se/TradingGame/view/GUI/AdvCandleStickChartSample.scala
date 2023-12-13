@@ -548,15 +548,22 @@ object AdvCandleStickChartSample extends JFXApp3 {
 
     }
 
-    var distancecandles = 1
+    var distancecandles = 60
     import scala.collection.mutable.ListBuffer
 
-    def updateCandleStickChartAxis(chart: CandleStickChart, xLower: Double): Unit = {
-
+    def updateCandleStickChartAxis(chart: CandleStickChart, xLower: Double, xUpper: Double, yLower: Double, yUpper: Double): Unit = {
         val xAxis = chart.getXAxis
-        val setLowerBoundMethodx = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
-        setLowerBoundMethodx.invoke(xAxis, xLower.asInstanceOf[AnyRef])
+        val yAxis = chart.getYAxis
 
+        val setLowerBoundMethodX = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
+        val setUpperBoundMethodX = xAxis.getClass.getMethod("setUpperBound", classOf[Double])
+        val setLowerBoundMethodY = yAxis.getClass.getMethod("setLowerBound", classOf[Double])
+        val setUpperBoundMethodY = yAxis.getClass.getMethod("setUpperBound", classOf[Double])
+
+        setLowerBoundMethodX.invoke(xAxis, xLower.asInstanceOf[AnyRef])
+        setUpperBoundMethodX.invoke(xAxis, xUpper.asInstanceOf[AnyRef])
+        setLowerBoundMethodY.invoke(yAxis, yLower.asInstanceOf[AnyRef])
+        setUpperBoundMethodY.invoke(yAxis, yUpper.asInstanceOf[AnyRef])
     }
 
     def clearAndAddData(chart: CandleStickChart, newData: ListBuffer[CandleStick]): Unit = {
@@ -580,14 +587,14 @@ object AdvCandleStickChartSample extends JFXApp3 {
     if (cssURL != null) {
         val css = cssURL.toExternalForm
 
-        val minDatay = candleData.takeRight(50).minBy(_.low).low
-        val maxDatay = candleData.takeRight(50).maxBy(_.high).high
+        val minDatay = candleData.take(200).minBy(_.low).low
+        val maxDatay = candleData.take(200).maxBy(_.high).high
 
-        val firstCandle = candleData.head.day
-        val minDatax = (candleData.takeRight(50).minBy(_.day).day)
-        val maxDatax = (candleData.takeRight(50).maxBy(_.day).day)
+        val firstCandle = candleData.last.day
+        val minDatax = (candleData.take(200).minBy(_.day).day)
+        val maxDatax = (candleData.take(200).maxBy(_.day).day)
 
-        val xAxis = new NumberAxis(minDatax, maxDatax,2) {
+        val xAxis = new NumberAxis(minDatax, maxDatax,1000000) {
         }
 
         val yAxis = new NumberAxis(minDatay, maxDatay, 0.0001) {
@@ -616,7 +623,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
     setAnimated(false)
     xAxis.animated = false
     yAxis.animated = false
-
+    this.setLegendVisible(false)
     def addCustomNode(node: Node): Unit = {
         
 

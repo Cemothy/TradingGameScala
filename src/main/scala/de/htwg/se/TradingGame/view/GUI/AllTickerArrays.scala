@@ -18,6 +18,7 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
     val lastLine = Source.fromFile(file).getLines().toList.last
     val lastValues = lastLine.split(",")
     var endDate: LocalDateTime = LocalDateTime.parse(s"${lastValues(0)},${lastValues(1)}", formatter)
+    val apiKey = "YECHGJZODYDHOV28"
     var currentPrice: Double = 0.0
     
     def parseTimeFrame(timeFrame: String): Int = {
