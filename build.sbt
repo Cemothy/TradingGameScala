@@ -8,6 +8,7 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % Test,
     libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R24",
+    libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
     libraryDependencies ++= {
       // Determine OS version of JavaFX binaries
       lazy val osName = System.getProperty("os.name") match {
@@ -21,3 +22,4 @@ lazy val root = project
     },
     unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "scala"
   )
+

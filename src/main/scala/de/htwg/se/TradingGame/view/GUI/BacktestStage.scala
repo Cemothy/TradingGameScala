@@ -12,6 +12,7 @@ import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.clearAndAddData
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.createChart
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
+import de.htwg.se.TradingGame.view.GUI.GetAPIData._
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.scene.shape.Line
@@ -57,7 +58,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
 object BacktestStage extends JFXApp3 {
     val controller = new Controller()
     override def start(): Unit = 
@@ -66,10 +66,9 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-   val data = AllTickerArrays("EURUSD", "1m")
-   data.setTicker("EURUSD")
-    data.setTimeFrame("1m")
-    val chart = createChart(data.getCandleSticks)
+    var data = getCandleSticks("1min", "EURUSD", LocalDateTime.now())
+
+    val chart = createChart(data)
     val chartPane = new DraggableCandleStickChart(chart)
     var dragStartX: Double = 0
     var dragStartY: Double = 0
@@ -245,7 +244,7 @@ class BacktestStage(controller: Controller){
         def updatecurrentProfit(trade: TradeDoneCalculations): Unit = {
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
             
-            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, data.currentPrice  , data.endDate.format(formatter))
+            //calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, data.currentPrice  , data.endDate.format(formatter))
         }
 
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
@@ -256,32 +255,35 @@ class BacktestStage(controller: Controller){
         val table = new TableView[TradeDoneCalculations](tradesBuffer) {
         columns ++= List(dateCollum, tradebuysell, volumeCollum, riskCollum, tickerCollum, entryCollum, stoplossCollum, takeprofitCollum, currentProfit)
         }
-
-        val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1d", "1w")
+        
+        val tickerComboBox = new TextField {
+        promptText = "Enter Ticker"
+        text = "EURUSD"
+        }
+        val timeframeOptions = ObservableBuffer("1min", "5min", "15min", "60min", "4h", "1d", "1w")
         val timeframeComboBox = new ComboBox[String](timeframeOptions)
-        timeframeComboBox.value = "1m"
+        timeframeComboBox.value = "1min"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
-            data.setTimeFrame(newTimeframe)
             
-            clearAndAddData(chart, data.getCandleSticks)
+            val newdata = getCandleSticks(newTimeframe.toString(), tickerComboBox.text.value, LocalDateTime.now())
+            clearAndAddData(chart, newdata)
             
             }
-        val tickerDropdown = new TickerSelection()
-        val tickerComboBox = tickerDropdown.createTickerDropdown()
-        tickerComboBox.value.onChange { (_, _, newTicker) =>
-            data.setTicker(newTicker)
-            
-            clearAndAddData(chart, data.getCandleSticks)
-            chartPane.setupperboundxtolastdata(data.getCandleSticks)
+
+        tickerComboBox.onKeyPressed = (keyEvent: KeyEvent) => {
+            if (keyEvent.code == KeyCode.Enter) {
+                val newdata = getCandleSticks(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.now())
+                clearAndAddData(chart, newdata)
             }
+        }
         val endButton = new Button("Finish Backtesting")
         val button1 = new Button("<<")
         val button2 = new Button(">>")
         val profitLabel = new Label(s"Profit: $summprofit       ")
         button2.onAction = () => {
-            data.incrementDataByNCandles(1)
+            //data.incrementDataByNCandles(1)
 
-            clearAndAddData(chart, data.getCandleSticks)
+            clearAndAddData(chart, data)
             tradesBuffer.clear()
             tradesBuffer ++= GetMarketData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
@@ -295,9 +297,9 @@ class BacktestStage(controller: Controller){
         }
 
         button1.onAction = () => {
-            data.decrementDataByNCandles(1)
+            //data.decrementDataByNCandles(1)
 
-            clearAndAddData(chart, data.getCandleSticks)
+            clearAndAddData(chart, data)
             tradesBuffer.clear()
             tradesBuffer ++= GetMarketData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
@@ -342,11 +344,11 @@ class BacktestStage(controller: Controller){
 
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formattedDate = selectedDate.format(formatter)
-            val browseinput = s"${tickerComboBox.value.value} ${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
+            val browseinput = s"${tickerComboBox.text.toString} ${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
             val dateinput = s"${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
-            data.setDate(dateinput)
-            clearAndAddData(chart, data.getCandleSticks)
-            chartPane.setupperboundxtolastdata(data.getCandleSticks)
+            //data.setDate(dateinput)
+            clearAndAddData(chart, data)
+            chartPane.setupperboundxtolastdata(data)
             controller.computeInput(browseinput)
             controller.printDesctriptor()
             tradesBuffer.clear()
@@ -466,15 +468,9 @@ class BacktestStage(controller: Controller){
             controller.computeInput("Q")
             controller.printDesctriptor()
         })
-        tickerComboBox.value.onChange { (_, _, newTicker) =>
 
-            }
 
-        timeframeComboBox.onAction = () => {
-            val selectedTimeframe = timeframeComboBox.value.value
-            // Update the line chart with the selected timeframe
 
-            }
 
         stage
     }
