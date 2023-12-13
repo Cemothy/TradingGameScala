@@ -53,6 +53,9 @@ import scalafx.scene.layout.StackPane
 import scalafx.scene.layout.VBox
 import scalafx.scene.paint.Color
 
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 object BacktestStage extends JFXApp3 {
@@ -70,6 +73,7 @@ class BacktestStage(controller: Controller){
     val chartPane = new DraggableCandleStickChart(chart)
     var dragStartX: Double = 0
     var dragStartY: Double = 0
+    var summprofit = 0.0
     var nextClickAction: String = ""
     val crosshairPane = new Pane()
     val crosshair = new Crosshair(crosshairPane) // Pass the crosshairPane instead of chartPane
@@ -107,12 +111,7 @@ class BacktestStage(controller: Controller){
         crosshairPane.setVisible(true)
     }
 
-    def calculateDate(x: Double): String = {
-    // Your logic to calculate the date based on the x-coordinate goes here.
-    // This is just a placeholder implementation.
-    "Some Date"
-    }
-    
+   
 
     
     val entry = new TextField()
@@ -146,11 +145,15 @@ class BacktestStage(controller: Controller){
         entry.text = chartPane.entryprice
         takeProfit.text = chartPane.takeProfitPrice
         stopLoss.text = chartPane.stopLossPrice
-        val date = calculateDate(me.getX)
+        val epochSeconds = chartPane.calculateXDate(me)
+        val instant = Instant.ofEpochSecond(epochSeconds.toLong)
+        val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+        val dateString = localDateTime.format(formatter)
         val price = chartPane.calculateYPrice(me)
 
         // Update the labels
-        dateLabelcross.text = date
+        dateLabelcross.text = dateString
         priceLabelcross.text = price
 
         // Position the labels
@@ -240,9 +243,9 @@ class BacktestStage(controller: Controller){
             }
          
         def updatecurrentProfit(trade: TradeDoneCalculations): Unit = {
-            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
-            val formattedDate = dateInput.getValue.format(formatter)
-            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, 1.1 , s"$formattedDate,${String.format("%02d",hourSpinner.getValue)}:${String.format("%02d",minuteSpinner.getValue)}")
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+            
+            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, data.currentPrice  , data.endDate.format(formatter))
         }
 
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
@@ -254,13 +257,14 @@ class BacktestStage(controller: Controller){
         columns ++= List(dateCollum, tradebuysell, volumeCollum, riskCollum, tickerCollum, entryCollum, stoplossCollum, takeprofitCollum, currentProfit)
         }
 
-        val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1day", "1week")
+        val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1d", "1w")
         val timeframeComboBox = new ComboBox[String](timeframeOptions)
         timeframeComboBox.value = "1m"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
             data.setTimeFrame(newTimeframe)
             
             clearAndAddData(chart, data.getCandleSticks)
+            
             }
         val tickerDropdown = new TickerSelection()
         val tickerComboBox = tickerDropdown.createTickerDropdown()
@@ -268,12 +272,45 @@ class BacktestStage(controller: Controller){
             data.setTicker(newTicker)
             
             clearAndAddData(chart, data.getCandleSticks)
-            
+            chartPane.setupperboundxtolastdata(data.getCandleSticks)
             }
         val endButton = new Button("Finish Backtesting")
-        val Button1 = new Button("Button1")
-        val Button2 = new Button("Button2")
-        val topButtons = new HBox(endButton, tickerComboBox,timeframeComboBox, Button1, Button2)
+        val button1 = new Button("<<")
+        val button2 = new Button(">>")
+        val profitLabel = new Label(s"Profit: $summprofit       ")
+        button2.onAction = () => {
+            data.incrementDataByNCandles(1)
+
+            clearAndAddData(chart, data.getCandleSticks)
+            tradesBuffer.clear()
+            tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+                updatecurrentProfit(trade)
+                trade
+            })
+            // Update summprofit
+            summprofit = tradesBuffer.map(_.currentprofit).sum
+            profitLabel.text = s"Profit: $summprofit"
+
+            table.refresh()
+        }
+
+        button1.onAction = () => {
+            data.decrementDataByNCandles(1)
+
+            clearAndAddData(chart, data.getCandleSticks)
+            tradesBuffer.clear()
+            tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+                updatecurrentProfit(trade)
+                trade
+            })
+            // Update summprofit
+            summprofit = tradesBuffer.map(_.currentprofit).sum
+            profitLabel.text = s"Profit: $summprofit"
+
+            table.refresh()
+        }
+        
+        val topButtons = new HBox(endButton, tickerComboBox,timeframeComboBox, button1, button2)
 
        
 
@@ -294,8 +331,8 @@ class BacktestStage(controller: Controller){
 
         val applyDateButton = new Button("Apply Date")
         
-        var summprofit = 0.0
-        val profitLabel = new Label(s"Profit: $summprofit       ")
+        
+        
         applyDateButton.setOnAction(_ => {
             val selectedDate = dateInput.getValue // Get the selected date from the date picker
             val selectedHour = hourSpinner.getValue // Get the selected hour from the spinner
@@ -307,7 +344,9 @@ class BacktestStage(controller: Controller){
             val formattedDate = selectedDate.format(formatter)
             val browseinput = s"${tickerComboBox.value.value} ${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
             val dateinput = s"${formattedDate},${String.format("%02d",selectedHour)}:${String.format("%02d",selectedMinute)}"
-            setDate(dateinput)
+            data.setDate(dateinput)
+            clearAndAddData(chart, data.getCandleSticks)
+            chartPane.setupperboundxtolastdata(data.getCandleSticks)
             controller.computeInput(browseinput)
             controller.printDesctriptor()
             tradesBuffer.clear()

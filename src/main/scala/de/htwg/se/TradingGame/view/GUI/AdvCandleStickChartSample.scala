@@ -39,6 +39,8 @@ import scalafx.scene.shape.Path
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
+import scala.collection.mutable.ListBuffer
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.CandleStick
 
 
 class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
@@ -65,6 +67,18 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     var dragStartX: Double = 0
     var dragStartY: Double = 0
 
+    def setupperboundxtolastdata(candleData: ListBuffer[CandleStick]): Unit = {
+        // Get the last data point
+        val lastDataPoint = candleData.last.day
+
+        // Get the X axis
+        val xAxis = candleStickChart.getXAxis
+
+        // Set the upper bound of the X axis to the X value of the last data point
+        val setUpperBoundMethodx = xAxis.getClass.getMethod("setUpperBound", classOf[Double])
+        setUpperBoundMethodx.invoke(xAxis, lastDataPoint.asInstanceOf[AnyRef])
+    }
+    
      def calculateYCoordinate(price: String): Double = {
         // Get the y-axis
         val yAxis = candleStickChart.yAxis.delegate

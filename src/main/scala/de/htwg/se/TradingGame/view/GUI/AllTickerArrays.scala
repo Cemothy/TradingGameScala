@@ -15,7 +15,11 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
     val firstline = Source.fromFile(file).getLines().take(1).toList.head
     val firstValues = firstline.split(",")
     val firstCandleEpochSec = LocalDateTime.parse(s"${firstValues(0)},${firstValues(1)}", formatter).atZone(ZoneId.systemDefault()).toEpochSecond()
-    var endDate: LocalDateTime = LocalDateTime.now() // add this line
+    val lastLine = Source.fromFile(file).getLines().toList.last
+    val lastValues = lastLine.split(",")
+    var endDate: LocalDateTime = LocalDateTime.parse(s"${lastValues(0)},${lastValues(1)}", formatter)
+    var currentPrice: Double = 0.0
+    
     def parseTimeFrame(timeFrame: String): Int = {
         val unit = timeFrame.takeRight(1)
         val value = timeFrame.dropRight(1).toInt
@@ -27,7 +31,47 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
             case _ => throw new IllegalArgumentException("Invalid timeframe")
         }
     }
+    def getNextCandle(): CandleStick = {
+      // Increment the endDate by the timeFrameMinutes
+      endDate = endDate.plusMinutes(timeFrameMinutes)
+
+      // Recalculate the candleSticks
+      candleSticks = calculateCandleSticks()
+
+      // Return the last candlestick
+      candleSticks.last
+  }
+    def incrementDataByNCandles(n: Int): Unit = {
+      // Increment the endDate by n times the timeFrameMinutes
+      endDate = endDate.plusMinutes(timeFrameMinutes * n)
+
+      // If the endDate is a Saturday or Sunday, increment it by the necessary number of days
+      endDate.getDayOfWeek match {
+          case java.time.DayOfWeek.SATURDAY => endDate = endDate.plusDays(2) // Skip to Monday
+          case java.time.DayOfWeek.SUNDAY => endDate = endDate.plusDays(1) // Skip to Monday
+          case _ => // Do nothing
+      }
+
+      // Recalculate the candleSticks
+      candleSticks = calculateCandleSticks()
+  }
+
+   
+    def decrementDataByNCandles(n: Int): Unit = {
+      // Decrement the endDate by n times the timeFrameMinutes
+      endDate = endDate.minusMinutes(timeFrameMinutes * n)
+
+      // If the endDate is a Saturday or Sunday, decrement it by the necessary number of days
+      endDate.getDayOfWeek match {
+          case java.time.DayOfWeek.MONDAY => endDate = endDate.minusDays(2) // Skip to Friday
+          case java.time.DayOfWeek.SUNDAY => endDate = endDate.minusDays(1) // Skip to Saturday
+          case _ => // Do nothing
+      }
+
     
+      // Recalculate the candleSticks
+      candleSticks = calculateCandleSticks()
+  }
     def setTicker(newTicker: String): Unit = {
         ticker = newTicker
         file = new File(Path).getParent + s"/Symbols/$ticker.csv"
@@ -46,24 +90,27 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
         candleSticks = calculateCandleSticks()
     }
     def calculateCandleSticks(): ListBuffer[CandleStick] = {
-        val lines = Source.fromFile(file).getLines().toList
-        val rawCandles = ListBuffer(lines.tail.takeRight(500*timeFrameMinutes).map { line =>
-            val values = line.split(",")
-            val candleDate = LocalDateTime.parse(s"${values(0)},${values(1)}", formatter).atZone(ZoneId.systemDefault())
-            if (candleDate.isBefore(endDate)) {
-                CandleStick(
-                    day = (candleDate.toEpochSecond()),
-                    open = values(2).toDouble,
-                    close = values(5).toDouble,
-                    high = values(3).toDouble,
-                    low = values(4).toDouble,
-                )
-            } else null
-        }.filter(_ != null): _*)
+    val lines = Source.fromFile(file).getLines().toList
+    val endDateEpochSec = endDate.atZone(ZoneId.systemDefault()).toEpochSecond
+    val startRangeEpochSec = endDateEpochSec - 500 * timeFrameMinutes * 60
 
+    val rawCandles = ListBuffer(lines.map { line =>
+        val values = line.split(",")
+        val candleDateEpochSec = LocalDateTime.parse(s"${values(0)},${values(1)}", formatter).atZone(ZoneId.systemDefault()).toEpochSecond
+        if (candleDateEpochSec >= startRangeEpochSec && candleDateEpochSec <= endDateEpochSec) {
+            CandleStick(
+                day = candleDateEpochSec,
+                open = values(2).toDouble,
+                close = values(5).toDouble,
+                high = values(3).toDouble,
+                low = values(4).toDouble,
+            )
+        } else null
+    }.filter(_ != null): _*)
+    
     val groupedCandles = rawCandles.grouped(timeFrameMinutes).toList
 
-    ListBuffer(groupedCandles.map { group =>
+    val newCandleSticks = ListBuffer(groupedCandles.map { group =>
         val open = group.head.open
         val close = group.last.close
         val high = group.map(_.high).max
@@ -77,6 +124,8 @@ case class AllTickerArrays(var ticker: String, var timeFrame: String) {
             low = low,
         )
     }: _*)
+    currentPrice = newCandleSticks.last.close
+    newCandleSticks
 }
 
     def getCandleSticks: ListBuffer[CandleStick] = candleSticks
