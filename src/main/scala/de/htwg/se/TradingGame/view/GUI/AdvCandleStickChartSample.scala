@@ -14,6 +14,8 @@ import scalafx.application.JFXApp
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
 import scalafx.event.ActionEvent
+import scalafx.event.EventHandler
+import scalafx.geometry.Point2D
 import scalafx.scene.Node
 import scalafx.scene.Scene
 import scalafx.scene.chart.Axis
@@ -38,80 +40,332 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
+
 class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
     private var currentSelectedTimeframe: String = "1m"
     private var selectedTicker: String = "EURUSD"
     private val chartDataLoader: ChartDataLoader = new ChartDataLoader()
     var lastPrice = chartDataLoader.lastPrice
     var selectedDate: java.time.LocalDateTime = java.time.LocalDateTime.now()
-    var lines: mutable.ListBuffer[Line] = mutable.ListBuffer()
+    var horizontalLines: List[Line] = List()
+    var startX = 0.0
+    var startY = 0.0
+    var linePrices: Map[Line, String] = Map()
+    var lineStartXs: Map[Line, Double] = Map()
+    var entryprice = ""
+    var entryLine: Line = new Line()
+    var stopLossPrice = ""
+    var takeProfitPrice = ""
+    var stopLossLine: Line = new Line()
+    var takeProfitLine: Line = new Line()
+    candleStickChart.verticalGridLinesVisible = false
+    candleStickChart.horizontalGridLinesVisible = false
     children.add(candleStickChart)
         
     var dragStartX: Double = 0
     var dragStartY: Double = 0
 
-    def calculateYPrice(me: MouseEvent): String = {
-        // Get the height of the chart pane
-        val chartHeight = candleStickChart.height.value
-
-        // Calculate the ratio of the y position to the chart height
-        val ratio = me.getY / chartHeight
-
+     def calculateYCoordinate(price: String): Double = {
+        // Get the y-axis
         val yAxis = candleStickChart.yAxis.delegate
 
-        val getLowerBoundMethody = yAxis.getClass.getMethod("getLowerBound")
-        val yAxisLowerBound = getLowerBoundMethody.invoke(yAxis).asInstanceOf[Double]
+        // Get the display position for the price
+        val y = yAxis.getDisplayPosition(price.toDouble)
 
-        val getUpperBoundMethody = yAxis.getClass.getMethod("getUpperBound")
-        val yAxisUpperBound = getUpperBoundMethody.invoke(yAxis).asInstanceOf[Double]
-        // Get the range of your prices
-        val priceRange = yAxisUpperBound - yAxisLowerBound
+        y
+    }
+    def calculateYPrice(me: MouseEvent): String = {
+        // Get the y-axis
+        val yAxis = candleStickChart.yAxis.delegate
 
-        // Calculate the price corresponding to the y position
-        val price = (1 - ratio) * priceRange + yAxisLowerBound
+        // Get the y-coordinate of the mouse event in the local coordinate system of the y-axis
+        val yInAxisCoords = yAxis.sceneToLocal(me.getSceneX, me.getSceneY).getY
+
+        // Get the value of the y-axis at the y-coordinate
+        val price = yAxis.getValueForDisplay(yInAxisCoords).doubleValue()
 
         // Format the price as a string
         f"$price%.5f"
     }
 
+    def calculateXCoordinate(date: Double): Double = {
+        // Get the x-axis
+        val xAxis = candleStickChart.xAxis.delegate
+
+        // Get the display position for the date
+        val x = xAxis.getDisplayPosition(date)
+
+        x
+    }
+
+    def calculateXDate(me: MouseEvent): Double = {
+        // Get the x-axis
+        val xAxis = candleStickChart.xAxis.delegate
+
+        // Get the x-coordinate of the mouse event in the local coordinate system of the x-axis
+        val xInAxisCoords = xAxis.sceneToLocal(me.getSceneX, me.getSceneY).getX
+
+        // Get the value of the x-axis at the x-coordinate
+        val date = xAxis.getValueForDisplay(xInAxisCoords).intValue()
+
+        date
+    }
 
     def plotHorizontalLine(me: MouseEvent): Unit = {
+        val point = this.sceneToLocal(new Point2D(me.sceneX, me.sceneY))
+        startX = point.x
+        startY = point.y
+
+            // Get the y-coordinate from the mouse event
+            val y = me.getY - 15
+
+            // Get the width of the chart
+            val chartWidth = candleStickChart.width.value
+
+            // Create a new Line object
+            val line = new Line() 
+            line.startX = 0
+            line.endX = chartWidth * 4
+            line.startY = y
+            line.endY = y
+
+            // Calculate the price at the y-coordinate
+            val price = calculateYPrice(me)
+
+            // Store the line and its price
+            linePrices = linePrices + (line -> price)
+
+            horizontalLines = line :: horizontalLines
+            candleStickChart.addCustomNode(line)
+
+
+            // Set the stroke color and width of the line
+            line.setStroke(Color.BLACK)
+            line.setStrokeWidth(2)
+            var dragDeltaX = 0.0
+            var dragDeltaY = 0.0
+
+            line.setOnMousePressed((event: MouseEvent) => {
+                // Record a delta distance for the drag and drop operation.
+                dragDeltaX = event.getSceneX
+                dragDeltaY = event.getSceneY
+                event.consume()
+            })
+
+            line.setOnMouseDragged((event: MouseEvent) => {
+                val deltaY = event.getSceneY - dragDeltaY
+                line.setStartY(line.getStartY + deltaY)
+                line.setEndY(line.getEndY + deltaY)
+                dragDeltaY = event.getSceneY
+                val newPrice = calculateYPrice(event)
+                linePrices = linePrices + (line -> newPrice)
+                event.consume()
+            })
+        
+    }
+    
+    def plotHorizontalStartLine(me: MouseEvent): Unit = {
+        val point = this.sceneToLocal(new Point2D(me.sceneX, me.sceneY))
+        startX = point.x
+        startY = point.y
+
+            // Get the y-coordinate from the mouse event
+            val y = me.getY - 15
+
+            // Get the width of the chart
+            val chartWidth = candleStickChart.width.value
+
+            // Create a new Line object
+            val line = new Line() 
+            line.startX = startX - 50 // Start the line at the x-coordinate of the mouse event
+            line.endX = chartWidth * 4
+            line.startY = y
+            line.endY = y
+
+            // Calculate the price at the y-coordinate
+            val price = calculateYPrice(me)
+            val date = calculateXDate(me)
+            // Store the line and its price
+            linePrices = linePrices + (line -> price)
+            lineStartXs = lineStartXs + (line -> date)
+            horizontalLines = line :: horizontalLines
+            candleStickChart.addCustomNode(line)
+
+
+            // Set the stroke color and width of the line
+            line.setStroke(Color.BLACK)
+            line.setStrokeWidth(2)
+            var dragDeltaX = 0.0
+            var dragDeltaY = 0.0
+
+            line.setOnMousePressed((event: MouseEvent) => {
+                // Record a delta distance for the drag and drop operation.
+                dragDeltaX = event.getSceneX
+                dragDeltaY = event.getSceneY
+                event.consume()
+            })
+
+            line.setOnMouseDragged((event: MouseEvent) => {
+                val deltaY = event.getSceneY - dragDeltaY
+                val deltaX = event.getSceneX - dragDeltaX
+                line.setStartY(line.getStartY + deltaY)
+                line.setEndY(line.getEndY + deltaY)
+                line.setStartX(line.getStartX + deltaX)
+                dragDeltaY = event.getSceneY
+                dragDeltaX = event.getSceneX
+                val newPrice = calculateYPrice(event)
+                val newDate = calculateXDate(event)
+                linePrices = linePrices + (line -> newPrice)
+                lineStartXs = lineStartXs + (line -> newDate)
+
+                event.consume()
+            
+            })
+        }
+    
+
+    
+    def entryline(price: String): Unit = {
+
         // Get the y-coordinate from the mouse event
-        val y = me.getY - 15
+        val y = calculateYCoordinate(price)
 
         // Get the width of the chart
         val chartWidth = candleStickChart.width.value
 
-        // Create a new Line object
-        val line = new Line(){
-            startX = 0
-            endX = chartWidth * 4
-            startY = y
-            endY = y
-        }
-        lines += line
-        candleStickChart.addCustomNode(line)
+
+        entryLine.startX = 0
+        entryLine.endX = chartWidth * 4
+        entryLine.startY = y
+        entryLine.endY = y
+
+        
+        // Calculate the price at the y-coordinate
+
+        // Store the line and its price
+        linePrices = linePrices + (entryLine -> price)
+        
+        horizontalLines = entryLine :: horizontalLines
+        candleStickChart.addCustomNode(entryLine)
+        entryprice = price
 
         // Set the stroke color and width of the line
-        line.setStroke(Color.BLACK)
-        line.setStrokeWidth(2)
+        
+    }
+    
+    
+         entryLine.setStroke(Color.GREEN)
+            entryLine.setStrokeWidth(2)
+            var dragDeltaX = 0.0
+            var dragDeltaY = 0.0
+
+            entryLine.setOnMousePressed((event: MouseEvent) => {
+                // Record a delta distance for the drag and drop operation.
+                dragDeltaX = event.getSceneX
+                dragDeltaY = event.getSceneY
+                event.consume()
+            })
+
+            entryLine.setOnMouseDragged((event: MouseEvent) => {
+                val deltaY = event.getSceneY - dragDeltaY
+                entryLine.setStartY(entryLine.getStartY + deltaY)
+                entryLine.setEndY(entryLine.getEndY + deltaY)
+                dragDeltaY = event.getSceneY
+                val newPrice = calculateYPrice(event)
+                linePrices = linePrices + (entryLine -> newPrice)
+                entryprice = newPrice
+                event.consume()
+            })
+
+
+    def stopLossLine(price: String): Unit = {
+        val y = calculateYCoordinate(price)
+        val chartWidth = candleStickChart.width.value
+
+        stopLossLine.startX = 0
+        stopLossLine.endX = chartWidth * 4
+        stopLossLine.startY = y
+        stopLossLine.endY = y
+
+        linePrices = linePrices + (stopLossLine -> price)
+
+        horizontalLines = stopLossLine :: horizontalLines
+        candleStickChart.addCustomNode(stopLossLine)
+        stopLossPrice = price
+
+        stopLossLine.setStroke(Color.RED)
+        stopLossLine.setStrokeWidth(2)
+
+        stopLossLine.setOnMousePressed((event: MouseEvent) => {
+            dragDeltaX = event.getSceneX
+            dragDeltaY = event.getSceneY
+            event.consume()
+        })
+
+        stopLossLine.setOnMouseDragged((event: MouseEvent) => {
+            val deltaY = event.getSceneY - dragDeltaY
+            stopLossLine.setStartY(stopLossLine.getStartY + deltaY)
+            stopLossLine.setEndY(stopLossLine.getEndY + deltaY)
+            dragDeltaY = event.getSceneY
+            val newPrice = calculateYPrice(event)
+            linePrices = linePrices + (stopLossLine -> newPrice)
+            stopLossPrice = newPrice
+            event.consume()
+        })
     }
 
+    def takeProfitLine(price: String): Unit = {
+        val y = calculateYCoordinate(price)
+        val chartWidth = candleStickChart.width.value
 
-    
+        takeProfitLine.startX = 0
+        takeProfitLine.endX = chartWidth * 4
+        takeProfitLine.startY = y
+        takeProfitLine.endY = y
 
+        linePrices = linePrices + (takeProfitLine -> price)
 
+        horizontalLines = takeProfitLine :: horizontalLines
+        candleStickChart.addCustomNode(takeProfitLine)
+        takeProfitPrice = price
+
+        takeProfitLine.setStroke(Color.BLUE)
+        takeProfitLine.setStrokeWidth(2)
+
+        takeProfitLine.setOnMousePressed((event: MouseEvent) => {
+            dragDeltaX = event.getSceneX
+            dragDeltaY = event.getSceneY
+            event.consume()
+        })
+
+        takeProfitLine.setOnMouseDragged((event: MouseEvent) => {
+            val deltaY = event.getSceneY - dragDeltaY
+            takeProfitLine.setStartY(takeProfitLine.getStartY + deltaY)
+            takeProfitLine.setEndY(takeProfitLine.getEndY + deltaY)
+            dragDeltaY = event.getSceneY
+            val newPrice = calculateYPrice(event)
+            linePrices = linePrices + (takeProfitLine -> newPrice)
+            takeProfitPrice = newPrice
+            event.consume()
+        })
+    }
     def updateOnMousePress(me: MouseEvent): Unit ={
         dragStartX = me.getX
         dragStartY = me.getY
     }
 
-    def updateAllLines(pointY: Double, startY: Double): Unit = {
-        for (line <- lines) {
-            line.setStartY(pointY + (line.getStartY - startY))
-            line.setEndY(pointY + (line.getEndY - startY))
+    def updateAllLines(): Unit = {
+        for ((line, price) <- linePrices) {
+            val y = calculateYCoordinate(price)
+            line.startY = y
+            line.endY = y
+        }
+        for ((line, startX) <- lineStartXs) {
+            val x = calculateXCoordinate(startX)
+            line.setStartX(x)
         }
     }
+
     def updateOnDrag(me: MouseEvent): Unit ={
         val dragEndX = me.getX
         val dragEndY = me.getY
@@ -135,25 +389,36 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
             val zoomStep = range * zoomFactor
 
             if (dragY < 0) {
+
                 // Dragging up, show lower numbers
+               
                 val newLowerBound = yAxisLowerBound + zoomStep
                 val newUpperBound = yAxisUpperBound - zoomStep
-
                 val setLowerBoundMethodY = yAxis.getClass.getMethod("setLowerBound", classOf[Double])
                 setLowerBoundMethodY.invoke(yAxis, newLowerBound.asInstanceOf[AnyRef])
 
                 val setUpperBoundMethodY = yAxis.getClass.getMethod("setUpperBound", classOf[Double])
                 setUpperBoundMethodY.invoke(yAxis, newUpperBound.asInstanceOf[AnyRef])
+                updateAllLines()
+
+
+
             } else {
+
                 // Dragging down, show higher numbers
+              
+
                 val newLowerBound = yAxisLowerBound - zoomStep
                 val newUpperBound = yAxisUpperBound + zoomStep
-
                 val setLowerBoundMethodY = yAxis.getClass.getMethod("setLowerBound", classOf[Double])
                 setLowerBoundMethodY.invoke(yAxis, newLowerBound.asInstanceOf[AnyRef])
 
                 val setUpperBoundMethodY = yAxis.getClass.getMethod("setUpperBound", classOf[Double])
                 setUpperBoundMethodY.invoke(yAxis, newUpperBound.asInstanceOf[AnyRef])
+                updateAllLines()
+
+               
+          
             }
         } else {
             val yAxis = candleStickChart.yAxis.delegate
@@ -210,13 +475,15 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
 
             val setUpperBoundMethodX = xAxis.getClass.getMethod("setUpperBound", classOf[Double])
             setUpperBoundMethodX.invoke(xAxis, (xAxisUpperBound - xDiff).asInstanceOf[AnyRef])
-            updateAllLines(dragEndY, dragStartY)
+            updateAllLines()
+
         }
         
 
         // Update the start points for the next drag event
         dragStartX = dragEndX
         dragStartY = dragEndY
+        
     }
 
     def updateOnMouseRelease(): Unit ={
@@ -243,35 +510,32 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     if (deltaY < 0) {
         // Zoom out
         val newLowerBound = xAxisLowerBound - zoomStep
-        AdvCandleStickChartSample.updateCandleStickChartAxis(candleStickChart, newLowerBound)
+        val setLowerBoundMethodx = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
+        setLowerBoundMethodx.invoke(xAxis, newLowerBound.asInstanceOf[AnyRef])
+        updateAllLines()
+
     } else {
         // Zoom in
         val newLowerBound = xAxisLowerBound + zoomStep
-        AdvCandleStickChartSample.updateCandleStickChartAxis(candleStickChart, newLowerBound)
+        val setLowerBoundMethodx = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
+        setLowerBoundMethodx.invoke(xAxis, newLowerBound.asInstanceOf[AnyRef])
+        updateAllLines()
+
     }
+    updateAllLines()
     }
 }
 
 
 object AdvCandleStickChartSample extends JFXApp3 {
- case class CandleStick(day: Double, open: Double, close: Double, high: Double, low: Double)
+    case class CandleStick(day: Double, open: Double, close: Double, high: Double, low: Double)
   
     override def start(): Unit = {
-    stage = new JFXApp3.PrimaryStage {
-      title = "Adv Candle Stick Chart Example"
-      scene = new Scene {
-        root = {
-          val data = AllTickerArrays.candleSticks
-          val chart = createChart(data)
-          val draggableChart = new DraggableCandleStickChart(chart)
-          draggableChart
-        }
-      }
-    }
-  }
 
- 
- import scala.collection.mutable.ListBuffer
+    }
+
+    var distancecandles = 1
+    import scala.collection.mutable.ListBuffer
 
     def updateCandleStickChartAxis(chart: CandleStickChart, xLower: Double): Unit = {
 
@@ -281,19 +545,31 @@ object AdvCandleStickChartSample extends JFXApp3 {
 
     }
 
+    def clearAndAddData(chart: CandleStickChart, newData: ListBuffer[CandleStick]): Unit = {
+    // Clear the existing data from the chart
+    chart.data.clear()
 
+    // Convert the new data into the format required by the chart
+    val seriesData = newData.map { d => 
+        val data = XYChart.Data[Number, Number](d.day, d.open, d)
+        XYChart.Series[Number, Number](ObservableBuffer(data))
+    }
+
+    // Add the new data to the chart
+    chart.data = ObservableBuffer(seriesData.toSeq: _*)
+}
     def createChart(candleData: ListBuffer[CandleStick]): CandleStickChart = {
     //Style Sheet loaded from external
     val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")
     if (cssURL != null) {
         val css = cssURL.toExternalForm
 
-        val minDatay = candleData.minBy(_.low).low
-        val maxDatay = candleData.maxBy(_.high).high
+        val minDatay = candleData.takeRight(50).minBy(_.low).low
+        val maxDatay = candleData.takeRight(50).maxBy(_.high).high
 
         val firstCandle = candleData.head.day
-        val minDatax = (candleData.minBy(_.day).day)
-        val maxDatax = (candleData.maxBy(_.day).day)
+        val minDatax = (candleData.takeRight(50).minBy(_.day).day)
+        val maxDatax = (candleData.takeRight(50).maxBy(_.day).day)
 
         val xAxis = new NumberAxis(minDatax, maxDatax,2) {
         }
@@ -326,7 +602,9 @@ object AdvCandleStickChartSample extends JFXApp3 {
     yAxis.animated = false
 
     def addCustomNode(node: Node): Unit = {
-            getPlotChildren.add(node)
+        
+
+        getPlotChildren.add(node)
         }
 
 
@@ -373,7 +651,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
                     val candleWidth = xAxis match {
                         case xa: jfxsc.NumberAxis => 
                             val pos1 = xa.displayPosition(1)
-                            val pos2 = xa.displayPosition(2)
+                            val pos2 = xa.displayPosition(distancecandles + 1)
                             (pos2 - pos1) * 0.90
                         case _ => -1
                     }

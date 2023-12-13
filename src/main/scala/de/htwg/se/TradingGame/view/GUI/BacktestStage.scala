@@ -9,6 +9,7 @@ import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.clearAndAddData
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.createChart
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
 import javafx.event.ActionEvent
@@ -20,6 +21,7 @@ import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Orientation
+import scalafx.geometry.Point2D
 import scalafx.scene.Scene
 import scalafx.scene.chart.LineChart
 import scalafx.scene.chart.NumberAxis
@@ -37,7 +39,10 @@ import scalafx.scene.control.TableColumn
 import scalafx.scene.control.TableColumn.CellDataFeatures
 import scalafx.scene.control.TableView
 import scalafx.scene.control.TextField
+import scalafx.scene.input.KeyCode
 import scalafx.scene.input.KeyCode.B
+import scalafx.scene.input.KeyEvent
+import scalafx.scene.input.MouseButton
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.HBox
@@ -58,11 +63,14 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-   val data = AllTickerArrays.candleSticks
-    val chart = createChart(data)
+   val data = AllTickerArrays("EURUSD", "1m")
+   data.setTicker("EURUSD")
+    data.setTimeFrame("1m")
+    val chart = createChart(data.getCandleSticks)
     val chartPane = new DraggableCandleStickChart(chart)
     var dragStartX: Double = 0
     var dragStartY: Double = 0
+    var nextClickAction: String = ""
     val crosshairPane = new Pane()
     val crosshair = new Crosshair(crosshairPane) // Pass the crosshairPane instead of chartPane
     crosshair.createCrosshair()
@@ -87,11 +95,11 @@ class BacktestStage(controller: Controller){
     chartWithCrosshair.children.addAll(datepane, pricepane)
     dateLabelcross.mouseTransparent = true
     priceLabelcross.mouseTransparent = true
+    crosshairPane.mouseTransparent = true
 
 
 
-
-    crosshairPane.onMouseExited = (me: MouseEvent) => {
+    chartWithCrosshair.onMouseExited = (me: MouseEvent) => {
         crosshairPane.setVisible(false)
     }
 
@@ -105,13 +113,39 @@ class BacktestStage(controller: Controller){
     "Some Date"
     }
     
-    chartWithCrosshair.onMouseClicked = (me: MouseEvent) => {
-        chartPane.plotHorizontalLine(me)
-    }
 
+    
+    val entry = new TextField()
+        entry.onKeyPressed = (keyEvent: KeyEvent) => {
+            // Check if Enter key was pressed
+            if (keyEvent.code == KeyCode.Enter) {
+                // Get price from TextField
+                val priceText = entry.text.value
 
+                // Plot horizontal line at price
+                chartPane.entryline(priceText)
+            }
+        }
+        val takeProfit = new TextField()
+        takeProfit.onKeyPressed = (keyEvent: KeyEvent) => {
+            if (keyEvent.code == KeyCode.Enter) {
+                val priceText = takeProfit.text.value
+                chartPane.takeProfitLine(priceText)
+            }
+        }
+
+        val stopLoss = new TextField()
+        stopLoss.onKeyPressed = (keyEvent: KeyEvent) => {
+            if (keyEvent.code == KeyCode.Enter) {
+                val priceText = stopLoss.text.value
+                chartPane.stopLossLine(priceText)
+            }
+        }
     chartWithCrosshair.onMouseMoved = (me: MouseEvent) => {
         crosshair.updateCrosshair(me)
+        entry.text = chartPane.entryprice
+        takeProfit.text = chartPane.takeProfitPrice
+        stopLoss.text = chartPane.stopLossPrice
         val date = calculateDate(me.getX)
         val price = chartPane.calculateYPrice(me)
 
@@ -223,6 +257,11 @@ class BacktestStage(controller: Controller){
         val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1day", "1week")
         val timeframeComboBox = new ComboBox[String](timeframeOptions)
         timeframeComboBox.value = "1m"
+        timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
+            data.setTimeFrame(newTimeframe)
+            
+            clearAndAddData(chart, data.getCandleSticks)
+            }
         val tickerDropdown = new TickerSelection()
         val tickerComboBox = tickerDropdown.createTickerDropdown()
         val endButton = new Button("Finish Backtesting")
@@ -273,13 +312,12 @@ class BacktestStage(controller: Controller){
 
             table.refresh()
         })
-        val entry = new TextField()
-        val stoploss = new TextField()
-        val takeprofit = new TextField()
+        
+
         val risk = new TextField()
         val enterTradeButton = new Button("Enter Trade")
         enterTradeButton.setOnAction(_ => {
-            val investinput = s"${entry.text.value} ${stoploss.text.value} ${takeprofit.text.value} ${risk.text.value}"
+            val investinput = s"${entry.text.value} ${stopLoss.text.value} ${takeProfit.text.value} ${risk.text.value}"
             controller.computeInput(investinput)
             controller.printDesctriptor()
 
@@ -295,12 +333,31 @@ class BacktestStage(controller: Controller){
             // Call createLongPositionBox with appropriate parameters
             
         }
+
+        val startHorizontalLineButton = new Button("0---")
+        val horizontalLineButton = new Button("----")
+        startHorizontalLineButton.onAction = (ae: ActionEvent) => {
+            nextClickAction = "starthorizontal"
+        }
+
+        horizontalLineButton.onAction = (ae: ActionEvent) => {
+            nextClickAction = "horizontal"
+        }
         val leftButtons = new VBox(
             tradeBoxButton,
-            new Button("Button 2"),
-            new Button("Button 3")
+            startHorizontalLineButton,
+            horizontalLineButton
         )
-
+         
+        chartWithCrosshair.onMouseClicked = (me: MouseEvent) => {
+            if (nextClickAction == "starthorizontal") {
+                chartPane.plotHorizontalStartLine(me)
+                nextClickAction = "" // Reset the action
+            } else if (nextClickAction == "horizontal") {
+                chartPane.plotHorizontalLine(me)
+                nextClickAction = "" // Reset the action
+            }
+        }
         val rightButtons = new VBox(
             new Button("Button 1"),
             new Button("Button 2"),
@@ -315,9 +372,9 @@ class BacktestStage(controller: Controller){
             new Label("Entry Price: "),
             entry,
             new Label("Stop Loss: "),
-            stoploss,
+            stopLoss,
             new Label("Take Profit:"),
-            takeprofit,
+            takeProfit,
             new Label("Risk in %:"),
             risk,
             enterTradeButton

@@ -1,6 +1,7 @@
 package de.htwg.se.TradingGame.view.GUI
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.ComboBox
+
 import java.io.File
 
 class TickerSelection {
@@ -13,7 +14,7 @@ class TickerSelection {
     val tickerDropdown = new ComboBox[String](tickerOptions)
     tickerDropdown.promptText = "Select Ticker"
     if (tickerOptions.nonEmpty) {
-      tickerDropdown.value = tickerOptions.last
+      tickerDropdown.value = tickerOptions.head
     }
     
     tickerDropdown
