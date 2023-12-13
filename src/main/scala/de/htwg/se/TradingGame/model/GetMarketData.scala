@@ -293,6 +293,9 @@ def didTradeWinnorLoose(trade: TradeComponent): String = {
 
 def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, currentPrice: Double, currentDate: String): Unit= {
   trade.currentprofit = 0.0
+  if(trade.dateTradeTriggered.equals("Trade was not triggered")){
+
+  } else {
   val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
   val parsedCurrentDate = LocalDateTime.parse(currentDate, formatter)
   val parsedDateTradeTriggered = LocalDateTime.parse(trade.dateTradeTriggered, formatter)
@@ -310,6 +313,7 @@ def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, current
       } else {
         trade.currentprofit = 0.0
       }
+    }
     }
   }
 }

@@ -2,6 +2,9 @@ package de.htwg.se.TradingGame.model
 import de.htwg.se.TradingGame.model._
 import java.time.LocalDate
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
+import de.htwg.se.TradingGame.model.TradingMethods.showCompany
+import de.htwg.se.TradingGame.model.GetMarketData.getPriceForDateTimeDouble
+import java.io.File
 
 //InvestInterpreter should read entryTrade, stopLossTrade, takeProfitTrade, riskTrade from terminal input
 
@@ -14,7 +17,7 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: St
 
     val invest: String = "[1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]*"
     val wrongInput: String = ".*"
-
+    val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
 
     def doInvest(input: String): (String, BrowseInterpreter) = {
         
@@ -26,9 +29,9 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: St
         (TradingMethods.currentTrade(currentTradestore), new BrowseInterpreter(balance))
     }
         
-
+    def doTickersymbol(input: String): (String, InvestInterpreter) = (showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)), new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance))
     def doWrongInput(input: String): (String, InvestInterpreter) = ("Wrong input. Pleas type a numbers", this)
 
     override val actions: Map[String, String => (String, Interpreter)] =
-        Map((wrongInput, doWrongInput),(invest,doInvest))
+        Map((tickersymbol, doTickersymbol),(wrongInput, doWrongInput),(invest,doInvest))
 }
