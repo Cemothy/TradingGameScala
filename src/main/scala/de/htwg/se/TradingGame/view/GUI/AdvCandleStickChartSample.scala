@@ -89,15 +89,17 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     
      def calculateYCoordinate(price: String): Double = {
         // Get the y-axis
+        val formattedPrice = price.replace(",", ".")
         val yAxis = candleStickChart.yAxis.delegate
 
         // Get the display position for the price
-        val y = yAxis.getDisplayPosition(price.toDouble)
+        val y = yAxis.getDisplayPosition(formattedPrice.toDouble)
 
         y
     }
     def calculateYPrice(me: MouseEvent): String = {
         // Get the y-axis
+        
         val yAxis = candleStickChart.yAxis.delegate
 
         // Get the y-coordinate of the mouse event in the local coordinate system of the y-axis
