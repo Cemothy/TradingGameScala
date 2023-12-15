@@ -372,11 +372,12 @@ class BacktestStage(controller: Controller){
         
         
         applyDateButton.setOnAction(_ => {
-            val browseinput = s"${tickerComboBox.text.toString} ${dateInput.text.value}"
+            val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
             
             val newdata = getCandleSticks(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
             clearAndAddData(chart, newdata)
             //chartPane.setupperboundxtolastdata(data)
+            println(browseinput)
             controller.computeInput(browseinput)
             controller.printDesctriptor()
             tradesBuffer.clear()
