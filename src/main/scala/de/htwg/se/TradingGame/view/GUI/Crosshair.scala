@@ -3,11 +3,17 @@ package de.htwg.se.TradingGame.view.GUI
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout.Pane
 import scalafx.scene.shape.Line
+import scalafx.scene.input.KeyCode.C
+import scalafx.scene.paint.Color
 
 class Crosshair(chartpane: Pane) {
   // Create two Line objects for the crosshair
-  val crosshairVertical = new Line()
-  val crosshairHorizontal = new Line()
+  val crosshairVertical = new Line(){
+    stroke = Color.WHITE
+  }
+  val crosshairHorizontal = new Line(){
+    stroke = Color.WHITE
+  }
 
   def createCrosshair(): Unit = {
     // Add the crosshair lines to the chart
