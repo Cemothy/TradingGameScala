@@ -1,11 +1,11 @@
 package de.htwg.se.TradingGame.controller
-import de.htwg.se.TradingGame.model.{Interpreter, MenuInterpreter}
+import de.htwg.se.TradingGame.model.InterpreterComponent.Interpreter._
 import de.htwg.se.TradingGame.util.Observable
 import de.htwg.se.TradingGame.util.UndoManager
 
 
 class Controller() extends Observable{
- var interpreter: Interpreter = new MenuInterpreter
+ var interpreter: Interpreter = createMenuInterpreter()
  var output:String = ""
  var balance:Double = 0.0
  private val undoManager = new UndoManager

@@ -10,6 +10,8 @@ trait Interpreter {
 
   val descriptor: String
 
+  def createMenuInterpreter(): Interpreter = new MenuInterpreter
+
   final def selectRegEx (input: String): String => (String, Interpreter) =
     actions.filter(k => input.matches(k._1)).last._2
 
