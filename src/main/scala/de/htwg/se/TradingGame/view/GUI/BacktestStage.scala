@@ -2,7 +2,6 @@ package de.htwg.se.TradingGame.view.GUI
 
 import de.htwg.se.TradingGame.controller.Controller
 import de.htwg.se.TradingGame.model.GetMarketData
-import de.htwg.se.TradingGame.model.GetMarketData._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
@@ -55,6 +54,7 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
+    val getMarketData = new GetMarketData()
     val chartpane = new LinechartPane()
     val crosshairPane = new Pane()
      val dateInput = new DatePicker()
@@ -123,11 +123,11 @@ class BacktestStage(controller: Controller){
         def updatecurrentProfit(trade: TradeDoneCalculations): Unit = {
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formattedDate = dateInput.getValue.format(formatter)
-            calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, chartpane.lastPrice , s"$formattedDate,${String.format("%02d",hourSpinner.getValue)}:${String.format("%02d",minuteSpinner.getValue)}")
+            getMarketData.calculateCurrentProfit(trade, TradeWithVolume(trade, controller.balance).volume, chartpane.lastPrice , s"$formattedDate,${String.format("%02d",hourSpinner.getValue)}:${String.format("%02d",minuteSpinner.getValue)}")
         }
 
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
-        tradesBuffer ++= GetMarketData.donetrades
+        tradesBuffer ++= getMarketData.donetrades
 
 
 
@@ -178,7 +178,7 @@ class BacktestStage(controller: Controller){
             controller.computeInput(browseinput)
             controller.printDesctriptor()
             tradesBuffer.clear()
-               tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+               tradesBuffer ++= getMarketData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -199,7 +199,7 @@ class BacktestStage(controller: Controller){
             controller.printDesctriptor()
 
             tradesBuffer.clear()
-            tradesBuffer ++= GetMarketData.donetrades
+            tradesBuffer ++= getMarketData.donetrades
            
             table.refresh()
 

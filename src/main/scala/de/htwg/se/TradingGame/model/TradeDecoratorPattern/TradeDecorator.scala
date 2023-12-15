@@ -1,6 +1,6 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
-abstract class TradeDecorator(val trade: TradeComponent) extends TradeComponent {
+trait TradeDecorator(val trade: TradeComponent) extends TradeComponent {
     def entryTrade: Double = trade.entryTrade
     def stopLossTrade: Double = trade.stopLossTrade
     def takeProfitTrade: Double = trade.takeProfitTrade

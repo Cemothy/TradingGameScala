@@ -2,12 +2,15 @@ package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
 import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
-import de.htwg.se.TradingGame.model.GetMarketData._
+import de.htwg.se.TradingGame.model.GetMarketData
 
 class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade) {
-  val dateTradeTriggered: String = dateWhenTradeTriggered(trade)
-  val tradeWinOrLose: String = didTradeWinnorLoose(trade)
-  val dateTradeDone: String = datewhenTradeisdone(trade)
+  
+  val getMarketData = new GetMarketData
+
+  val dateTradeTriggered: String = getMarketData.dateWhenTradeTriggered(trade)
+  val tradeWinOrLose: String = getMarketData.didTradeWinnorLoose(trade)
+  val dateTradeDone: String = getMarketData.datewhenTradeisdone(trade)
   var currentprofit: Double = 0.0
 
   val creator: ProfitCalculationStrategyCreator = tradeWinOrLose match {

@@ -8,7 +8,7 @@ import java.io.File
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import scala.util.Try
 
-object GetMarketData {
+class GetMarketData {
 
 val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
 
@@ -164,7 +164,7 @@ def isTradeBuyorSell(trade : TradeComponent) : Boolean = {
 
   def dateWhenTradeTriggered(trade: TradeComponent): String = {
     var date: String = "Trade was not triggered"
-    val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
+    val source = Source.fromFile(new java.io.File(this.Path).getParent + s"/Symbols/${trade.ticker}.csv")
     if(isTradeBuyorSell(trade)){
     source.getLines()
       .collect {
@@ -187,7 +187,7 @@ def isTradeBuyorSell(trade : TradeComponent) : Boolean = {
 
 def dateWhenTradehitTakeProfit (trade: TradeComponent): String = {
   var date: String = " Trade did not hit take profit"
-  val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
+  val source = Source.fromFile(new java.io.File(this.Path).getParent + s"/Symbols/${trade.ticker}.csv")
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
   if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
     date = "Trade was not triggered"
@@ -215,7 +215,7 @@ def dateWhenTradehitTakeProfit (trade: TradeComponent): String = {
 
 def dateWhenTradehitStopLoss(trade: TradeComponent): String = {
   var date: String = " Trade did not hit stop loss"
-  val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
+  val source = Source.fromFile(new java.io.File(this.Path).getParent + s"/Symbols/${trade.ticker}.csv")
   val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
   if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
     date = "Trade was not triggered"
@@ -348,12 +348,37 @@ def doneTradeStringwithProfit: String = {
   output
 }
 
+}
 
 
+object TradingMethods {
+  def showCompany(currentTicker: String, date: String, balance: Double, currentPrice: Double): String = {
+    val output =
+      s"""_____________________________________
+         |Currently trading with :
+         |Balance: $balance
+         |Company: $currentTicker
+         |Date: $date
+         |Current Value: $$$currentPrice
+         |_____________________________________
+         |""".stripMargin
 
+    output
+  }
 
+  def currentTrade(trade: Trade): String = {
+    val output =
+      s"""_____________________________________
+         |Current Trade:
+         |Ticker: ${trade.ticker}
+         |Entry: $$${trade.entryTrade}
+         |StopLoss: $$${trade.stopLossTrade}
+         |TakeProfit: $$${trade.takeProfitTrade}
+         |Risk (in percent): ${trade.risk}%
+         |""".stripMargin
 
-
+    output
+  }
 }
 
 

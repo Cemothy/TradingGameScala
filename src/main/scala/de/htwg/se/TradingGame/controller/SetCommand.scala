@@ -9,6 +9,7 @@ import de.htwg.se.TradingGame.model.BrowseInterpreter
 class SetCommand(input: String, controller: Controller) extends Command {
 
   val interpreter = controller.interpreter
+  val getMarketData = new GetMarketData
 
   override def doStep: Unit =  
     val result = interpreter.processInputLine(input)
@@ -16,8 +17,8 @@ class SetCommand(input: String, controller: Controller) extends Command {
     controller.output = result._1
 
   override def undoStep: Unit = 
-    GetMarketData.trades.trimEnd(1)
-    GetMarketData.donetrades.trimEnd(1)
+    getMarketData.trades.trimEnd(1)
+    getMarketData.donetrades.trimEnd(1)
     controller.interpreter = new BrowseInterpreter(interpreter.balance)
 
   override def redoStep: Unit = 

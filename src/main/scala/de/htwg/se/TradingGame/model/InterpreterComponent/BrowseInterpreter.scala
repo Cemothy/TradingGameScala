@@ -3,7 +3,7 @@ import de.htwg.se.TradingGame.model.MenuInterpreter
 import de.htwg.se.TradingGame.model.BrowseInterpreter
 import de.htwg.se.TradingGame.model.InvestInterpreter
 import de.htwg.se.TradingGame.model.TradingMethods._
-import de.htwg.se.TradingGame.model.GetMarketData._
+import de.htwg.se.TradingGame.model.GetMarketData
 import java.time.LocalDate
 import java.io.File
 import scala.util.Try
@@ -12,7 +12,7 @@ import scala.util.Failure
 
 class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
-
+    val getMarketData = new GetMarketData
     override val balance = balanceInput 
     override val descriptor: String = "Please Enter the Tickersymbol of your choice: EURUSD Date: YYYY.MM.DD,HH:MM \n\nto Stop : Q\n\n"
 
@@ -25,7 +25,7 @@ class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
     def doTickersymbol(input: String): (String, Interpreter) = {
         val result = Try {
-            val price = getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)
+            val price = getMarketData.getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)
             val companyInfo = showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, price)
             val interpreter = new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance)
             (companyInfo, interpreter)
@@ -39,7 +39,7 @@ class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
     def doWrongInput(input: String): (String, BrowseInterpreter) = ("Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n", this)
 
-    def doQuit(input: String): (String, BrowseInterpreter) = (closeProgram, this)
+    def doQuit(input: String): (String, BrowseInterpreter) = (getMarketData.closeProgram, this)
 
     override val actions: Map[String, String => (String, Interpreter)] =
         Map((wrongInput, doWrongInput),(tickersymbol, doTickersymbol),(quit,doQuit))

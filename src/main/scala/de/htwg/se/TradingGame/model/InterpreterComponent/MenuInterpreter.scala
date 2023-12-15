@@ -12,7 +12,6 @@ class MenuInterpreter extends Interpreter {
     def doBalance(input: String): (String, BrowseInterpreter) = ("", new BrowseInterpreter(input))
 
     def doWrongInput(input: String): (String, MenuInterpreter) = ("Wrong input. Please type a number!", this)
-
     override val actions: Map[String, String => (String, Interpreter)] =
         Map((wrongInput, doWrongInput),(balanceInput,doBalance))
 }

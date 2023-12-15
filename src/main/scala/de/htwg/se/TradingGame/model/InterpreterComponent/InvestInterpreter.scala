@@ -17,12 +17,13 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: St
 
 
     def doInvest(input: String): (String, BrowseInterpreter) = {
+        val getMarketData = new GetMarketData
         
         val currentTradestore = new Trade(input.split(" ")(0).toDouble, input.split(" ")(1).toDouble, input.split(" ")(2).toDouble, input.split(" ")(3).toDouble, dateTime, tickersymbol)
-        GetMarketData.trades.addOne(new TradeisBuy(currentTradestore))
-        GetMarketData.donetrades.addOne(new TradeDoneCalculations(currentTradestore))
+        getMarketData.trades.addOne(new TradeisBuy(currentTradestore))
+        getMarketData.donetrades.addOne(new TradeDoneCalculations(currentTradestore))
         
-        GetMarketData.balance = balance.toDouble
+        getMarketData.balance = balance.toDouble
         (TradingMethods.currentTrade(currentTradestore), new BrowseInterpreter(balance))
     }
         
