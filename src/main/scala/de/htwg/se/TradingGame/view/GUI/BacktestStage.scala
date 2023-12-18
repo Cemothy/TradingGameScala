@@ -9,8 +9,11 @@ import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.addData
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.clearAndAddData
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.createChart
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.deleteFirstCandle
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.updateCandleStickChartAxis
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
 import de.htwg.se.TradingGame.view.GUI.GetAPIData._
 import javafx.event.ActionEvent
@@ -40,6 +43,7 @@ import scalafx.scene.control.TableColumn
 import scalafx.scene.control.TableColumn.CellDataFeatures
 import scalafx.scene.control.TableView
 import scalafx.scene.control.TextField
+import scalafx.scene.control.ToggleButton
 import scalafx.scene.input.KeyCode
 import scalafx.scene.input.KeyCode.B
 import scalafx.scene.input.KeyEvent
@@ -58,9 +62,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.updateCandleStickChartAxis
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.addData
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.deleteFirstCandle
+
 object BacktestStage extends JFXApp3 {
     val controller = new Controller()
     override def start(): Unit = 
@@ -415,6 +417,14 @@ class BacktestStage(controller: Controller){
 
         val startHorizontalLineButton = new Button("0---")
         val horizontalLineButton = new Button("----")
+        val sentimentcircleButton = new ToggleButton(".oO0")
+        sentimentcircleButton.onAction = (ae: ActionEvent) => {
+            if (sentimentcircleButton.selected.value) {
+                chartPane.addcircle(tickerComboBox.text.value)
+            } else {
+                chartPane.deleteAllCircles()
+            }
+}
         startHorizontalLineButton.onAction = (ae: ActionEvent) => {
             nextClickAction = "starthorizontal"
         }
@@ -425,11 +435,13 @@ class BacktestStage(controller: Controller){
         val leftButtons = new VBox(
             tradeBoxButton,
             startHorizontalLineButton,
-            horizontalLineButton
+            horizontalLineButton,
+            sentimentcircleButton
         )
          
         chartWithCrosshair.onMouseClicked = (me: MouseEvent) => {
             if (nextClickAction == "starthorizontal") {
+                
                 chartPane.plotHorizontalStartLine(me)
                 nextClickAction = "" // Reset the action
             } else if (nextClickAction == "horizontal") {
