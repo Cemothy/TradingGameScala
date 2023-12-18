@@ -8,6 +8,7 @@ import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.CandleStick
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.updateXYAxis
 import de.htwg.se.TradingGame.view.GUI.GetAPINewsSentiment
 import javafx.beans.value.ChangeListener
+import javafx.collections.FXCollections
 import javafx.scene.{chart => jfxsc}
 import javafx.scene.{layout => jfxsl}
 import javafx.scene.{shape => jfxss}
@@ -26,6 +27,7 @@ import scalafx.geometry.Point2D
 import scalafx.scene.Node
 import scalafx.scene.Scene
 import scalafx.scene.chart.Axis
+import scalafx.scene.chart.CategoryAxis
 import scalafx.scene.chart.NumberAxis
 import scalafx.scene.chart.ValueAxis
 import scalafx.scene.chart.XYChart
@@ -45,17 +47,23 @@ import scalafx.scene.shape.LineTo
 import scalafx.scene.shape.MoveTo
 import scalafx.scene.shape.Path
 
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import scala.collection.mutable
+import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.TreeMap
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
 
 class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     private var currentSelectedTimeframe: String = "1m"
     private var selectedTicker: String = "EURUSD"
-    private val chartDataLoader: ChartDataLoader = new ChartDataLoader()
-    var lastPrice = chartDataLoader.lastPrice
     var selectedDate: java.time.LocalDateTime = java.time.LocalDateTime.now()
     var horizontalLines: List[Line] = List()
     var startX = 0.0
@@ -148,7 +156,6 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
         circleEpochTimes = Map()
     }
     def addcircle(symbol: String): Unit = {
-        // Convert the JSON data to Circle objects and add them to the chart
         GetAPINewsSentiment.getNewsSentiment(symbol).as[JsArray].value.foreach { item =>
         val epochTime = (item \ "date").as[Long]
         val weightedSentiment = (item \ "weighted_sentiment").as[Double]
@@ -338,8 +345,8 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     }
     
     
-         entryLine.setStroke(Color.GREEN)
-            entryLine.setStrokeWidth(2)
+         entryLine.setStroke(Color.YELLOW)
+            entryLine.setStrokeWidth(3)
             var dragDeltaX = 0.0
             var dragDeltaY = 0.0
 
@@ -378,7 +385,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
         stopLossPrice = price
 
         stopLossLine.setStroke(Color.RED)
-        stopLossLine.setStrokeWidth(2)
+        stopLossLine.setStrokeWidth(3)
 
         stopLossLine.setOnMousePressed((event: MouseEvent) => {
             dragDeltaX = event.getSceneX
@@ -413,8 +420,8 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
         candleStickChart.addCustomNode(takeProfitLine)
         takeProfitPrice = price
 
-        takeProfitLine.setStroke(Color.BLUE)
-        takeProfitLine.setStrokeWidth(2)
+        takeProfitLine.setStroke(Color.GREEN)
+        takeProfitLine.setStrokeWidth(3)
 
         takeProfitLine.setOnMousePressed((event: MouseEvent) => {
             dragDeltaX = event.getSceneX
@@ -448,10 +455,10 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
             val x = calculateXCoordinate(startX)
             line.setStartX(x)
         }
-        for ((circle, epochTime) <- circleEpochTimes) {
-        val x = calculateXCoordinate(epochTime)
-        circle.centerX = x
-    }
+       for ((circle, epochTime) <- circleEpochTimes) {
+            val x = calculateXCoordinate(epochTime)
+            circle.centerX = x
+        }
     }
 
     def updateOnDrag(me: MouseEvent): Unit ={
@@ -619,7 +626,6 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
 
 object AdvCandleStickChartSample extends JFXApp3 {
     case class CandleStick(day: Double, open: Double, close: Double, high: Double, low: Double)
-  
     override def start(): Unit = {
 
     }
@@ -648,29 +654,73 @@ object AdvCandleStickChartSample extends JFXApp3 {
         updateXYAxis(chart)
         
     }
+    val chartDataMap: TreeMap[Double, XYChart.Data[Number, Number]] = TreeMap()
     def clearAndAddData(chart: CandleStickChart, newData: ListBuffer[CandleStick]): Unit = {
         // Clear the existing data from the chart
         chart.data.clear()
-
+        chartDataMap.clear()
         // Convert the new data into the format required by the chart
         val seriesData = newData.map { d => 
             val data = XYChart.Data[Number, Number](d.day, d.open, d)
+ 
             XYChart.Series[Number, Number](ObservableBuffer(data))
         }
 
         // Add the new data to the chart
         chart.data = ObservableBuffer(seriesData.toSeq: _*)
         updateXYAxis(chart)
-        
     }
 
-    def addData(chart: CandleStickChart, candleStick: CandleStick): Unit = {
-        // Convert the CandleStick object into the format required by the chart
-        val data = XYChart.Data[Number, Number](candleStick.day, candleStick.open, candleStick)
-        val series = XYChart.Series[Number, Number](ObservableBuffer(data))
 
-        // Add the new data to the chart
-        chart.data = series +: chart.data
+ def addDataAndHideAfterDate(chart: CandleStickChart, data: ListBuffer[CandleStick], date: Double): Unit = {
+    // Convert the CandleStick objects into the format required by the chart
+    val seriesData = data.map(candleStick => {
+        val data = XYChart.Data[Number, Number](candleStick.day, candleStick.open, candleStick)
+        data
+    })
+
+    // Convert seriesData to a Set to remove duplicates
+    val seriesDataSet = seriesData.toSet
+
+    // Convert seriesDataSet to a Seq
+    val seriesDataSeq = seriesDataSet.toSeq
+
+    // Create a new series from the data
+    val series = XYChart.Series[Number, Number](ObservableBuffer(seriesDataSeq: _*))
+
+    // Add the new series to the chart
+    chart.data += series
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    // Iterate over all series in the chart
+    for (series <- chart.data) {
+        // Iterate over the data in the current series
+        for (data <- series.getData) {
+                // Get the CandleStick object associated with this data
+            val candleStick = data.getExtraValue.asInstanceOf[CandleStick]
+     
+
+
+            // If the date of the CandleStick is after the specified date, hide the data
+            if (candleStick.day > date) {
+                data.getNode.setVisible(false)
+                // Add the data to the TreeMap
+                chartDataMap += (candleStick.day -> data)
+            }
+        }
+    }
+}
+    def showData(chart: CandleStickChart): Unit = {
+        // Check if the map is not empty
+        if (chartDataMap.nonEmpty) {
+            // Get the first entry in the map
+            val firstEntry = chartDataMap.head
+
+            // Make the first invisible candle visible
+            firstEntry._2.getNode.setVisible(true)
+
+            // Remove the first entry from the map
+            chartDataMap -= firstEntry._1
+        }
     }
 
    def deleteFirstCandle(chart: CandleStickChart): Unit = {
@@ -692,11 +742,11 @@ object AdvCandleStickChartSample extends JFXApp3 {
     
     def updateXYAxis(chart: CandleStickChart): Unit = {
         val yAxis = chart.getYAxis.asInstanceOf[javafx.scene.chart.NumberAxis]
-        val xAxis = chart.getXAxis.asInstanceOf[javafx.scene.chart.NumberAxis]
+         val xAxis = chart.getXAxis.asInstanceOf[javafx.scene.chart.NumberAxis]
 
         updateAxis(yAxis)
         updateAxis(xAxis)
-    }
+}
 
     def updateAxis(axis: javafx.scene.chart.NumberAxis): Unit = {
         val getLowerBoundMethod = axis.getClass.getMethod("getLowerBound")
@@ -709,45 +759,46 @@ object AdvCandleStickChartSample extends JFXApp3 {
 
         axis.setTickUnit(tickUnit)
     }
+
+ 
     def createChart(candleData: ListBuffer[CandleStick]): CandleStickChart = {
-    //Style Sheet loaded from external
-    val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")
-    if (cssURL != null) {
-        val css = cssURL.toExternalForm
+        //Style Sheet loaded from external
+        val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")
+        if (cssURL != null) {
+            val css = cssURL.toExternalForm
 
-        val minDatay = candleData.take(200).minBy(_.low).low
-        val maxDatay = candleData.take(200).maxBy(_.high).high
+            val minDatay = candleData.take(200).minBy(_.low).low
+            val maxDatay = candleData.take(200).maxBy(_.high).high
 
-        val firstCandle = candleData.last.day
-        val minDatax = (candleData.take(200).minBy(_.day).day)
-        val maxDatax = (candleData.take(200).maxBy(_.day).day)
+            val firstCandle = candleData.last.day
+            val minDatax = (candleData.take(200).minBy(_.day).day)
+            val maxDatax = (candleData.take(200).maxBy(_.day).day)
 
-        val xAxis = new NumberAxis(minDatax, maxDatax,1) {
+            val xAxis = new NumberAxis(minDatax, maxDatax,1) {
+            }
+            val yAxis = new NumberAxis(minDatay, maxDatay, 1) {
+            }
+
+            val seriesData = candleData.map { d => 
+            val data = XYChart.Data[Number, Number](d.day, d.open, d)
+            XYChart.Series[Number, Number](ObservableBuffer(data))
+            }
+
+            val chart = new CandleStickChart(xAxis, yAxis) {
+            data = ObservableBuffer(seriesData.toSeq: _*)
+            getStylesheets += css
+            }
+            updateXYAxis(chart)
+            chart 
+        } else {
+            println("Resource not found: AdvCandleStickChartSample.css")
+            null
+        }
         }
 
-        val yAxis = new NumberAxis(minDatay, maxDatay, 1) {
-        }
-
-        val seriesData = candleData.map { d => 
-        val data = XYChart.Data[Number, Number](d.day, d.open, d)
-        XYChart.Series[Number, Number](ObservableBuffer(data))
-        }
-
-        val chart = new CandleStickChart(xAxis, yAxis) {
-        data = ObservableBuffer(seriesData.toSeq: _*)
-        getStylesheets += css
-        }
-        updateXYAxis(chart)
-        chart 
-    } else {
-        println("Resource not found: AdvCandleStickChartSample.css")
-        null
-    }
-    }
 
 
-
-    class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuffer[jfxsc.XYChart.Series[Number, Number]] = ObservableBuffer.empty)
+  class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuffer[jfxsc.XYChart.Series[Number, Number]] = ObservableBuffer.empty)
     extends jfxsc.XYChart[Number, Number](xa, ya) {
     setData(initialData)
     setAnimated(false)
