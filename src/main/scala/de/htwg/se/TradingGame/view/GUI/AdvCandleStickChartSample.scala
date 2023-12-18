@@ -5,14 +5,20 @@
 package de.htwg.se.TradingGame.view.GUI
 
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.CandleStick
+import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.updateXYAxis
+import de.htwg.se.TradingGame.view.GUI.GetAPINewsSentiment
+import javafx.beans.value.ChangeListener
 import javafx.scene.{chart => jfxsc}
 import javafx.scene.{layout => jfxsl}
 import javafx.scene.{shape => jfxss}
 import javafx.{scene => jfxs}
+import play.api.libs.json.JsArray
 import scalafx.Includes._
 import scalafx.animation.FadeTransition
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp3
+import scalafx.beans.property.DoubleProperty
+import scalafx.beans.value.ObservableValue
 import scalafx.collections.ObservableBuffer
 import scalafx.event.ActionEvent
 import scalafx.event.EventHandler
@@ -25,6 +31,7 @@ import scalafx.scene.chart.ValueAxis
 import scalafx.scene.chart.XYChart
 import scalafx.scene.control.Label
 import scalafx.scene.control.Tooltip
+import scalafx.scene.input.ContextMenuEvent
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.input.ScrollEvent
 import scalafx.scene.layout.GridPane
@@ -32,6 +39,7 @@ import scalafx.scene.layout.Pane
 import scalafx.scene.layout.Region
 import scalafx.scene.layout.StackPane
 import scalafx.scene.paint.Color
+import scalafx.scene.shape.Circle
 import scalafx.scene.shape.Line
 import scalafx.scene.shape.LineTo
 import scalafx.scene.shape.MoveTo
@@ -41,11 +49,6 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
-import scalafx.scene.input.ContextMenuEvent
-import scalafx.beans.property.DoubleProperty
-import javafx.beans.value.ChangeListener
-import scalafx.beans.value.ObservableValue
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.updateXYAxis
 
 
 class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
@@ -65,6 +68,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     var takeProfitPrice = ""
     var stopLossLine: Line = new Line()
     var takeProfitLine: Line = new Line()
+    var circleEpochTimes: Map[Circle, Long] = Map()
     candleStickChart.verticalGridLinesVisible = false
     candleStickChart.horizontalGridLinesVisible = false
     children.add(candleStickChart)
@@ -134,6 +138,40 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
 
         date
     }
+
+    def deleteAllCircles(): Unit = {
+        for ((circle, _) <- circleEpochTimes) {
+            // Remove the circle from the chart
+            candleStickChart.plotChildren.remove(circle)
+        }
+        // Clear the circleEpochTimes map
+        circleEpochTimes = Map()
+    }
+    def addcircle(symbol: String): Unit = {
+        // Convert the JSON data to Circle objects and add them to the chart
+        GetAPINewsSentiment.getNewsSentiment(symbol).as[JsArray].value.foreach { item =>
+        val epochTime = (item \ "date").as[Long]
+        val weightedSentiment = (item \ "weighted_sentiment").as[Double]
+
+        // Create a new Circle object
+        val circle = new Circle()
+
+        // Set the center of the circle to the date and the top of the chart
+        circle.centerX = calculateXCoordinate(epochTime)
+        circle.centerY = 15
+
+        // Set the radius of the circle
+        circle.radius = 20 * weightedSentiment.abs
+
+        // Set the color of the circle based on the sentiment value
+        circle.fill = if (weightedSentiment > 0) Color.GREEN else Color.RED
+
+        // Add the circle to the chart
+        candleStickChart.addCustomNode(circle)
+        circleEpochTimes = circleEpochTimes + (circle -> epochTime)
+        }
+    }
+   
 
     def plotHorizontalLine(me: MouseEvent): Unit = {
         val point = this.sceneToLocal(new Point2D(me.sceneX, me.sceneY))
@@ -410,6 +448,10 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
             val x = calculateXCoordinate(startX)
             line.setStartX(x)
         }
+        for ((circle, epochTime) <- circleEpochTimes) {
+        val x = calculateXCoordinate(epochTime)
+        circle.centerX = x
+    }
     }
 
     def updateOnDrag(me: MouseEvent): Unit ={
