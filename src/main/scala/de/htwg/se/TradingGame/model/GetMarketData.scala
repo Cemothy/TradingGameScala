@@ -1,143 +1,182 @@
 package de.htwg.se.TradingGame.model 
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model._
-import scala.io.Source
+
+import java.io.File
+import java.sql.Connection
+import java.sql.DriverManager
+import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
-import java.io.File
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
+import scala.io.Source
 
 object GetMarketData {
-
+val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
+val username = "dbsys31"
+val password = "dbsys31"
 val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
-
+val formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-def isDateInFile(dateTime: String, dataFilePath: String): Boolean = {
-  var dateInFile: Boolean = false
-  val source = Source.fromFile(dataFilePath)
-  var File: String = "No Date found"
-  //look if date is in file 
-  File = source.getLines()
-      .collect {
-        case line if line.startsWith(dateTime) => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
-      }
-      .toList
-      .headOption
-      .getOrElse("No Date found")
-      source.close()
-      if(File.equals("No Date found")){
-        false
-      } else {
-        true
-      }
+def isDateInFile(dateTime: String): Boolean = {
+  var conn: Connection = DriverManager.getConnection(url, username, password)
 
+  // Prepare the SQL statement
+  val sql = "SELECT COUNT(*) FROM Candlestick WHERE Zeitstempel = TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+  pstmt.setString(1, dateTime)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val count = rs.getInt(1)
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return true if the count is greater than 0, false otherwise
+  count > 0
 }
 
-def nextPossibleDateinFile(dateTime: String, dataFilePath: String): String = {
-  var nextPossibleDate: String = ""
-  val source = Source.fromFile(dataFilePath)
- //read the last line of source and give out the Date and time
-  if(isDateInFile(dateTime, dataFilePath)){
-    nextPossibleDate = dateTime
-  } else {
-    nextPossibleDate = source.getLines()
-      .collect {
-        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateTime, formatter)) => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
-      }
-      .toList
-      .headOption
-      .getOrElse("No Date found") // If no matching line found, return 0.0
-  }
-  source.close()
-  nextPossibleDate
+def nextPossibleDateinFile(dateTime: String): String = {
+  var conn: Connection = DriverManager.getConnection(url, username, password)
+
+  // Prepare the SQL statement
+  val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE Zeitstempel > TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+  pstmt.setString(1, dateTime)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val nextPossibleDate = rs.getTimestamp(1)
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the next possible date, or "No Date found" if there's no such date
+  if (nextPossibleDate != null) nextPossibleDate.toString else "No Date found"
 }
 
-def getLastDateofFile (dataFilePath: String): String = {
-  var lastDate: String = ""
-  val source = Source.fromFile(dataFilePath)
- //read the last line of source and give out the Date and time
-  
-    lastDate = source.getLines()
-      .toList
-      .lastOption
-      .getOrElse("No Date found")
-      source.close()
+def getLastDateofFile (): String = {
 
-  lastDate.split(",")(0) + "," + lastDate.split(",")(1)
+  var conn: Connection = DriverManager.getConnection(url, username, password)
 
+  // Prepare the SQL statement
+  val sql = "SELECT MAX(Zeitstempel) FROM Candlestick WHERE TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val lastDate = rs.getTimestamp(1)
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the last date, or "No Date found" if there's no such date
+  if (lastDate != null) lastDate.toString else "No Date found"
 }
 
-def getFirsDateofFile (dataFilePath: String): String = {
-  var firstDate: String = ""
-  val source = Source.fromFile(dataFilePath)
- //read the last line of source and give out the Date and time
-  
-    firstDate = source.getLines()
-      .toList
-      .headOption
-      .getOrElse("No Date found")
-      source.close()
+def getFirsDateofFile (): String = {
+  var conn: Connection = DriverManager.getConnection(url, username, password)
 
-  firstDate.split(",")(0) + "," + firstDate.split(",")(1)
+  // Prepare the SQL statement
+  val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
 
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val firstDate = rs.getTimestamp(1)
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the first date, or "No Date found" if there's no such date
+  if (firstDate != null) firstDate.toString else "No Date found"
 }
-def getPriceForDateTimeDouble(dateTime: String, dataFilePath: String, ohlc: Integer): Double = {
-  val priceString = getPriceForDateTimeString(dateTime, dataFilePath, ohlc)
+def getPriceForDateTimeDouble(dateTime: String, ohlc: String): Double = {
+  var conn: Connection = DriverManager.getConnection(url, username, password)
 
-  if(priceString.equals("date is after last date of file") || priceString.equals("date is before first date of file")){
-    0.0
-  } else { 
-    priceString.toDouble
-  }
+  // Prepare the SQL statement
+  val sql = s"SELECT $ohlc FROM Candlestick WHERE Zeitstempel = TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+  pstmt.setString(1, dateTime)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  val price = if (rs.next()) rs.getDouble(1) else 0.0
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the price
+  price
 }
 
-def getPriceForDateTimeString(dateTime: String, dataFilePath: String, ohlc: Integer): String = {
-  var price: String = "0.0"
-  val source = Source.fromFile(dataFilePath)
+def getPriceForDateTimeString(dateTime: String, ohlc: String): String = {
+  var conn: Connection = DriverManager.getConnection(url, username, password)
 
-  if(!isDateAfterLastDateinFile(dateTime, dataFilePath) && !isDateBeforefirstDateinFile(dateTime, dataFilePath)){
-    price = source.getLines()
-      .collect {
-        case line if line.startsWith(dateTime) || LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateTime, formatter)) => line.split(",")(ohlc) // Fetching the price
-      }
-      .toList
-      .headOption
-      .getOrElse("0.0") // If no matching line found, return 0.0
-      source.close()
-    }
-      if(price.equals("0.0")){
-        if(isDateAfterLastDateinFile(dateTime, dataFilePath)){
-          price = "date is after last date of file"
-        } else if(isDateBeforefirstDateinFile(dateTime, dataFilePath)){
-          price = "date is before first date of file"
-        }
-        } else {
-        price
-      }
-      
-      price
-      }
+  // Prepare the SQL statement
+  val sql = s"SELECT $ohlc FROM Candlestick WHERE Zeitstempel = TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+  pstmt.setString(1, dateTime)
 
-def isDateBeforefirstDateinFile(dateTime: String, dataFilePath: String): Boolean = {
-  var dateBeforeFirstDate: Boolean = false
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  val price = if (rs.next()) rs.getString(1) else "0.0"
 
-  val firstDate = getFirsDateofFile(dataFilePath)
-  val firstDateLocalDateTime = LocalDateTime.parse(firstDate, formatter)
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the price
+  price
+}
+
+def isDateBeforefirstDateinFile(dateTime: String): Boolean = {
+  var conn: Connection = DriverManager.getConnection(url, username, password)
+
+  // Prepare the SQL statement
+  val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val firstDate = rs.getTimestamp(1).toLocalDateTime
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Compare the provided date with the first date
+  val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
   val dateTimeLocalDateTime = LocalDateTime.parse(dateTime, formatter)
 
-  if(dateTimeLocalDateTime.isBefore(firstDateLocalDateTime)){
-    dateBeforeFirstDate = true
-  } else {
-    dateBeforeFirstDate = false
-  }
-  dateBeforeFirstDate
+  dateTimeLocalDateTime.isBefore(firstDate)
 }
 
-def isDateAfterLastDateinFile(dateTime: String, dataFilePath: String): Boolean = {
+def isDateAfterLastDateinFile(dateTime: String): Boolean = {
   var dateAfterLastDate: Boolean = false
 
-  val lastDate = getLastDateofFile(dataFilePath)
+  val lastDate = getLastDateofFile()
   val lastDateLocalDateTime = LocalDateTime.parse(lastDate, formatter)
   val dateTimeLocalDateTime = LocalDateTime.parse(dateTime, formatter)
 
@@ -169,82 +208,152 @@ def isTradeBuyorSell(trade : TradeComponent) : Boolean = {
   //* @return String
 
 
-  def dateWhenTradeTriggered(trade: TradeComponent): String = {
-    var date: String = "Trade was not triggered"
-    val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
-    if(isTradeBuyorSell(trade)){
-    source.getLines()
-      .collect {
-        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.datestart, formatter))  && trade.entryTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
-      }
-      .toList
-      .headOption
-      .getOrElse("Trade was not triggered") // If no matching line found, return 0.0
-    }else{
-      source.getLines()
-      .collect {
-        case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.datestart, formatter))  && trade.entryTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
-      }
-      .toList
-      .headOption
-      .getOrElse("Trade was not triggered") // If no matching line found, return 0.0
-    }
+def dateWhenTradeTriggered(trade: TradeComponent): String = {
+  var conn: Connection = null
+  var pstmt: PreparedStatement = null
+  var rs: ResultSet = null
+  var date: String = "Trade was not triggered"
+
+  try {
+    conn = DriverManager.getConnection(url, username, password)
+    val datestart = LocalDateTime.parse(trade.datestart, formatter)
+    val formattedDatestart = datestart.format(outputFormatter)
+
+    // Prepare the SQL statement
+    val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
+                  JOIN Markt m ON c.MarktID = m.MarktID
+                  WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= TO_TIMESTAMP('$formattedDatestart', 'YYYY-MM-DD HH24:MI:SS')
+                  ORDER BY c.Zeitstempel"""
+
+
+    pstmt = conn.prepareStatement(sql)
+
+    // Execute the query and get the result
+    rs = pstmt.executeQuery()
+    
   
+    // Process the result
+    var found = false
+    while (rs.next() && !found) {
+      val line = rs.getTimestamp("Zeitstempel").toLocalDateTime.format(formatter) + "," + rs.getDouble("HighPrice") + "," + rs.getDouble("LowPrice")
+      if (isTradeBuyorSell(trade)) {
+        
+        if (LocalDateTime.parse(line.split(",")(0)+ "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.datestart, formatter)) && trade.entryTrade > line.split(",")(3).toDouble) {
+          date = line.split(",")(0)+ "," + line.split(",")(1)
+          found = true
+        }
+      } else {
+        if (LocalDateTime.parse(line.split(",")(0)+ "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(trade.datestart, formatter)) && trade.entryTrade < line.split(",")(2).toDouble) {
+          date = line.split(",")(0)+ "," + line.split(",")(1)
+          found = true
+        }
+      }
+    }
+  } finally {
+    if (rs != null) rs.close()
+    if (pstmt != null) pstmt.close()
+    if (conn != null) conn.close()
+  }
+
+  date
 }
 
-def dateWhenTradehitTakeProfit (trade: TradeComponent): String = {
-  var date: String = " Trade did not hit take profit"
-  val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
-  val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
-  if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
-    date = "Trade was not triggered"
-  } else{
-  if(isTradeBuyorSell(trade)){
-    date = source.getLines()
-    .collect {
-      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.takeProfitTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+def dateWhenTradehitTakeProfit(trade: TradeComponent): String = {
+  var conn: Connection = null
+  var pstmt: PreparedStatement = null
+  var rs: ResultSet = null
+  var date: String = "Trade did not hit take profit"
+
+  try {
+    conn = DriverManager.getConnection(url, username, password)
+    val datestart = LocalDateTime.parse(trade.datestart, formatter)
+    val formattedDatestart = datestart.format(outputFormatter)
+    // Prepare the SQL statement
+    val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
+              JOIN Markt m ON c.MarktID = m.MarktID
+              WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= TO_TIMESTAMP('$formattedDatestart', 'YYYY-MM-DD HH24:MI:SS')
+              ORDER BY c.Zeitstempel"""
+
+    pstmt = conn.prepareStatement(sql)
+
+    // Execute the query and get the result
+    rs = pstmt.executeQuery()
+
+    val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
+    if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
+      date = "Trade was not triggered"
+    } else {
+      var found = false
+      while (rs.next() && !found) {
+        val line = rs.getTimestamp("Zeitstempel").toLocalDateTime.format(formatter) + ","  + rs.getDouble("HighPrice") + "," + rs.getDouble("LowPrice")
+        if (isTradeBuyorSell(trade)) {
+          if (LocalDateTime.parse(line.split(",")(0)+ "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter)) && trade.takeProfitTrade < line.split(",")(2).toDouble) {
+            date = line.split(",")(0)+ "," + line.split(",")(1)
+            found = true
+          }
+        } else {
+          if (LocalDateTime.parse(line.split(",")(0)+ "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter)) && trade.takeProfitTrade > line.split(",")(3).toDouble) {
+            date = line.split(",")(0)+ "," + line.split(",")(1)
+            found = true
+          }
+        }
+      }
     }
-    .toList
-    .headOption
-    .getOrElse("Trade did not hit take profit") // If no matching line found, return 0.0
-  }else{
-    date = source.getLines()
-    .collect {
-      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.takeProfitTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
-    }
-    .toList
-    .headOption
-    .getOrElse("Trade did not hit take profit") // If no matching line found, return 0.0
+  } finally {
+    if (rs != null) rs.close()
+    if (pstmt != null) pstmt.close()
+    if (conn != null) conn.close()
   }
-  }
+
   date
 }
 
 def dateWhenTradehitStopLoss(trade: TradeComponent): String = {
-  var date: String = " Trade did not hit stop loss"
-  val source = Source.fromFile(new java.io.File(GetMarketData.Path).getParent + s"/Symbols/${trade.ticker}.csv")
-  val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
-  if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
-    date = "Trade was not triggered"
-  } else{
-  if(isTradeBuyorSell(trade)){
-    date = source.getLines()
-    .collect {
-      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.stopLossTrade > line.split(",")(4).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
+  var conn: Connection = null
+  var pstmt: PreparedStatement = null
+  var rs: ResultSet = null
+  var date: String = "Trade did not hit stop loss"
+
+  try {
+    conn = DriverManager.getConnection(url, username, password)
+    val datestart = LocalDateTime.parse(trade.datestart, formatter)
+    val formattedDatestart = datestart.format(outputFormatter)
+    // Prepare the SQL statement
+    val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
+              JOIN Markt m ON c.MarktID = m.MarktID
+              WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= TO_TIMESTAMP('$formattedDatestart', 'YYYY-MM-DD HH24:MI:SS')
+              ORDER BY c.Zeitstempel"""
+    pstmt = conn.prepareStatement(sql)
+
+    // Execute the query and get the result
+    rs = pstmt.executeQuery()
+
+    val dateWhenTradeTriggered1 = dateWhenTradeTriggered(trade)
+    if(dateWhenTradeTriggered1.equals("Trade was not triggered")){
+      date = "Trade was not triggered"
+    } else {
+      var found = false
+      while (rs.next() && !found) {
+        val line = rs.getTimestamp("Zeitstempel").toLocalDateTime.format(formatter) + ","  + rs.getDouble("HighPrice") + "," + rs.getDouble("LowPrice")
+        if (isTradeBuyorSell(trade)) {
+          if (LocalDateTime.parse(line.split(",")(0)+ "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter)) && trade.stopLossTrade > line.split(",")(3).toDouble) {
+            date = line.split(",")(0)+ "," + line.split(",")(1)
+            found = true
+          }
+        } else {
+          if (LocalDateTime.parse(line.split(",")(0)+ "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter)) && trade.stopLossTrade < line.split(",")(2).toDouble) {
+            date = line.split(",")(0)+ "," + line.split(",")(1)
+            found = true
+          }
+        }
+      }
     }
-    .toList
-    .headOption
-    .getOrElse("Trade did not hit stop loss") // If no matching line found, return 0.0
-  }else{
-    date = source.getLines()
-    .collect {
-      case line if LocalDateTime.parse(line.split(",")(0) + "," + line.split(",")(1), formatter).isAfter(LocalDateTime.parse(dateWhenTradeTriggered1, formatter))  && trade.stopLossTrade < line.split(",")(3).toDouble => line.split(",")(0) + "," + line.split(",")(1) // Fetching the date and time
-    }
-    .toList
-    .headOption
-    .getOrElse("Trade did not hit stop loss") // If no matching line found, return 0.0
+  } finally {
+    if (rs != null) rs.close()
+    if (pstmt != null) pstmt.close()
+    if (conn != null) conn.close()
   }
-}
+
   date
 }
 

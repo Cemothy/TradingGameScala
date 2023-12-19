@@ -72,7 +72,7 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-    var data = getCandleSticks("1min", "TSLA", LocalDateTime.now())
+    var data = getCandleSticks("60min", "EURUSD", LocalDateTime.now())
 
     val chart = createChart(data)
     val chartPane = new DraggableCandleStickChart(chart)
@@ -268,11 +268,11 @@ class BacktestStage(controller: Controller){
         
         val tickerComboBox = new TextField {
         promptText = "Enter Ticker"
-        text = "TSLA"
+        text = "EURUSD"
         }
         val timeframeOptions = ObservableBuffer("1min", "5min", "15min", "60min", "4h", "1d", "1w")
         val timeframeComboBox = new ComboBox[String](timeframeOptions)
-        timeframeComboBox.value = "1min"
+        timeframeComboBox.value = "60min"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
             
             val newdata = getCandleSticks(newTimeframe.toString(), tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
@@ -350,8 +350,11 @@ class BacktestStage(controller: Controller){
             }
 
             dateInput.text.value = newDateTime.format(formatter)
-
-            
+            val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
+            println(browseinput)
+            controller.computeInput(browseinput)
+            controller.printDesctriptor()
+    
             showData(chart)
 
             tradesBuffer.clear()
@@ -502,7 +505,10 @@ class BacktestStage(controller: Controller){
                 val newdata = getCandleSticks(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
                 addDataAndHideAfterDate(chart, newdata, localDateTime.atZone(ZoneId.systemDefault()).toEpochSecond)
                 //updateCandleStickChartAxis(chart, newdata)
-            
+                val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
+                println(browseinput)
+                controller.computeInput(browseinput)
+                controller.printDesctriptor()
                 nextClickAction = ""
             }
         }
