@@ -69,7 +69,7 @@ object GetAPIData extends App {
         }
         val zize = size + candleSticks.size
         println("zize: " + zize)
-          if (zize < 200) {
+          if (zize < 200 && size != zize) {
             val startDate = endDate.minusMonths(1).withDayOfMonth(endDate.minusMonths(1).toLocalDate.lengthOfMonth())
             val newsize = size + candleSticks.size
             println("newsize: " + newsize) 

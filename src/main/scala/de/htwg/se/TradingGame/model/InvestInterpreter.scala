@@ -14,10 +14,11 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: St
     override val balance = balanceInput
     override val descriptor: String = "Please enter your entryTrade stopLossTrade takeProfitTrade riskTrade\n"
     
-
+    val tickersymbolbrowse: String = "EURUSD [0-9]{4}.[0-9]{2}.[0-9]{2},[0-9]{2}:[0-9]{2}"
     val invest: String = "[1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]* [1-9][0-9]*.[0-9]*"
     val wrongInput: String = ".*"
     val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
+
 
     def doInvest(input: String): (String, BrowseInterpreter) = {
         
@@ -29,9 +30,9 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: St
         (TradingMethods.currentTrade(currentTradestore), new BrowseInterpreter(balance))
     }
         
-    def doTickersymbol(input: String): (String, InvestInterpreter) = (showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, getPriceForDateTimeDouble(input.split(" ")(1), new java.io.File(Path).getParent +  s"/Symbols/${input.split(" ")(0)}.csv", 5)), new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance))
+    def doTickersymbol(input: String): (String, InvestInterpreter) = (showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, getPriceForDateTimeDouble(input.split(" ")(1), "OpenPrice")), new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance))
     def doWrongInput(input: String): (String, InvestInterpreter) = ("Wrong input. Pleas type a numbers", this)
 
     override val actions: Map[String, String => (String, Interpreter)] =
-        Map((tickersymbol, doTickersymbol),(wrongInput, doWrongInput),(invest,doInvest))
+        Map((wrongInput, doWrongInput),(tickersymbolbrowse, doTickersymbol),(invest,doInvest))
 }
