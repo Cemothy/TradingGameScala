@@ -148,9 +148,12 @@ class BacktestStage(controller: Controller){
     chartWithCrosshair.onMouseMoved = (me: MouseEvent) => {
         chartPane.updateAllLines()
         crosshair.updateCrosshair(me)
-        entry.text = chartPane.entryprice
-        takeProfit.text = chartPane.takeProfitPrice
-        stopLoss.text = chartPane.stopLossPrice
+        
+        entry.text = chartPane.entryprice.replace(",", ".")
+        
+        takeProfit.text = chartPane.takeProfitPrice.replace(",", ".")
+        
+        stopLoss.text = chartPane.stopLossPrice.replace(",", ".")
         val epochSeconds = chartPane.calculateXDate(me)
         val instant = Instant.ofEpochSecond(epochSeconds.toLong)
         val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())

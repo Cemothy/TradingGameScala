@@ -338,6 +338,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
         
         horizontalLines = entryLine :: horizontalLines
         candleStickChart.addCustomNode(entryLine)
+        price.replace(",", ".")
         entryprice = price
 
         // Set the stroke color and width of the line
@@ -364,6 +365,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
                 dragDeltaY = event.getSceneY
                 val newPrice = calculateYPrice(event)
                 linePrices = linePrices + (entryLine -> newPrice)
+                newPrice.replace(",", ".")
                 entryprice = newPrice
                 event.consume()
             })
@@ -382,6 +384,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
 
         horizontalLines = stopLossLine :: horizontalLines
         candleStickChart.addCustomNode(stopLossLine)
+        price.replace(",", ".")
         stopLossPrice = price
 
         stopLossLine.setStroke(Color.RED)
@@ -400,6 +403,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
             dragDeltaY = event.getSceneY
             val newPrice = calculateYPrice(event)
             linePrices = linePrices + (stopLossLine -> newPrice)
+            newPrice.replace(",", ".")
             stopLossPrice = newPrice
             event.consume()
         })
@@ -418,6 +422,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
 
         horizontalLines = takeProfitLine :: horizontalLines
         candleStickChart.addCustomNode(takeProfitLine)
+        price.replace(",", ".")
         takeProfitPrice = price
 
         takeProfitLine.setStroke(Color.GREEN)
@@ -436,6 +441,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
             dragDeltaY = event.getSceneY
             val newPrice = calculateYPrice(event)
             linePrices = linePrices + (takeProfitLine -> newPrice)
+            newPrice.replace(",", ".")
             takeProfitPrice = newPrice
             event.consume()
         })
