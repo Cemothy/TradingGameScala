@@ -1,8 +1,8 @@
 package de.htwg.se.TradingGame.view.GUI
 
 import de.htwg.se.TradingGame.controller.Controller
-import de.htwg.se.TradingGame.model.GetMarketData
-import de.htwg.se.TradingGame.model.GetMarketData._
+import de.htwg.se.TradingGame.model.DataSave.TradeData
+import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
@@ -12,10 +12,13 @@ import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
 import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample._
 import de.htwg.se.TradingGame.view.GUI.BalanceStage
 import de.htwg.se.TradingGame.view.GUI.GetAPIData._
+import de.htwg.se.TradingGame.view.GUI.GetDatabaseData._
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.scene.shape.Line
 import scalafx.Includes._
+import scalafx.animation.KeyFrame
+import scalafx.animation.Timeline
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.beans.property.ObjectProperty
@@ -32,6 +35,7 @@ import scalafx.scene.control.Button
 import scalafx.scene.control.ComboBox
 import scalafx.scene.control.DatePicker
 import scalafx.scene.control.Label
+import scalafx.scene.control.Slider
 import scalafx.scene.control.Spinner
 import scalafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory
 import scalafx.scene.control.SplitPane
@@ -53,17 +57,14 @@ import scalafx.scene.layout.Region
 import scalafx.scene.layout.StackPane
 import scalafx.scene.layout.VBox
 import scalafx.scene.paint.Color
+import scalafx.util.Duration
+
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.time.OffsetDateTime
-import scalafx.animation.{KeyFrame, Timeline}
-import scalafx.util.Duration
-import javafx.event.{ActionEvent, EventHandler}
-import scalafx.scene.control.Slider
+import java.time.ZoneId
 import java.time.ZoneOffset
-
+import java.time.format.DateTimeFormatter
 object BacktestStage extends JFXApp3 {
     val controller = new Controller()
     override def start(): Unit = 
@@ -72,7 +73,9 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: Controller){
-    var data = getCandleSticks("60min", "EURUSD", LocalDateTime.now())
+    val sizecandles = 500
+
+    var data = getCandleSticksdadabase("1h", "EURUSD", LocalDateTime.now(), sizecandles)
 
     val chart = createChart(data)
     val chartPane = new DraggableCandleStickChart(chart)
@@ -81,6 +84,7 @@ class BacktestStage(controller: Controller){
     var summprofit = 0.0
     var nextClickAction: String = ""
     val crosshairPane = new Pane()
+    val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
     val crosshair = new Crosshair(crosshairPane) // Pass the crosshairPane instead of chartPane
     crosshair.createCrosshair()
     val dateLabelcross = new Label {
@@ -154,7 +158,7 @@ class BacktestStage(controller: Controller){
         val epochSeconds = chartPane.calculateXDate(me)
         val instant = Instant.ofEpochSecond(epochSeconds.toLong)
         val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
-        val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+        
         val dateString = localDateTime.format(formatter)
         val price = chartPane.calculateYPrice(me)
 
@@ -258,7 +262,7 @@ class BacktestStage(controller: Controller){
         }
 
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
-        tradesBuffer ++= GetMarketData.donetrades
+        tradesBuffer ++= TradeData.donetrades
 
 
 
@@ -270,19 +274,19 @@ class BacktestStage(controller: Controller){
         promptText = "Enter Ticker"
         text = "EURUSD"
         }
-        val timeframeOptions = ObservableBuffer("1min", "5min", "15min", "60min", "4h", "1d", "1w")
+        val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1d", "1w")
         val timeframeComboBox = new ComboBox[String](timeframeOptions)
-        timeframeComboBox.value = "60min"
+        timeframeComboBox.value = "1h"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
             
-            val newdata = getCandleSticks(newTimeframe.toString(), tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
+            val newdata = getCandleSticksdadabase(newTimeframe.toString(), tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
             clearAndAddData(chart, newdata)
             
             }
 
         tickerComboBox.onKeyPressed = (keyEvent: KeyEvent) => {
             if (keyEvent.code == KeyCode.Enter) {
-                val newdata = getCandleSticks(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
+                val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
                 clearAndAddData(chart, newdata)
                 updateCandleStickChartAxis(chart, newdata)
             }
@@ -300,15 +304,37 @@ class BacktestStage(controller: Controller){
 
         class TimelineToggleButton extends ToggleButton {
             var timeline: Timeline = _
-
+            
             def startTimeline(): Unit = {
                 timeline = new Timeline {
                     cycleCount = Timeline.Indefinite
-                    keyFrames = KeyFrame(Duration(speedSlider.value.value), onFinished = _ => showData(chart))
+                    keyFrames = KeyFrame(Duration(speedSlider.value.value), onFinished = _ => showdataandupdatedatetext()
+
+                    )
                 }
                 timeline.play()
             }
         }
+
+
+        def showdataandupdatedatetext(): Unit = {
+            val currentDateTime = LocalDateTime.parse(dateInput.text.value, formatter)
+            val newDateTime = timeframeComboBox.value.value match {
+                    case "1m" => currentDateTime.plusMinutes(1)
+                    case "5m" => currentDateTime.plusMinutes(5)
+                    case "15m" => currentDateTime.plusMinutes(15)
+                    case "1h" => currentDateTime.plusHours(1)
+                    case "4h" => currentDateTime.plusHours(4)
+                    case "1d" => currentDateTime.plusDays(1)
+                    case "1w" => currentDateTime.plusWeeks(1)
+                    case _ => currentDateTime
+                }
+            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")))
+            dateInput.text = newDateTime.format(formatter)
+        }
+
+
+
 
         val runDataButton = new TimelineToggleButton {
             text = "Run Data"
@@ -339,26 +365,26 @@ class BacktestStage(controller: Controller){
             val currentDateTime = LocalDateTime.parse(dateInput.text.value, formatter)
 
             val newDateTime = timeframeComboBox.value.value match {
-                case "1min" => currentDateTime.plusMinutes(1)
-                case "5min" => currentDateTime.plusMinutes(5)
-                case "15min" => currentDateTime.plusMinutes(15)
-                case "60min" => currentDateTime.plusHours(1)
+                case "1m" => currentDateTime.plusMinutes(1)
+                case "5m" => currentDateTime.plusMinutes(5)
+                case "15m" => currentDateTime.plusMinutes(15)
+                case "1h" => currentDateTime.plusHours(1)
                 case "4h" => currentDateTime.plusHours(4)
                 case "1d" => currentDateTime.plusDays(1)
                 case "1w" => currentDateTime.plusWeeks(1)
                 case _ => currentDateTime
             }
 
-            dateInput.text.value = newDateTime.format(formatter)
+            
             val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
             println(browseinput)
             controller.computeInput(browseinput)
-            controller.printDesctriptor()
-    
-            showData(chart)
-
+            controller.printDescriptor()
+        
+            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")))
+            dateInput.text = newDateTime.format(formatter)
             tradesBuffer.clear()
-            tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+            tradesBuffer ++= TradeData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -373,21 +399,21 @@ class BacktestStage(controller: Controller){
             val currentDateTime = LocalDateTime.parse(dateInput.text.value, formatter)
 
             val newDateTime = timeframeComboBox.value.value match {
-                case "1min" => currentDateTime.minusMinutes(1)
-                case "5min" => currentDateTime.minusMinutes(5)
-                case "15min" => currentDateTime.minusMinutes(15)
-                case "60min" => currentDateTime.minusHours(1)
+                case "1m" => currentDateTime.minusMinutes(1)
+                case "5m" => currentDateTime.minusMinutes(5)
+                case "15m" => currentDateTime.minusMinutes(15)
+                case "1h" => currentDateTime.minusHours(1)
                 case "4h" => currentDateTime.minusHours(4)
                 case "1d" => currentDateTime.minusDays(1)
                 case "1w" => currentDateTime.minusWeeks(1)
                 case _ => currentDateTime
             }
 
-            dateInput.text.value = newDateTime.format(formatter)
+            dateInput.text = newDateTime.format(formatter)
 
             deleteFirstCandle(chart)
             tradesBuffer.clear()
-            tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+            tradesBuffer ++= TradeData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -424,14 +450,14 @@ class BacktestStage(controller: Controller){
         applyDateButton.setOnAction(_ => {
             val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
             
-            val newdata = getCandleSticks(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
+            val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
             clearAndAddData(chart, newdata)
             //chartPane.setupperboundxtolastdata(data)
             println(browseinput)
             controller.computeInput(browseinput)
-            controller.printDesctriptor()
+            controller.printDescriptor()
             tradesBuffer.clear()
-               tradesBuffer ++= GetMarketData.donetrades.map(trade => {
+               tradesBuffer ++= TradeData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -448,10 +474,11 @@ class BacktestStage(controller: Controller){
         enterTradeButton.setOnAction(_ => {
             val investinput = s"${entry.text.value} ${stopLoss.text.value} ${takeProfit.text.value} ${risk.text.value}"
             controller.computeInput(investinput)
-            controller.printDesctriptor()
+            controller.printDescriptor()
+ 
 
             tradesBuffer.clear()
-            tradesBuffer ++= GetMarketData.donetrades
+            tradesBuffer ++= TradeData.donetrades
            
             table.refresh()
 
@@ -502,13 +529,13 @@ class BacktestStage(controller: Controller){
                 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
                 val dateString = localDateTime.format(formatter)
                 dateInput.text = dateString
-                val newdata = getCandleSticks(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter))
+                val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
                 addDataAndHideAfterDate(chart, newdata, localDateTime.atZone(ZoneId.systemDefault()).toEpochSecond)
                 //updateCandleStickChartAxis(chart, newdata)
                 val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
                 println(browseinput)
                 controller.computeInput(browseinput)
-                controller.printDesctriptor()
+                controller.printDescriptor()
                 nextClickAction = ""
             }
         }
@@ -568,7 +595,7 @@ class BacktestStage(controller: Controller){
             stage.hide()
             BacktestEvaluation.createStage().show()
             controller.computeInput("Q")
-            controller.printDesctriptor()
+            controller.printDescriptor()
         })
 
 

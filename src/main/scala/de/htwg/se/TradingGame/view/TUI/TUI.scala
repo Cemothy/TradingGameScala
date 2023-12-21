@@ -11,7 +11,7 @@ class TUI (controller: Controller) extends Observer{
   controller.add(this)
 
   def processInputLine():Unit =
-    controller.printDesctriptor()
+    controller.printDescriptor()
     controller.computeInput(StdIn.readLine())
 
   override def update: Unit = 

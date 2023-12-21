@@ -2,7 +2,7 @@ package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
 import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
-import de.htwg.se.TradingGame.model.GetMarketData._
+import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData._
 
 class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade) {
   val dateTradeTriggered: String = dateWhenTradeTriggered(trade)

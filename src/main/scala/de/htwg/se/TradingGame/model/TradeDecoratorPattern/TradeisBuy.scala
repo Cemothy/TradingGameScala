@@ -1,6 +1,6 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
-import de.htwg.se.TradingGame.model.GetMarketData.isTradeBuyorSell
+import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData.isTradeBuyorSell
 
 class TradeisBuy(trade: TradeComponent) extends TradeDecorator(trade) {
   var isTradeBuy: String = ""
