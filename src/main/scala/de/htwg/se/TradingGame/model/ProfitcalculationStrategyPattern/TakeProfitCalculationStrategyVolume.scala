@@ -1,7 +1,7 @@
 package de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern
 import de.htwg.se.TradingGame.model._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
-import de.htwg.se.TradingGame.model.FileChooser.getSymbolPath
+
 // Concrete Strategy A
 class TakeProfitCalculationStrategyVolume extends ProfitCalculationStrategy {
   def calculateProfit(trade: TradeComponent): Double = {

@@ -1,11 +1,12 @@
-package de.htwg.se.TradingGame.model 
-import de.htwg.se.TradingGame.model.MenuInterpreter
-import de.htwg.se.TradingGame.model.BrowseInterpreter
-import de.htwg.se.TradingGame.model.InvestInterpreter
-import de.htwg.se.TradingGame.model.TradingMethods._
-import de.htwg.se.TradingGame.model.GetMarketData._
-import java.time.LocalDate
+package de.htwg.se.TradingGame.model.InterpretterComponent 
+import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData._
+import de.htwg.se.TradingGame.model.InterpretterComponent.BrowseInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.InvestInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.MenuInterpreter
+
 import java.io.File
+import java.time.LocalDate
+
 
 class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
@@ -26,6 +27,11 @@ class BrowseInterpreter(balanceInput: String) extends Interpreter {
 
     def doQuit(input: String): (String, BrowseInterpreter) = (closeProgram, this)
 
+    override def resetState: Interpreter = {
+        // Return a new instance with the initial balance
+        new BrowseInterpreter(balanceInput)
+    }
+    override def interpreterType: String = "BrowseInterpreter"
     override val actions: Map[String, String => (String, Interpreter)] =
         Map((wrongInput, doWrongInput),(tickersymbol, doTickersymbol),(quit,doQuit))
 }

@@ -1,6 +1,6 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
-import de.htwg.se.TradingGame.model.GetMarketData.balance
+import de.htwg.se.TradingGame.model.DataSave.TradeData.balance
 
 class TradeWithVolume( 
   trade: TradeComponent,

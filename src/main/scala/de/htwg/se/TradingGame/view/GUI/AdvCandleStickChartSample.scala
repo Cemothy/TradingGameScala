@@ -58,6 +58,7 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.TreeMap
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
+import de.htwg.se.TradingGame.view.GUI.GetDatabaseData._
 
 
 class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
@@ -709,20 +710,55 @@ object AdvCandleStickChartSample extends JFXApp3 {
         }
     }
 }
-    def showData(chart: CandleStickChart): Unit = {
-        // Check if the map is not empty
-        if (chartDataMap.nonEmpty) {
-            // Get the first entry in the map
-            val firstEntry = chartDataMap.head
+   def showData(chart: CandleStickChart, currentdate: LocalDateTime): Unit = {
+  // Check if the map has only 5 entries left
+  if (chartDataMap.size <= 5) {
+    println("Getting new data")
+    // Get new candle data
+    val lastCandleDate = currentdate
+    val newCandleData = getCandleData("1h", "EURUSD", lastCandleDate, 500)
 
-            // Make the first invisible candle visible
-            firstEntry._2.getNode.setVisible(true)
+    // Convert the CandleStick objects into the format required by the chart
+    val seriesData = newCandleData.map(candleStick => {
+      val data = XYChart.Data[Number, Number](candleStick.day, candleStick.open, candleStick)
+      data
+    })
 
-            // Remove the first entry from the map
-            chartDataMap -= firstEntry._1
-        }
+    // Convert seriesData to a Set to remove duplicates
+    val seriesDataSet = seriesData.toSet
+
+    // Convert seriesDataSet to a Seq
+    val seriesDataSeq = seriesDataSet.toSeq
+
+    // Create a new series from the data
+    val series = XYChart.Series[Number, Number](ObservableBuffer(seriesDataSeq: _*))
+
+    // Add the new series to the chart
+    chart.data += series
+
+    // Iterate over the data in the current series
+    for (data <- series.getData) {
+      // Get the CandleStick object associated with this data
+      val candleStick = data.getExtraValue.asInstanceOf[CandleStick]
+
+      // Hide the data
+      data.getNode.setVisible(false)
+
+      // Add the data to the TreeMap
+      chartDataMap += (candleStick.day -> data)
     }
+  } 
+   // Get the first entry in the map
+    if (chartDataMap.nonEmpty) {
+        val firstEntry = chartDataMap.head
 
+        // Make the first invisible candle visible
+        firstEntry._2.getNode.setVisible(true)
+
+        // Remove the first entry from the map
+        chartDataMap -= firstEntry._1
+        }
+   }
    def deleteFirstCandle(chart: CandleStickChart): Unit = {
         if (chart.data.nonEmpty) {
             // Get the first series in the chart

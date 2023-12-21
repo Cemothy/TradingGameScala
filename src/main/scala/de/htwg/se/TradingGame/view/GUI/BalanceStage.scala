@@ -31,9 +31,9 @@ class BalanceStage(controller: Controller){
   
 
   startButton.setOnAction(_ => {
-    balance = balanceInput.text.value.toDouble
+    controller.balance = balanceInput.text.value.toDouble
     controller.computeInput(balanceInput.text.value)
-    controller.printDesctriptor()
+    controller.printDescriptor()
     stage.hide()
     new BacktestStage(controller).createStage().show()
   })

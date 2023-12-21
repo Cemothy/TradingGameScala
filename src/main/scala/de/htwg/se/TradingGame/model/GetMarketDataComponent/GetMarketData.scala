@@ -1,4 +1,4 @@
-package de.htwg.se.TradingGame.model 
+package de.htwg.se.TradingGame.model.GetMarketDataComponent 
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model._
 
@@ -11,8 +11,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import de.htwg.se.TradingGame.model.DataSave.TradeData
 
-object GetMarketData {
+object GetMarketData{
 val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
 val username = "dbsys31"
 val password = "dbsys31"
@@ -429,9 +430,7 @@ def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, current
 
 
 
-  val trades: ArrayBuffer[TradeComponent] = ArrayBuffer.empty[TradeComponent]
-  val donetrades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
-  var balance: Double = 0.0
+
 def closeProgram: String = {
 
     println(doneTradeStringwithProfit)
@@ -441,7 +440,7 @@ def closeProgram: String = {
 
 def doneTradeStringwithProfit: String = {
   var output = ""
-  for (trade <- donetrades) {
+  for (trade <- TradeData.donetrades) {
     output += "__________________________________________________________\n"
     output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
     output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "
@@ -453,29 +452,52 @@ def doneTradeStringwithProfit: String = {
     output += s"Date Trade Done: ${trade.dateTradeDone}  |  "
     output += s"Trade Winner or Loser: ${trade.tradeWinOrLose}  |  "
     output += s"Trade Buy or Sell: ${if (trade.trade.takeProfitTrade > trade.trade.stopLossTrade) "Buy" else "Sell"}  |  "
-    output += s"Profit: $$${trade.endProfit * balance}\n"
+    output += s"Profit: $$${trade.endProfit * TradeData.balance}\n"
     output += "__________________________________________________________\n"
-    this.balance = balance + trade.endProfit * balance
+    TradeData.balance = TradeData.balance + trade.endProfit * TradeData.balance
     output += "__________________________________________________________\n"
-    output += s"new Balance: $$$balance\n"
+    output += s"new Balance: $$${TradeData.balance}\n"
     output += "__________________________________________________________\n"
   }
   output += "__________________________________________________________\n"
-  output += s"Final Balance: $$$balance\n"
+  output += s"Final Balance: $$${TradeData.balance}\n"
   output += "__________________________________________________________\n"
 
   output += "Closing the program..."
   output
 }
 
+def showCompany(currentTicker: String, date: String, balance: Double, currentPrice: Double): String = {
+    val output =
+      s"""_____________________________________
+         |Currently trading with :
+         |Balance: $balance
+         |Company: $currentTicker
+         |Date: $date
+         |Current Value: $$$currentPrice
+         |_____________________________________
+         |""".stripMargin
 
+    output
+  }
 
+  def currentTrade(trade: Trade): String = {
+    val output =
+      s"""_____________________________________
+         |Current Trade:
+         |Ticker: ${trade.ticker}
+         |Entry: $$${trade.entryTrade}
+         |StopLoss: $$${trade.stopLossTrade}
+         |TakeProfit: $$${trade.takeProfitTrade}
+         |Risk (in percent): ${trade.risk}%
+         |""".stripMargin
 
+    output
+  }
 
 
 
 }
-
 
 
 

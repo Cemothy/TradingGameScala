@@ -1,6 +1,5 @@
-package de.htwg.se.TradingGame.model 
+package de.htwg.se.TradingGame.model.InterpretterComponent 
 import de.htwg.se.TradingGame.model._
-
 import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
 
 trait Interpreter {
@@ -14,4 +13,6 @@ trait Interpreter {
     actions.filter(k => input.matches(k._1)).last._2
 
   final def processInputLine (input: String): (String, Interpreter) = selectRegEx(input)(input)
+  def interpreterType: String
+  def resetState: Interpreter
 }
