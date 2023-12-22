@@ -1,21 +1,18 @@
 package de.htwg.se.TradingGame.view.TUI
-import scala.io
+
 import scala.io.StdIn
-import de.htwg.se.TradingGame.controller.Controller
+import de.htwg.se.TradingGame.controller.IController // Import the trait
 import de.htwg.se.TradingGame.util.Observer
-import de.htwg.se.TradingGame.model.* 
 
-
-class TUI (controller: Controller) extends Observer{
-
+class TUI(controller: IController) extends Observer {
   controller.add(this)
 
-  def processInputLine():Unit =
+  def processInputLine(): Unit = {
     controller.printDescriptor()
     controller.computeInput(StdIn.readLine())
+  }
 
-  override def update: Unit = 
+  override def update: Unit = {
     println(controller.output)
-
-
+  }
 }
