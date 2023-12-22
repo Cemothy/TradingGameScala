@@ -757,6 +757,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
 
         // Remove the first entry from the map
         chartDataMap -= firstEntry._1
+        chart.layoutPlotChildren()
         }
    }
    def deleteFirstCandle(chart: CandleStickChart): Unit = {
@@ -864,34 +865,41 @@ object AdvCandleStickChartSample extends JFXApp3 {
 
     /** Called to update and layout the content for the plot */
     override def layoutPlotChildren(): Unit = {
-        if (data == null) {
+    if (data == null) {
         return
-        }
+    }
+        val getxLowerBoundMethod = xAxis.getClass.getMethod("getLowerBound")
+        val xAxisLowerBound = getxLowerBoundMethod.invoke(xAxis).asInstanceOf[Double]
 
-        for (series <- data) {
+
+        val getxUpperBoundMethod = xAxis.getClass.getMethod("getUpperBound")
+        val xAxisUpperBound = getxUpperBoundMethod.invoke(xAxis).asInstanceOf[Double]
+
+    for (series <- data) {
         val seriesPath: Option[Path] = series.node() match {
-            case path: jfxss.Path => Some(path)
-            case _ => None
+        case path: jfxss.Path => Some(path)
+        case _ => None
         }
         seriesPath.foreach(_.elements.clear())
 
         for (item <- getDisplayedDataIterator(series).asScala) {
-            item.extraValue() match {
+        item.extraValue() match {
             case dayValues: CandleStick =>
-                val x = xAxis.displayPosition(dayValues.day)
+            val x = xAxis.displayPosition(dayValues.day)
 
+            //if (dayValues.day >= (xAxisLowerBound - 200000) && dayValues.day <= xAxisUpperBound+200000) {
                 item.node() match {
-                case candle: Candle =>
+                case candle: Candle if candle.isVisible =>
                     val yOpen = yAxis.displayPosition(dayValues.open)
                     val yClose = yAxis.displayPosition(dayValues.close)
                     val yHigh = yAxis.displayPosition(dayValues.high)
                     val yLow = yAxis.displayPosition(dayValues.low)
                     val candleWidth = xAxis match {
-                        case xa: jfxsc.NumberAxis => 
-                            val pos1 = xa.displayPosition(1)
-                            val pos2 = xa.displayPosition(distancecandles + 1)
-                            (pos2 - pos1) * 0.8
-                        case _ => -1
+                    case xa: jfxsc.NumberAxis =>
+                        val pos1 = xa.displayPosition(1)
+                        val pos2 = xa.displayPosition(distancecandles + 1)
+                        (pos2 - pos1) * 0.8
+                    case _ => -1
                     }
                     candle.update(yClose - yOpen, yHigh - yOpen, yLow - yOpen, candleWidth)
                     candle.updateTooltip(item.YValue().doubleValue, dayValues.close, dayValues.high, dayValues.low)
@@ -899,12 +907,12 @@ object AdvCandleStickChartSample extends JFXApp3 {
                     candle.layoutY = yOpen
                 case _ =>
                 }
+            //}
 
-                
             case _ =>
-            }
         }
         }
+    }
     }
 
     override def dataItemChanged(item: jfxsc.XYChart.Data[Number, Number]): Unit = {}
