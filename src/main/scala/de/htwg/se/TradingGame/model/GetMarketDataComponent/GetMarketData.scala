@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import de.htwg.se.TradingGame.model.DataSave.TradeData
-
+import de.htwg.se.TradingGame.model.FileIO.TradeDataXMLFileIO
 object GetMarketData{
 val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
 val username = "dbsys31"
@@ -432,7 +432,8 @@ def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, current
 
 
 def closeProgram: String = {
-
+  val xmlFileIO = new TradeDataXMLFileIO("tradedata.xml")
+  xmlFileIO.saveData(TradeData.donetrades, TradeData.balance)
     println(doneTradeStringwithProfit)
     System.exit(0)
     "should not print"

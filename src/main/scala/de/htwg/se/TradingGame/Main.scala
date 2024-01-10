@@ -5,11 +5,12 @@ import de.htwg.se.TradingGame.view.TUI.TUI
 import scalafx.application.JFXApp3
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
+import de.htwg.se.TradingGame.model.DataSave.TradeData
 
 
 object MainClass extends JFXApp3 {
-
-  val interpreter: Interpreter = browseInterpreter //menuInterpreter
+  TradeData.loadData("Z:\\SoftwareEngineering\\tradedata.xml")
+  val interpreter: Interpreter = menuInterpreter
   val controller: Controller = new Controller(interpreter)
 
   if (interpreter.interpreterType == "BrowseInterpreter") {

@@ -1,6 +1,6 @@
 package de.htwg.se.TradingGame.model.InterpretterComponent 
 import de.htwg.se.TradingGame.model._
-import jdk.javadoc.internal.doclets.toolkit.util.DocFinder.Input
+
 
 trait Interpreter {
 
