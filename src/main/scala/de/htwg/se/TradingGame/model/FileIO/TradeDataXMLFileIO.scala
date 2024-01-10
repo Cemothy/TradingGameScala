@@ -1,12 +1,15 @@
 package de.htwg.se.TradingGame.model.FileIO
 
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.{TradeComponent, TradeDoneCalculations}
+import _root_.de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
+import _root_.de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
+import _root_.de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
+
 import scala.collection.mutable.ArrayBuffer
 import scala.xml._
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 
-class TradeDataXMLFileIO(filename: String) {
-  def saveData(donetrades: ArrayBuffer[TradeDoneCalculations], balance: Double): Unit = {
+class TradeDataXMLFileIO extends TradeDataFileIO{
+  def saveData(donetrades: ArrayBuffer[TradeDoneCalculations], balance: Double, filename: String): Unit = {
+    val filnamexml = "src\\main\\scala\\de\\htwg\\se\\TradingGame\\Data\\" + filename + ".xml"
     val doneTradesElements = donetrades.map { trade =>
       <DoneTrades>
         <entryTrade>{trade.trade.entryTrade}</entryTrade>
@@ -28,11 +31,12 @@ class TradeDataXMLFileIO(filename: String) {
       <Balance>{balance}</Balance>
     </TradeData>
 
-    XML.save(filename, rootElement, "UTF-8", true)
+    XML.save(filnamexml, rootElement, "UTF-8", true)
   }
 
-  def loadData(): (ArrayBuffer[TradeDoneCalculations], Double) = {
-    val file = XML.loadFile(filename)
+  def loadData(filename: String): (ArrayBuffer[TradeDoneCalculations], Double) = {
+    val filnamexml = "src\\main\\scala\\de\\htwg\\se\\TradingGame\\Data\\" + filename + ".xml"
+    val file = XML.loadFile(filnamexml)
 
     val doneTrades = (file \ "DoneTrades").map { trade =>
       val entryTrade = (trade \ "entryTrade").text.toDouble

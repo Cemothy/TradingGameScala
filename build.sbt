@@ -8,7 +8,6 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % Test,
     libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R24",
-    libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
     libraryDependencies += "com.oracle.database.jdbc" % "ojdbc8" % "19.8.0.0",
     libraryDependencies += "net.codingwell" %% "scala-guice" % "7.0.0",
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",

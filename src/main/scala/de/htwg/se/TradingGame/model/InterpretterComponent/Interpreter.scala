@@ -1,6 +1,9 @@
 package de.htwg.se.TradingGame.model.InterpretterComponent 
 import de.htwg.se.TradingGame.model._
-
+import com.google.inject.name.Names
+import com.google.inject.{Guice, Inject, Injector}
+import net.codingwell.scalaguice.InjectorExtensions.*
+import de.htwg.se.TradingGame.TradingGameModule
 
 trait Interpreter {
 
@@ -15,4 +18,5 @@ trait Interpreter {
   final def processInputLine (input: String): (String, Interpreter) = selectRegEx(input)(input)
   def interpreterType: String
   def resetState: Interpreter
+  val injector: Injector = Guice.createInjector(new TradingGameModule)
 }

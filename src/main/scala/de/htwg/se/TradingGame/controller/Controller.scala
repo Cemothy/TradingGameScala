@@ -2,10 +2,10 @@ package de.htwg.se.TradingGame.controller
 
 import de.htwg.se.TradingGame.util.{Observable, UndoManager}
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
 import com.google.inject.name.Names
 import com.google.inject.{Guice, Inject, Injector}
 import net.codingwell.scalaguice.InjectorExtensions.*
+import de.htwg.se.TradingGame.TradingGameModule
 
 class Controller @Inject() (var interpreter: Interpreter) extends IController {
   var output: String = ""

@@ -3,7 +3,7 @@ package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData._
-import scala.xml.Node
+
 
 class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade) {
   var dateTradeTriggered: String = dateWhenTradeTriggered(trade)

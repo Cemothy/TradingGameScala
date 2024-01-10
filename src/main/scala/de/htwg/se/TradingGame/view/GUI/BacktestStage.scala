@@ -2,7 +2,6 @@ package de.htwg.se.TradingGame.view.GUI
 
 import de.htwg.se.TradingGame.controller.IController
 import de.htwg.se.TradingGame.model.DataSave.TradeData
-import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
@@ -66,7 +65,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
-import TradingGame.MainClass.controller
+import de.htwg.se.TradingGame.Main.controller
 
 object BacktestStage extends JFXApp3 {
 

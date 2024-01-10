@@ -1,6 +1,5 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
-import scala.xml.Node
 
 trait TradeComponent {
   def entryTrade: Double

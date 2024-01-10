@@ -1,18 +1,20 @@
-package TradingGame
-import de.htwg.se.TradingGame.controller.Controller
+package de.htwg.se.TradingGame
+
+import com.google.inject.Guice
+import de.htwg.se.TradingGame.controller.IController
+import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.view.GUI.GUI
 import de.htwg.se.TradingGame.view.TUI.TUI
 import scalafx.application.JFXApp3
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
-import de.htwg.se.TradingGame.model.DataSave.TradeData
 
+object Main extends JFXApp3 {
+  val injector = Guice.createInjector(new TradingGameModule)
+  val controller: IController = injector.getInstance(classOf[IController])
+  val interpreter = injector.getInstance(classOf[Interpreter])
+  val tradeData = injector.getInstance(classOf[TradeDataclass])
 
-object MainClass extends JFXApp3 {
-  TradeData.loadData("Z:\\SoftwareEngineering\\tradedata.xml")
-  val interpreter: Interpreter = menuInterpreter
-  val controller: Controller = new Controller(interpreter)
-
+  tradeData.loadData("TradeData")
   if (interpreter.interpreterType == "BrowseInterpreter") {
     controller.setBalance(100)
   }

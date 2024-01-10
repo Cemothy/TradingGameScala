@@ -3,13 +3,15 @@ import de.htwg.se.TradingGame.model.DataSave.TradeData
 import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model._
-
+import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
 import java.io.File
 import java.time.LocalDate
+import com.google.inject.Inject
 
 //InvestInterpreter should read entryTrade, stopLossTrade, takeProfitTrade, riskTrade from terminal input
 
-class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: String) extends Interpreter {
+class InvestInterpreter @Inject() (tickersymbol: String, dateTime: String, balanceInput: String, tradeData: TradeDataclass) extends Interpreter {
+
 
 
     override val balance = balanceInput
@@ -28,14 +30,14 @@ class InvestInterpreter(tickersymbol: String, dateTime: String, balanceInput: St
         TradeData.donetrades.addOne(new TradeDoneCalculations(currentTradestore))
         
         TradeData.balance = balance.toDouble
-        (currentTrade(currentTradestore), new BrowseInterpreter(balance))
+        (currentTrade(currentTradestore), new BrowseInterpreter(balance, tradeData))
     }
         
-    def doTickersymbol(input: String): (String, InvestInterpreter) = (showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, getPriceForDateTimeDouble(input.split(" ")(1), "OpenPrice")), new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance))
+    def doTickersymbol(input: String): (String, InvestInterpreter) = (showCompany(input.split(" ")(0), input.split(" ")(1), balance.toDouble, getPriceForDateTimeDouble(input.split(" ")(1), "OpenPrice")), new InvestInterpreter(input.split(" ")(0), input.split(" ")(1), balance, tradeData))
     def doWrongInput(input: String): (String, InvestInterpreter) = ("Wrong input. Pleas type a numbers", this)
     override def resetState: Interpreter = {
         // Reset the state by creating a new instance with the original parameters
-        new InvestInterpreter(tickersymbol, dateTime, balanceInput)
+        new InvestInterpreter(tickersymbol, dateTime, balanceInput, tradeData)
     }
     override def interpreterType: String = "InvestInterpreter"
     override val actions: Map[String, String => (String, Interpreter)] =
