@@ -1,7 +1,9 @@
 package de.htwg.se.TradingGame.view.GUI
 
+import TradingGame.MainClass.controller
 import de.htwg.se.TradingGame.controller.IController
 import de.htwg.se.TradingGame.model.DataSave.TradeData
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
@@ -65,8 +67,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
-import TradingGame.MainClass.controller
 
 object BacktestStage extends JFXApp3 {
 
@@ -76,7 +76,7 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: IController){
-    val sizecandles = 500
+    val sizecandles = 1000
 
     var data = getCandleSticksdadabase("1h", "EURUSD", LocalDateTime.now(), sizecandles)
 

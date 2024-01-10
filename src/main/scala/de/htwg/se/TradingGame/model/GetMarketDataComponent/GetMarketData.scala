@@ -1,4 +1,5 @@
 package de.htwg.se.TradingGame.model.GetMarketDataComponent 
+import de.htwg.se.TradingGame.model.DataSave.TradeData
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model._
 
@@ -11,12 +12,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-import de.htwg.se.TradingGame.model.DataSave.TradeData
 
 object GetMarketData{
-val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
-val username = "dbsys31"
-val password = "dbsys31"
+val url = "jdbc:postgresql://localhost:5432/candlesticks"
+val username = "samuel"
+val password = "3464"
 val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
 val formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")

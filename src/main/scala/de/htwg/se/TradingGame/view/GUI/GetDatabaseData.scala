@@ -9,8 +9,9 @@ import java.time.ZoneId
 import scala.collection.mutable.ListBuffer
 
 object GetDatabaseData extends App {
-  val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
-  val conn = DriverManager.getConnection(url, "dbsys31", "dbsys31")
+  val url = "jdbc:postgresql://localhost:5432/candlesticks"
+  val conn = DriverManager.getConnection(url, "samuel", "3464")
+
 
  def getCandleSticksdadabase(interval: String, symbol: String, endDate: LocalDateTime, size: Int): ListBuffer[CandleStick] = {
   val candleSticks = ListBuffer[CandleStick]()
@@ -26,14 +27,14 @@ object GetDatabaseData extends App {
   }
 
   val sql = """
-    SELECT * FROM (
-        SELECT c.* FROM Candlestick c
-        JOIN Markt m ON c.MarktID = m.MarktID
-        JOIN Timeframe t ON c.TimeframeID = t.TimeframeID
-        WHERE m.Marktname = ? AND t.Timeframe = ? AND c.Zeitstempel < ?
-        ORDER BY c.Zeitstempel DESC
-    ) WHERE ROWNUM <= ?
-    """
+  SELECT c.* FROM Candlestick c
+  JOIN Markt m ON c.MarktID = m.MarktID
+  JOIN Timeframe t ON c.TimeframeID = t.TimeframeID
+  WHERE m.Marktname = ? AND t.Timeframe = ? AND c.Zeitstempel < ?
+  ORDER BY c.Zeitstempel DESC
+  LIMIT ?
+  """
+
   val pstmt = conn.prepareStatement(sql)
     pstmt.setString(1, symbol)
     pstmt.setString(2, interval)
@@ -68,14 +69,13 @@ object GetDatabaseData extends App {
  
 
   val sql = """
-    SELECT * FROM (
-        SELECT c.* FROM Candlestick c
-        JOIN Markt m ON c.MarktID = m.MarktID
-        JOIN Timeframe t ON c.TimeframeID = t.TimeframeID
-        WHERE m.Marktname = ? AND t.Timeframe = ? AND c.Zeitstempel > ?
-        ORDER BY c.Zeitstempel ASC
-    ) WHERE ROWNUM <= ?
-    """
+  SELECT c.* FROM Candlestick c
+  JOIN Markt m ON c.MarktID = m.MarktID
+  JOIN Timeframe t ON c.TimeframeID = t.TimeframeID
+  WHERE m.Marktname = ? AND t.Timeframe = ? AND c.Zeitstempel < ?
+  ORDER BY c.Zeitstempel DESC
+  LIMIT ?
+  """
   val pstmt = conn.prepareStatement(sql)
     pstmt.setString(1, symbol)
     pstmt.setString(2, interval)
@@ -101,8 +101,8 @@ object GetDatabaseData extends App {
   candleSticks
 }
 
-//     getCandleData("1m", "EURUSD", LocalDateTime.of(2023, 2, 3, 12, 12), 200).foreach(candleStick => {
-//     val date = LocalDateTime.ofInstant(Instant.ofEpochSecond(candleStick.day.toLong), ZoneId.systemDefault())
-//     println(s"Date: $date, Close Price: ${candleStick.close}")
-// })
+   //  getCandleData("1m", "EURUSD", LocalDateTime.of(2023, 2, 3, 12, 12), 200).foreach(candleStick => {
+   //  val date = LocalDateTime.ofInstant(Instant.ofEpochSecond(candleStick.day.toLong), ZoneId.systemDefault())
+   //  println(s"Date: $date, Close Price: ${candleStick.close}")
+ //})
 }
