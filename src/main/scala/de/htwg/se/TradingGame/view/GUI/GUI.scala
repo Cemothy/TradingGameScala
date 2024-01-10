@@ -13,20 +13,24 @@ class GUI(controller: IController) extends JFXApp3 with Observer {
   var previousInterpreter: Option[String] = None
 
   override def update: Unit = {
-    Platform.runLater {
-      controller.getInterpreterType match {
-        case "MenuInterpreter" =>
+  Platform.runLater {
+    controller.getInterpreterType match {
+      case "MenuInterpreter" =>
+        if (previousInterpreter.exists(_ == "BrowseInterpreter")) {
           balanceStage.createStage().show()
+        }
 
-        case "BrowseInterpreter" =>
+      case "BrowseInterpreter" =>
+        if (previousInterpreter.exists(_ == "MenuInterpreter")) {
           backtestStage = Some(new BacktestStage(controller))
           backtestStage.foreach(_.createStage().show())
+        }
 
-        case _ => // handle other cases if necessary
-      }
-      previousInterpreter = Some(controller.getInterpreterType)
+      case _ => // handle other cases if necessary
     }
+    previousInterpreter = Some(controller.getInterpreterType)
   }
+}
 
   override def start(): Unit = {
     // Initialization or other startup logic
