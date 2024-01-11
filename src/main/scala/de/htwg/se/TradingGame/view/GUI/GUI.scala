@@ -8,7 +8,7 @@ import de.htwg.se.TradingGame.controller.IController
 class GUI(controller: IController) extends JFXApp3 with Observer {
   controller.add(this)
 
-  val balanceStage = new BalanceStage(controller)
+  var balanceStage:  Option[BalanceStage] = None
   var backtestStage: Option[BacktestStage] = None
   var previousInterpreter: Option[String] = None
 
@@ -17,7 +17,8 @@ class GUI(controller: IController) extends JFXApp3 with Observer {
     controller.getInterpreterType match {
       case "MenuInterpreter" =>
         if (previousInterpreter.exists(_ == "BrowseInterpreter")) {
-          balanceStage.createStage().show()
+          balanceStage = Some(new BalanceStage(controller))
+          balanceStage.foreach(_.createStage().show())
         }
 
       case "BrowseInterpreter" =>

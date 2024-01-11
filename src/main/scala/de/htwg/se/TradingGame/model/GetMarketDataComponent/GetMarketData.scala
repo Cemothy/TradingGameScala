@@ -1,11 +1,12 @@
 package de.htwg.se.TradingGame.model.GetMarketDataComponent 
 import com.google.inject.Inject
 import de.htwg.se.TradingGame.model.DataSave.TradeData
+import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
 import de.htwg.se.TradingGame.model.FileIO.TradeDataFileIO
 import de.htwg.se.TradingGame.model.FileIO.TradeDataXMLFileIO
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model._
-import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
+
 import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
@@ -436,7 +437,7 @@ def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, current
 
 class GetMarketDataclass @Inject() (tradeData: TradeDataclass) {
   def closeProgram: String = {
-      tradeData.saveData("TradeData")
+      tradeData.saveData(TradeData.savename)
       println(doneTradeStringwithProfit)
       System.exit(0)
       "should not print"

@@ -9,7 +9,15 @@ import scala.xml._
 
 class TradeDataXMLFileIO extends TradeDataFileIO{
   def saveData(donetrades: ArrayBuffer[TradeDoneCalculations], balance: Double, filename: String): Unit = {
-    val filnamexml = "src\\main\\scala\\de\\htwg\\se\\TradingGame\\Data\\" + filename + ".xml"
+    val filnamexml = "C:\\Users\\Samuel\\Documents\\SoftwareEngeneering\\TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\Data\\" + filename + ".xml"
+    val file = new java.io.File(filnamexml)
+    println("Absolute path: " + file.getAbsolutePath)
+    println("Exists: " + file.exists)
+    println("Readable: " + file.canRead)
+    if (!file.getParentFile.exists()) {
+      val directoriesCreated = file.getParentFile.mkdirs()
+      println("Directories created: " + directoriesCreated)
+    }
     val doneTradesElements = donetrades.map { trade =>
       <DoneTrades>
         <entryTrade>{trade.trade.entryTrade}</entryTrade>

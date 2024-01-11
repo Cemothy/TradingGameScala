@@ -14,6 +14,7 @@ object TradeData {
   val trades: ArrayBuffer[TradeComponent] = ArrayBuffer.empty[TradeComponent]
   val donetrades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
   var balance: Double = 0.0
+  var savename: String = ""
 }
 class TradeDataclass @Inject() (tradeDataFileIO: TradeDataFileIO) {
 
