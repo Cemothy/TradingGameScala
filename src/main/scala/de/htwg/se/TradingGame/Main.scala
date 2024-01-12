@@ -61,7 +61,7 @@ object Main extends JFXApp3 {
           
           loadResult match {
             case Some(selectedFile) =>
-              val fileNameWithoutExtension = selectedFile.asInstanceOf[String]
+              val fileNameWithoutExtension = selectedFile.asInstanceOf[String].stripSuffix(".json")
               println("loading file: " + fileNameWithoutExtension)
               tradeData.loadData(fileNameWithoutExtension)
             case _ =>

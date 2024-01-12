@@ -4,9 +4,10 @@ import _root_.de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 import _root_.de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
 import _root_.de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
 import play.api.libs.json._
-
+import java.nio.file.Files
 import java.io._
 import scala.collection.mutable.ArrayBuffer
+import java.nio.file.Paths
 
 // Custom JSON Writes and Reads for TradeComponent
 implicit val tradeComponentWrites: Writes[TradeComponent] = new Writes[TradeComponent] {
@@ -67,14 +68,13 @@ class TradeDataJSONFileIO extends TradeDataFileIO {
       "Balance" -> balance
     )
     
-    val pw = new PrintWriter(new File(filenameJason))
-    pw.write(Json.prettyPrint(json))
-    pw.close()
+    val jsonString = Json.prettyPrint(json)
+    Files.write(Paths.get(filenameJason), jsonString.getBytes)
   }
 
   def loadData(filename: String): (ArrayBuffer[TradeDoneCalculations], Double) = {
-    val filenameJason = "src\\main\\scala\\de\\htwg\\se\\TradingGame\\Data\\" + filename + ".json"
-    val source: String = scala.io.Source.fromFile(filenameJason).getLines.mkString
+    val filenameJason = "src/main/scala/de/htwg/se/TradingGame/Data/" + filename + ".json"
+    val source: String = new String(Files.readAllBytes(Paths.get(filenameJason)))
     val json: JsValue = Json.parse(source)
 
     val donetrades = (json \ "DoneTrades").as[ArrayBuffer[TradeDoneCalculations]]

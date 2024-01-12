@@ -1,0 +1,18 @@
+{
+  "DoneTrades" : [ {
+    "trade" : {
+      "entryTrade" : 1.09,
+      "stopLossTrade" : 1.09,
+      "takeProfitTrade" : 1.09,
+      "risk" : 5,
+      "datestart" : "2023.12.14,12:32",
+      "ticker" : "EURUSD"
+    },
+    "dateTradeTriggered" : "2023.12.14,12:33",
+    "tradeWinOrLose" : "Trade hit stop loss",
+    "dateTradeDone" : "2023.12.14,12:34",
+    "currentprofit" : 0,
+    "endProfit" : -0.05
+  } ],
+  "Balance" : 34534
+}

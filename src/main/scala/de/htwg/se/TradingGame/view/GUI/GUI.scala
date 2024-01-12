@@ -16,10 +16,9 @@ class GUI(controller: IController) extends JFXApp3 with Observer {
   Platform.runLater {
     controller.getInterpreterType match {
       case "MenuInterpreter" =>
-        if (previousInterpreter.exists(_ == "BrowseInterpreter")) {
           balanceStage = Some(new BalanceStage(controller))
           balanceStage.foreach(_.createStage().show())
-        }
+        
 
       case "BrowseInterpreter" =>
         if (previousInterpreter.exists(_ == "MenuInterpreter")) {

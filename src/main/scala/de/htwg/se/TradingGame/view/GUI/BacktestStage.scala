@@ -381,7 +381,7 @@ class BacktestStage(controller: IController){
             val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
             println(browseinput)
             controller.computeInput(browseinput)
-            controller.printDescriptor()
+            //controller.printDescriptor()
         
             showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")))
             dateInput.text = newDateTime.format(formatter)
@@ -457,7 +457,7 @@ class BacktestStage(controller: IController){
             //chartPane.setupperboundxtolastdata(data)
             println(browseinput)
             controller.computeInput(browseinput)
-            controller.printDescriptor()
+            //controller.printDescriptor()
             tradesBuffer.clear()
                tradesBuffer ++= TradeData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
@@ -476,7 +476,7 @@ class BacktestStage(controller: IController){
         enterTradeButton.setOnAction(_ => {
             val investinput = s"${entry.text.value} ${stopLoss.text.value} ${takeProfit.text.value} ${risk.text.value}"
             controller.computeInput(investinput)
-            controller.printDescriptor()
+            //controller.printDescriptor()
  
 
             tradesBuffer.clear()
@@ -537,7 +537,7 @@ class BacktestStage(controller: IController){
                 val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
                 println(browseinput)
                 controller.computeInput(browseinput)
-                controller.printDescriptor()
+                //controller.printDescriptor()
                 nextClickAction = ""
             }
         }
@@ -597,7 +597,7 @@ class BacktestStage(controller: IController){
             stage.hide()
             BacktestEvaluation.createStage().show()
             controller.computeInput("Q")
-            controller.printDescriptor()
+            //controller.printDescriptor()
         })
 
 

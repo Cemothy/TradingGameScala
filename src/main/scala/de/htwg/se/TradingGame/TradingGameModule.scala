@@ -17,7 +17,7 @@ class TradingGameModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
     bind[IController](new TypeLiteral[IController] {}).to(classOf[Controller])
     bind[Interpreter](new TypeLiteral[Interpreter] {}).to(classOf[MenuInterpreter])
-    bind[TradeDataFileIO](new TypeLiteral[TradeDataFileIO] {}).to(classOf[TradeDataXMLFileIO])
-    //bind[TradeDataFileIO](new TypeLiteral[TradeDataFileIO] {}).to(classOf[TradeDataJSONFileIO])
+    //bind[TradeDataFileIO](new TypeLiteral[TradeDataFileIO] {}).to(classOf[TradeDataXMLFileIO])
+    bind[TradeDataFileIO](new TypeLiteral[TradeDataFileIO] {}).to(classOf[TradeDataJSONFileIO])
   }
 }
