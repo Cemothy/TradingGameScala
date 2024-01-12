@@ -8,61 +8,58 @@ object Databaseask extends App {
   val in = new BufferedReader(new InputStreamReader(System.in))
 
   try {
-    DriverManager.registerDriver(new oracle.jdbc.OracleDriver())
-    val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
-    val conn = DriverManager.getConnection(url, "dbsys31", "dbsys31")
+    // Register the PostgreSQL driver
+    Class.forName("org.postgresql.Driver")
+
+    // Update the URL for PostgreSQL
+    val url = "jdbc:postgresql://localhost:5432/candlesticks"
+    // Update the connection details
+    val conn = DriverManager.getConnection(url, "samuel", "3464")
 
     conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED)
     conn.setAutoCommit(false)
 
     val stmt = conn.createStatement()
 
+    // Your SQL queries remain the same if they are compatible with PostgreSQL
     val timeframeInsertQuery = "INSERT INTO Timeframe(TimeframeID, Timeframe) VALUES (?, ?)"
     val timeframePreparedStatement = conn.prepareStatement(timeframeInsertQuery)
-    timeframePreparedStatement.setInt(1, 1440)
-    timeframePreparedStatement.setString(2, "1d")
+    timeframePreparedStatement.setInt(1, 10080)
+    timeframePreparedStatement.setString(2, "1w")
     timeframePreparedStatement.executeUpdate()
-
-    // val marktInsertQuery = "INSERT INTO Markt(MarktID, Marktname) VALUES (?, ?)"
-    // val marktPreparedStatement = conn.prepareStatement(marktInsertQuery)
-    // marktPreparedStatement.setInt(1, 1)
-    // marktPreparedStatement.setString(2, "EURUSD")
-    // marktPreparedStatement.executeUpdate()
 
     val candlestickInsertQuery = "INSERT INTO Candlestick(CandlestickID, MarktID, TimeframeID, Zeitstempel, OpenPrice, HighPrice, LowPrice, ClosePrice, Volume) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     val preparedStatement = conn.prepareStatement(candlestickInsertQuery)
 
     val format = new SimpleDateFormat("yyyy.MM.dd,HH:mm")
 
-
-    var candlestickIdCounter = 12768000
-    for (line <- Source.fromFile("C:\\Users\\Samuel\\Documents\\SoftwareEngeneering\\TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\view\\GUI\\EURUSD1440.csv").getLines) {
-      
+    var candlestickIdCounter = 12830000 // is set right now to the last candlestick id in the database
+    for (line <- Source.fromFile("C:\\Users\\Samuel\\Documents\\SoftwareEngeneering\\TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\view\\GUI\\EURUSD10080.csv").getLines) {
       val cols = line.split(",").map(_.trim)
 
       val date = new java.sql.Timestamp(format.parse(cols(0) + "," + cols(1)).getTime)
-      val openPrice = new java.math.BigDecimal(cols(2))
-      val highPrice = new java.math.BigDecimal(cols(3))
-      val lowPrice = new java.math.BigDecimal(cols(4))
-      val closePrice = new java.math.BigDecimal(cols(5))
-      val volume = Integer.parseInt(cols(6))
+      val openPrice = cols(2).toDouble
+      val highPrice = cols(3).toDouble
+      val lowPrice = cols(4).toDouble
+      val closePrice = cols(5).toDouble
+      val volume = cols(6).toInt
 
       val candlestickId = candlestickIdCounter
 
-      preparedStatement.setInt(1, candlestickId) 
-      preparedStatement.setInt(2, 1) 
-      preparedStatement.setInt(3, 1440) 
+      preparedStatement.setInt(1, candlestickId)
+      preparedStatement.setInt(2, 1)
+      preparedStatement.setInt(3, 10080)
       preparedStatement.setTimestamp(4, date)
-      preparedStatement.setBigDecimal(5, openPrice)
-      preparedStatement.setBigDecimal(6, highPrice)
-      preparedStatement.setBigDecimal(7, lowPrice)
-      preparedStatement.setBigDecimal(8, closePrice)
+      preparedStatement.setDouble(5, openPrice)
+      preparedStatement.setDouble(6, highPrice)
+      preparedStatement.setDouble(7, lowPrice)
+      preparedStatement.setDouble(8, closePrice)
       preparedStatement.setInt(9, volume)
-        preparedStatement.addBatch()
+      preparedStatement.addBatch()
 
       candlestickIdCounter += 1
-      if(candlestickIdCounter % 1000 == 0) {
-         preparedStatement.executeBatch()
+      if (candlestickIdCounter % 10000 == 0) {
+        preparedStatement.executeBatch()
         println(candlestickIdCounter)
       }
     }
@@ -73,7 +70,7 @@ object Databaseask extends App {
   } catch {
     case se: SQLException =>
       println()
-      println("SQL Exception occurred while establishing connection to DBS: "
+      println("SQL Exception occurred while establishing connection to DB: "
         + se.getMessage)
       println("- SQL state  : " + se.getSQLState)
       println("- Message    : " + se.getMessage)
