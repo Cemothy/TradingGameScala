@@ -1,13 +1,9 @@
 package de.htwg.se.TradingGame.view.GUI
 
-import TradingGame.MainClass.controller
+import de.htwg.se.TradingGame.Main.controller
 import de.htwg.se.TradingGame.controller.IController
 import de.htwg.se.TradingGame.model.DataSave.TradeData
-<<<<<<< HEAD
-=======
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.InterpreterModule.given
->>>>>>> owndatabase
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
@@ -70,11 +66,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-<<<<<<< HEAD
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
-import de.htwg.se.TradingGame.Main.controller
-=======
->>>>>>> owndatabase
 
 object BacktestStage extends JFXApp3 {
 
@@ -84,7 +75,7 @@ object BacktestStage extends JFXApp3 {
 
 }
 class BacktestStage(controller: IController){
-    val sizecandles = 1000
+    val sizecandles = 3500
 
     var data = getCandleSticksdadabase("1h", "EURUSD", LocalDateTime.now(), sizecandles)
 
@@ -103,10 +94,15 @@ class BacktestStage(controller: IController){
     style = "-fx-background-color: white; -fx-padding: 5;"
 
     }
-
+    val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1d", "1w")
+    val timeframeComboBox = new ComboBox[String](timeframeOptions)
     val priceLabelcross = new Label {
         textFill = Color.Black
         style = "-fx-background-color: white; -fx-padding: 5;"
+    }
+    val tickerComboBox = new TextField {
+        promptText = "Enter Ticker"
+        text = "EURUSD"
     }
     val chartWithCrosshair = new StackPane()
     chartWithCrosshair.children.addAll(chartPane, crosshairPane)
@@ -192,7 +188,16 @@ class BacktestStage(controller: IController){
         chartPane.updateOnDrag(me)
         crosshair.updateCrosshair(me)
         chartPane.updateAllLines()
+    if (getLowestXTimeisinBounds(chart) && (gettingData == false)){
+        val epochSeconds = getLowestXTime(chart).get
+        val dateTime = LocalDateTime.ofEpochSecond(epochSeconds.toLong, 0, ZoneOffset.UTC)
+        adjustCandlestoleft(chart, timeframeComboBox.value.value, tickerComboBox.text.value, dateTime, 1000)
+    } else if(getHighestXTimeIsInBounds(chart) && (gettingData == false)){
+        val epochSeconds = getHighestXTime(chart).get
+        val dateTime = LocalDateTime.ofEpochSecond(epochSeconds.toLong, 0, ZoneOffset.UTC)
+        adjustCandlesToRight(chart, timeframeComboBox.value.value, tickerComboBox.text.value, dateTime, 1000)
     }
+}
 
     chartWithCrosshair.onMouseReleased = (me: MouseEvent) => {
         chartPane.updateOnMouseRelease()
@@ -202,6 +207,22 @@ class BacktestStage(controller: IController){
     chartWithCrosshair.onScroll = (me: ScrollEvent) => {
         chartPane.updateOnScroll(me)
         chartPane.updateAllLines()
+            //   // Get the lower bound of the x-axis
+            // val xAxis = chart.getXAxis
+            // val getLowerBoundMethod = xAxis.getClass.getMethod("getLowerBound")
+            // val xAxisLowerBound = getLowerBoundMethod.invoke(xAxis).asInstanceOf[Double]
+
+            // // Get the day of the last candle that is most left
+            // val lastCandleMostLeftDay = if (chart.data.nonEmpty && chart.data.head.getData.nonEmpty) {
+            //     chart.data.head.getData.head.getXValue.asInstanceOf[Double]
+            // } else Double.MaxValue
+            // val instant = Instant.ofEpochSecond(lastCandleMostLeftDay.toLong)
+            // val lastCandleMostLeftDayDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+            // // If the lower x bound is left from the last candle that is most left
+            // if (xAxisLowerBound < lastCandleMostLeftDay) {
+
+
+            // }
     }
 
      val dateInput = new TextField {
@@ -281,17 +302,14 @@ class BacktestStage(controller: IController){
         columns ++= List(dateCollum, tradebuysell, volumeCollum, riskCollum, tickerCollum, entryCollum, stoplossCollum, takeprofitCollum, currentProfit)
         }
         
-        val tickerComboBox = new TextField {
-        promptText = "Enter Ticker"
-        text = "EURUSD"
-        }
-        val timeframeOptions = ObservableBuffer("1m", "5m", "15m", "1h", "4h", "1d", "1w")
-        val timeframeComboBox = new ComboBox[String](timeframeOptions)
+   
+        
         timeframeComboBox.value = "1h"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
             
             val newdata = getCandleSticksdadabase(newTimeframe.toString(), tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
             clearAndAddData(chart, newdata)
+            setLowerBoundForCandlesnumber(chart)
             
             }
 
@@ -340,7 +358,7 @@ class BacktestStage(controller: IController){
                     case "1w" => currentDateTime.plusWeeks(1)
                     case _ => currentDateTime
                 }
-            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")))
+            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")), timeframeComboBox.value.value, tickerComboBox.text.value )
             dateInput.text = newDateTime.format(formatter)
         }
 
@@ -392,7 +410,7 @@ class BacktestStage(controller: IController){
             controller.computeInput(browseinput)
             controller.printDescriptor()
         
-            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")))
+            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")),timeframeComboBox.value.value, tickerComboBox.text.value )
             dateInput.text = newDateTime.format(formatter)
             tradesBuffer.clear()
             tradesBuffer ++= TradeData.donetrades.map(trade => {
@@ -463,7 +481,7 @@ class BacktestStage(controller: IController){
             
             val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
             clearAndAddData(chart, newdata)
-            //chartPane.setupperboundxtolastdata(data)
+            updateCandleStickChartAxis(chart ,newdata)
             println(browseinput)
             controller.computeInput(browseinput)
             controller.printDescriptor()

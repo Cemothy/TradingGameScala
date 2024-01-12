@@ -63,7 +63,41 @@ object GetDatabaseData extends App {
   def close(): Unit = {
     conn.close()
   }
+def getCandleDataFuture(interval: String, symbol: String, startDate: LocalDateTime, size: Int): ListBuffer[CandleStick] = {
+  val candleSticks = ListBuffer[CandleStick]()
 
+  val sql = """
+  SELECT c.* FROM Candlestick c
+  JOIN Markt m ON c.MarktID = m.MarktID
+  JOIN Timeframe t ON c.TimeframeID = t.TimeframeID
+  WHERE m.Marktname = ? AND t.Timeframe = ? AND c.Zeitstempel >= ?
+  ORDER BY c.Zeitstempel ASC
+  LIMIT ?
+  """
+  val pstmt = conn.prepareStatement(sql)
+    pstmt.setString(1, symbol)
+    pstmt.setString(2, interval)
+    pstmt.setTimestamp(3, Timestamp.valueOf(startDate))
+    pstmt.setInt(4, size)
+  val rs = pstmt.executeQuery()
+
+  while (rs.next()) {
+    val dateTime = rs.getTimestamp("Zeitstempel").toLocalDateTime
+    val candleStick = CandleStick(
+      day = dateTime.atZone(ZoneId.systemDefault()).toEpochSecond,
+      open = rs.getDouble("OpenPrice"),
+      close = rs.getDouble("ClosePrice"),
+      high = rs.getDouble("HighPrice"),
+      low = rs.getDouble("LowPrice")
+    )
+    candleSticks += candleStick
+  }
+
+  rs.close()
+  pstmt.close()
+
+  candleSticks
+}
   def getCandleData(interval: String, symbol: String, startDate: LocalDateTime, size: Int): ListBuffer[CandleStick] = {
   val candleSticks = ListBuffer[CandleStick]()
  

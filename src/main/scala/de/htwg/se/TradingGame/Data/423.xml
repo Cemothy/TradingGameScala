@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<TradeData>
+      <DoneTrades>
+        <entryTrade>1.08578</entryTrade>
+        <stopLossTrade>1.08727</stopLossTrade>
+        <takeProfitTrade>1.07866</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2023.01.16,19:21</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>2023.01.17,15:35</dateTradeTriggered>
+        <tradeWinOrLose>Trade hit take profit</tradeWinOrLose>
+        <dateTradeDone>2023.01.17,18:39</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.09557</endProfit>
+      </DoneTrades><DoneTrades>
+        <entryTrade>1.08485</entryTrade>
+        <stopLossTrade>1.08848</stopLossTrade>
+        <takeProfitTrade>1.08025</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2023.01.18,18:36</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>2023.01.20,10:08</dateTradeTriggered>
+        <tradeWinOrLose>Trade hit take profit</tradeWinOrLose>
+        <dateTradeDone>2023.01.20,15:55</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.02534</endProfit>
+      </DoneTrades>
+      <Balance>2342.0</Balance>
+    </TradeData>

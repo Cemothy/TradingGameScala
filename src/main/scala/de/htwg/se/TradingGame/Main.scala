@@ -75,7 +75,6 @@ object Main extends JFXApp3 {
           filename match {
             case Some(name) =>
               TradeData.savename = name
-              controller.setBalance(100)
             case None =>
           }
       }

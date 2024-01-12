@@ -14,14 +14,17 @@ import javafx.scene.{chart => jfxsc}
 import javafx.scene.{layout => jfxsl}
 import javafx.scene.{shape => jfxss}
 import javafx.{scene => jfxs}
+import org.checkerframework.checker.units.qual.g
 import play.api.libs.json.JsArray
 import scalafx.Includes._
 import scalafx.animation.FadeTransition
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp3
+import scalafx.application.Platform
 import scalafx.beans.property.DoubleProperty
 import scalafx.beans.value.ObservableValue
 import scalafx.collections.ObservableBuffer
+import scalafx.concurrent.Task
 import scalafx.event.ActionEvent
 import scalafx.event.EventHandler
 import scalafx.geometry.Point2D
@@ -57,10 +60,9 @@ import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.TreeMap
+import scala.compiletime.ops.boolean
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
-import scalafx.concurrent.Task
-import scalafx.application.Platform
 
 
 class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.CandleStickChart) extends StackPane {
@@ -89,6 +91,9 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     }
     var dragStartX: Double = 0
     var dragStartY: Double = 0
+
+
+
 
     def setupperboundxtolastdata(candleData: ListBuffer[CandleStick]): Unit = {
         // Get the last data point
@@ -590,7 +595,7 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
         dragStartY = 0
     }
 
-    def updateOnScroll(event: ScrollEvent): Unit ={
+    def updateOnScroll(event: ScrollEvent): Unit = {
     updateXYAxis(candleStickChart)
     val zoomFactor = 0.1 // Adjust this value to control the zoom speed
 
@@ -607,22 +612,24 @@ class DraggableCandleStickChart(candleStickChart: AdvCandleStickChartSample.Cand
     val zoomStep = range * zoomFactor
     val xAxisWidth = candleStickChart.xAxis.delegate.getWidth
     val zoomhighlowlines = xAxisWidth * zoomFactor
+    val maxCandles = 1500
+    val distanceCandles = AdvCandleStickChartSample.distancecandles
+    AdvCandleStickChartSample.numbercandles = (range / distanceCandles).toInt
     if (deltaY < 0) {
         // Zoom out
+        if (range >= (maxCandles * distanceCandles)) {
+            return
+        }
         val newLowerBound = xAxisLowerBound - zoomStep
         val setLowerBoundMethodx = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
         setLowerBoundMethodx.invoke(xAxis, newLowerBound.asInstanceOf[AnyRef])
- 
-
+           
     } else {
         // Zoom in
         val newLowerBound = xAxisLowerBound + zoomStep
         val setLowerBoundMethodx = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
         setLowerBoundMethodx.invoke(xAxis, newLowerBound.asInstanceOf[AnyRef])
-  
-
     }
-
     }
 }
 
@@ -632,7 +639,7 @@ object AdvCandleStickChartSample extends JFXApp3 {
     override def start(): Unit = {
 
     }
-
+    var numbercandles = 200
     var distancecandles = 60
     import scala.collection.mutable.ListBuffer
 
@@ -640,10 +647,10 @@ object AdvCandleStickChartSample extends JFXApp3 {
         val xAxis = chart.getXAxis
         val yAxis = chart.getYAxis
 
-        val minDatax = candleData.take(200).minBy(_.day).day
-        val maxDatax = candleData.take(200).maxBy(_.day).day
-        val minDatay = candleData.take(200).minBy(_.low).low
-        val maxDatay = candleData.take(200).maxBy(_.high).high
+        val minDatax = candleData.take(numbercandles).minBy(_.day).day
+        val maxDatax = candleData.take(numbercandles).maxBy(_.day).day
+        val minDatay = candleData.take(numbercandles).minBy(_.low).low
+        val maxDatay = candleData.take(numbercandles).maxBy(_.high).high
 
         val setLowerBoundMethodX = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
         val setUpperBoundMethodX = xAxis.getClass.getMethod("setUpperBound", classOf[Double])
@@ -712,13 +719,13 @@ object AdvCandleStickChartSample extends JFXApp3 {
         }
     }
 }
-   def showData(chart: CandleStickChart, currentdate: LocalDateTime): Unit = {
+ def showData(chart: CandleStickChart, currentdate: LocalDateTime, timeframe: String, ticker: String): Unit = {
   // Check if the map has only 5 entries left
-  if (chartDataMap.size <= 5) {
+  if (chartDataMap.size <= 30) {
     println("Getting new data")
     // Get new candle data
     val lastCandleDate = currentdate
-    val newCandleData = getCandleData("1h", "EURUSD", lastCandleDate, 500)
+    val newCandleData = getCandleDataFuture(timeframe, ticker, lastCandleDate, 1000)
 
     // Convert the CandleStick objects into the format required by the chart
     val seriesData = newCandleData.map(candleStick => {
@@ -778,6 +785,19 @@ object AdvCandleStickChartSample extends JFXApp3 {
             }
         }
     }
+
+    def setLowerBoundForCandlesnumber(chart: CandleStickChart): Unit = {
+        // Get the upper bound of the x-axis
+        val xAxis = chart.getXAxis
+        val getUpperBoundMethod = xAxis.getClass.getMethod("getUpperBound")
+        val xAxisUpperBound = getUpperBoundMethod.invoke(xAxis).asInstanceOf[Double]
+
+
+        // Calculate the lower bound based on the number of candles
+        val lowerBound = xAxisUpperBound - (numbercandles * distancecandles)
+        val setLowerBoundMethodX = xAxis.getClass.getMethod("setLowerBound", classOf[Double])
+        setLowerBoundMethodX.invoke(xAxis, lowerBound.asInstanceOf[AnyRef])
+    }
     
     def updateXYAxis(chart: CandleStickChart): Unit = {
         val yAxis = chart.getYAxis.asInstanceOf[javafx.scene.chart.NumberAxis]
@@ -799,19 +819,191 @@ object AdvCandleStickChartSample extends JFXApp3 {
         axis.setTickUnit(tickUnit)
     }
 
- 
+  import scala.collection.mutable
+import scala.jdk.CollectionConverters._
+def deleteCandlesFromRight(chart: CandleStickChart, number: Int): Unit = {
+  val seriesToRemove = new mutable.ListBuffer[XYChart.Series[Number, Number]]()
+  var count = 0
+
+  // Iterate over all series in the chart
+  for (series <- chart.data if count < number) {
+    // Remove the last data points from the series
+    while (series.getData.nonEmpty && count < number) {
+      series.getData.remove(series.getData.size - 1) // remove the last element
+      count += 1
+    }
+
+    // If the series is now empty, add it to the list of series to remove
+    if (series.getData.isEmpty) {
+      seriesToRemove += series
+    }
+  }
+
+  // Remove the empty series from the chart
+  chart.data.removeAll(seriesToRemove.asJava)
+}
+
+def deleteCandlesFromLeft(chart: CandleStickChart, number: Int): Unit = {
+  val seriesToRemove = new mutable.ListBuffer[XYChart.Series[Number, Number]]()
+  var count = 0
+
+  // Iterate over all series in the chart in reverse order
+  for (series <- chart.data.reverse if count < number) {
+    // Remove the first data points from the series
+    while (series.getData.nonEmpty && count < number) {
+      series.getData.remove(0) // remove the first element
+      count += 1
+    }
+
+    // If the series is now empty, add it to the list of series to remove
+    if (series.getData.isEmpty) {
+      seriesToRemove += series
+    }
+  }
+
+  // Remove the empty series from the chart
+  chart.data.removeAll(seriesToRemove.asJava)
+}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
+def addCandlesToRight(chart: CandleStickChart, interval: String, symbol: String, startDate: LocalDateTime, size: Int): Unit = {
+  // Fetch the candle data in a separate thread
+  val futureCandles = Future {
+    gettingData = true
+    GetDatabaseData.getCandleDataFuture(interval, symbol, startDate, size)
+  }
+
+  // When the new candles are ready, add them to the chart
+  futureCandles.onComplete {
+    case Success(newCandles) =>
+      Platform.runLater {
+        gettingData = false  // Move this line here
+
+        // Convert the CandleStick objects into the format required by the chart
+        val seriesData = newCandles.map(candleStick => {
+          val data = XYChart.Data[Number, Number](candleStick.day, candleStick.open, candleStick)
+          data
+        }).toSeq  // Convert to Seq
+
+        // Create a new series from the data
+        val series = XYChart.Series[Number, Number](ObservableBuffer(seriesData: _*))
+
+        // Add the new series to the chart at the end
+        chart.data.prepend(series)
+      }
+
+    case Failure(e) =>
+      println(s"Failed to load new candles: ${e.getMessage}")
+  }
+}
+
+var gettingData = false
+def addCandlesToLeft(chart: CandleStickChart, interval: String, symbol: String, endDate: LocalDateTime, size: Int): Unit = {
+  // Fetch the candle data in a separate thread
+  val futureCandles = Future {
+    gettingData = true
+    GetDatabaseData.getCandleData(interval, symbol, endDate, size)
+  }
+
+  // When the new candles are ready, add them to the chart
+  futureCandles.onComplete {
+    case Success(newCandles) =>
+      Platform.runLater {
+        gettingData = false  // Move this line here
+
+        // Convert the CandleStick objects into the format required by the chart
+        val seriesData = newCandles.map(candleStick => {
+          val data = XYChart.Data[Number, Number](candleStick.day, candleStick.open, candleStick)
+          data
+        }).toSeq  // Convert to Seq
+
+        // Create a new series from the data
+        val series = XYChart.Series[Number, Number](ObservableBuffer(seriesData: _*))
+
+        // Add the new series to the chart at the beginning
+        chart.data.append(series)
+      }
+
+    case Failure(e) =>
+      println(s"Failed to load new candles: ${e.getMessage}")
+  }
+}
+        def adjustCandlestoleft(chart: CandleStickChart, interval: String, symbol: String, endDate: LocalDateTime, size: Int): Unit = {
+                            // Delete candles from the right
+                deleteCandlesFromRight(chart, size)
+                // Add candles to the left
+                addCandlesToLeft(chart,interval, symbol, endDate, size)
+
+
+            
+        }
+def adjustCandlesToRight(chart: CandleStickChart, interval: String, symbol: String, startDate: LocalDateTime, size: Int): Unit = {
+  // Delete candles from the left
+  deleteCandlesFromLeft(chart, size)
+  
+  // Add candles to the right
+  addCandlesToRight(chart, interval, symbol, startDate, size)
+}
+
+def getLowestXTimeisinBounds(chart: CandleStickChart): Boolean = {
+    val xAxis = chart.getXAxis
+    val getLowerBoundMethod = xAxis.getClass.getMethod("getLowerBound")
+    val axisLowerBound = getLowerBoundMethod.invoke(xAxis).asInstanceOf[Double]
+    //println(getLowestXTime(chart))
+    //println(axisLowerBound)
+    if(getLowestXTime(chart).get > axisLowerBound - (1000*distancecandles)) {
+        return true
+    }else{
+        return false
+    
+    }
+}
+def getHighestXTimeIsInBounds(chart: CandleStickChart): Boolean = {
+  val xAxis = chart.getXAxis
+  val getUpperBoundMethod = xAxis.getClass.getMethod("getUpperBound")
+  val axisUpperBound = getUpperBoundMethod.invoke(xAxis).asInstanceOf[Double]
+  //println(getHighestXTime(chart))
+  //println(axisUpperBound)
+  if(getHighestXTime(chart).get < axisUpperBound + (1000*distancecandles)) {
+    return true
+  } else {
+    return false
+  }
+}
+
+   def getLowestXTime(chart: CandleStickChart): Option[Double] = {
+  // Flatten the data from all series into a single collection
+  val allData = chart.data.flatMap(_.getData)
+
+  // Find the data point with the lowest x value
+  val minData = allData.minByOption(_.getXValue.doubleValue())
+
+  // Extract the day from the CandleStick
+  minData.map(_.getExtraValue.asInstanceOf[CandleStick].day)
+}
+def getHighestXTime(chart: CandleStickChart): Option[Double] = {
+  // Flatten the data from all series into a single collection
+  val allData = chart.data.flatMap(_.getData)
+
+  // Find the data point with the highest x value
+  val maxData = allData.maxByOption(_.getXValue.doubleValue())
+
+  // Extract the day from the CandleStick
+  maxData.map(_.getExtraValue.asInstanceOf[CandleStick].day)
+}
     def createChart(candleData: ListBuffer[CandleStick]): CandleStickChart = {
         //Style Sheet loaded from external
         val cssURL = this.getClass.getResource("/de/htwg/se/TradingGame/view/GUI/AdvCandleStickChartSample.css")
         if (cssURL != null) {
             val css = cssURL.toExternalForm
 
-            val minDatay = candleData.take(200).minBy(_.low).low
-            val maxDatay = candleData.take(200).maxBy(_.high).high
+            val minDatay = candleData.take(numbercandles).minBy(_.low).low
+            val maxDatay = candleData.take(numbercandles).maxBy(_.high).high
 
             val firstCandle = candleData.last.day
-            val minDatax = (candleData.take(200).minBy(_.day).day)
-            val maxDatax = (candleData.take(200).maxBy(_.day).day)
+            val minDatax = (candleData.take(numbercandles).minBy(_.day).day)
+            val maxDatax = (candleData.take(numbercandles).maxBy(_.day).day)
 
             val xAxis = new NumberAxis(minDatax, maxDatax,1) {
             }
@@ -865,86 +1057,103 @@ object AdvCandleStickChartSample extends JFXApp3 {
     def xAxis = getXAxis
     def yAxis = getYAxis
 
-    /** Called to update and layout the content for the plot */
-override def layoutPlotChildren(): Unit = {
-  if (data == null) {
-    return
-  }
+    import scala.collection.parallel.CollectionConverters._
+
+    import javafx.application.Platform
+
+
+    override def layoutPlotChildren(): Unit = {
+        if (data == null) {
+            return
+        }
+
+        // val start = System.nanoTime()
+
         val getxLowerBoundMethod = xAxis.getClass.getMethod("getLowerBound")
         val xAxisLowerBound = getxLowerBoundMethod.invoke(xAxis).asInstanceOf[Double]
-
 
         val getxUpperBoundMethod = xAxis.getClass.getMethod("getUpperBound")
         val xAxisUpperBound = getxUpperBoundMethod.invoke(xAxis).asInstanceOf[Double]
 
-  for (series <- data) {
-    for (item <- getDisplayedDataIterator(series).asScala) {
-      item.extraValue() match {
-        case dayValues: CandleStick =>
-          val x = xAxis.displayPosition(dayValues.day)
-          if (dayValues.day >= xAxisLowerBound && dayValues.day <= xAxisUpperBound) {
-            item.node() match {
-              case candle: Candle if candle.isVisible =>
-                val task = new javafx.concurrent.Task[Unit] {
-                  override def call(): Unit = {
-                    val candleInfo = computeCandleInfo(dayValues, x)
-                    Platform.runLater(() => {
-                      updateCandleGUI(candle, candleInfo, x)
-                    })
-                  }
-                }
-                new Thread(task).start()
-              case _ =>
+        // Calculate the updates in parallel
+        val updates = data.par.flatMap { series =>
+            val seriesPath: Option[Path] = series.node() match {
+            case path: jfxss.Path => Some(path)
+            case _ => None
             }
-          }
-        case _ =>
-      }
-    }
-  }
-}
+            seriesPath.foreach(_.elements.clear())
 
-def computeCandleInfo(dayValues: CandleStick, x: Double): (Double, Double, Double, Double, Double) = {
-  val yOpen = yAxis.displayPosition(dayValues.open)
-  val yClose = yAxis.displayPosition(dayValues.close)
-  val yHigh = yAxis.displayPosition(dayValues.high)
-  val yLow = yAxis.displayPosition(dayValues.low)
-  val candleWidth = xAxis match {
-    case xa: jfxsc.NumberAxis =>
-      val pos1 = xa.displayPosition(1)
-      val pos2 = xa.displayPosition(distancecandles + 1)
-      (pos2 - pos1) * 0.8
-    case _ => -1
-  }
-  (yOpen, yClose, yHigh, yLow, candleWidth)
-}
+            getDisplayedDataIterator(series).asScala.flatMap { item =>
+            item.extraValue() match {
+                case dayValues: CandleStick =>
+                val x = xAxis.displayPosition(dayValues.day)
+                item.node() match {
+                    case candle: Candle if candle.isVisible =>
+                    val yOpen = yAxis.displayPosition(dayValues.open)
+                    val yClose = yAxis.displayPosition(dayValues.close)
+                    val yHigh = yAxis.displayPosition(dayValues.high)
+                    val yLow = yAxis.displayPosition(dayValues.low)
+                    val candleWidth = xAxis match {
+                        case xa: jfxsc.NumberAxis =>
+                        val pos1 = xa.displayPosition(1)
+                        val pos2 = xa.displayPosition(distancecandles + 1)
+                        (pos2 - pos1) * 0.8
+                        case _ => -1
+                    }
+                    Some((candle, yClose - yOpen, yHigh - yOpen, yLow - yOpen, candleWidth, x, yOpen))
+                    case _ => None
+                }
+                case _ => None
+            }
+            }
+        }.seq
 
-def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double, Double), x: Double): Unit = {
-  val (yOpen, yClose, yHigh, yLow, candleWidth) = candleInfo
-  candle.update(yClose - yOpen, yHigh - yOpen, yLow - yOpen, candleWidth)
-  candle.layoutX = x
-  candle.layoutY = yOpen
-}
+        // Apply the updates on the JavaFX Application Thread
+        Platform.runLater(new Runnable {
+        override def run(): Unit = {
+            // val startUpdates = System.nanoTime()
 
-    override def dataItemChanged(item: jfxsc.XYChart.Data[Number, Number]): Unit = {}
+            updates.foreach { case (candle, yCloseOpen, yHighOpen, yLowOpen, candleWidth, x, yOpen) =>
+            candle.update(yCloseOpen, yHighOpen, yLowOpen, candleWidth)
+            candle.layoutX = x
+            candle.layoutY = yOpen
+            }
 
-    override def dataItemAdded(series: jfxsc.XYChart.Series[Number, Number],
-                                            itemIndex: Int, item: jfxsc.XYChart.Data[Number, Number]): Unit = {
-        val candle = Candle(getData.indexOf(series), item, itemIndex)
-        if (shouldAnimate) {
-        candle.opacity = 0
-        plotChildren += candle
-        new FadeTransition(500 ms, candle) {
-            toValue = 1
-        }.play()
-        } else {
-        plotChildren += candle
+            // val endUpdates = System.nanoTime()
+            // val durationUpdates = (endUpdates - startUpdates) / 1e6 // convert to milliseconds
+            // println(s"Update execution time: $durationUpdates ms")
         }
-        if (series.node() != null) {
-        series.node().toFront()
+        })
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time: $duration ms")
         }
+
+        override def dataItemChanged(item: jfxsc.XYChart.Data[Number, Number]): Unit = {}
+
+        override def dataItemAdded(series: jfxsc.XYChart.Series[Number, Number], itemIndex: Int, item: jfxsc.XYChart.Data[Number, Number]): Unit = {
+            // val start = System.nanoTime()
+            val candle = Candle(getData.indexOf(series), item, itemIndex)
+            if (shouldAnimate) {
+            candle.opacity = 0
+            plotChildren += candle
+            new FadeTransition(500 ms, candle) {
+                toValue = 1
+            }.play()
+            } else {
+            plotChildren += candle
+            }
+            if (series.node() != null) {
+            series.node().toFront()
+            }
+                    
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time dataItemAdded: $duration ms")
     }
 
     override def dataItemRemoved(item: jfxsc.XYChart.Data[Number, Number], series: jfxsc.XYChart.Series[Number, Number]): Unit = {
+        // val start = System.nanoTime()
         val candle = item.node()
         if (shouldAnimate) {
         new FadeTransition(500 ms, candle) {
@@ -956,9 +1165,13 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
         else {
         plotChildren -= candle
         }
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time dataItemRemoved: $duration ms")
     }
 
     override def seriesAdded(series: jfxsc.XYChart.Series[Number, Number], seriesIndex: Int): Unit = {
+        // val start = System.nanoTime()
         for (j <- 0 until series.data().size) {
         val item = series.data()(j)
         val candle = Candle(seriesIndex, item, j)
@@ -979,9 +1192,13 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
         }
         series.node = seriesPath
         plotChildren += seriesPath
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time seriesAdded: $duration ms")
     }
 
     override def seriesRemoved(series: jfxsc.XYChart.Series[Number, Number]): Unit = {
+        // val start = System.nanoTime()
         for (d <- series.getData) {
         val candle = d.node()
         if (shouldAnimate) {
@@ -994,6 +1211,9 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
             plotChildren -= candle
         }
         }
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time seriesRemoved: $duration ms")
     }
 
 
@@ -1003,7 +1223,7 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
          * axis passing it that data.
          */
     override def updateAxisRange(): Unit = {
-
+        // val start = System.nanoTime()
         if (xAxis.isAutoRanging) {
         val xData = for (series <- data; seriesData <- series.data()) yield seriesData.XValue()
         xAxis.invalidateRange(xData)
@@ -1023,7 +1243,11 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
 
         yAxis.invalidateRange(yData)
         }
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time updateAxisRange: $duration ms")
     }
+
     }
 
     private object Candle {
@@ -1036,6 +1260,7 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
          * @return New candle node to represent the give data item
          */
     def apply(seriesIndex: Int, item: XYChart.Data[_, _], itemIndex: Int): Node = {
+        // val start = System.nanoTime()
         var candle = item.node()
         candle match {
         case c: Candle =>
@@ -1044,7 +1269,11 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
             candle = new Candle("series" + seriesIndex, "data" + itemIndex)
             item.node = candle
         }
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time apply: $duration ms")
         candle
+        
     }
 
     }
@@ -1056,59 +1285,79 @@ def updateCandleGUI(candle: Candle, candleInfo: (Double, Double, Double, Double,
     private val highLowLine: Line = new Line
     private val bar: Region = new Region
     private var openAboveClose: Boolean = true
-    private val tooltip: Tooltip = new Tooltip
 
-    private var _styleClass: Seq[String] = Seq()
+
+     private var _styleClass: Seq[String] = Seq()
 
     def styleClass: Seq[String] = _styleClass
     def styleClass_=(s: Seq[String]): Unit = {
+    //  val start = System.nanoTime()
     _styleClass = s
     getStyleClass.setAll(s: _*)
-    }
-    setAutoSizeChildren(false)
-    getChildren.addAll(highLowLine, bar)
-    updateStyleClasses()
+        //     val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time styleClass_: $duration ms")
+  }
+  setAutoSizeChildren(false)
+  getChildren.addAll(highLowLine, bar)
+
 
 
     def setSeriesAndDataStyleClasses(seriesStyleClass: String, dataStyleClass: String): Unit = {
+        // val start = System.nanoTime()
         this.seriesStyleClass = seriesStyleClass
         this.dataStyleClass = dataStyleClass
         updateStyleClasses()
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time setSeriesAndDataStyleClasses: $duration ms")
     }
 
-    def update(closeOffset: Double, highOffset: Double, lowOffset: Double, candleWidth: Double): Unit = {
-        openAboveClose = closeOffset > 0
-        updateStyleClasses()
-        highLowLine.startY = highOffset
-        highLowLine.endY = lowOffset
-        val cw = if (candleWidth == -1) {
-        // FIXME: It should be possible to access this method without delegate, it is not the same as setPrefWidth
-        bar.delegate.prefWidth(-1)
-        } else
-        candleWidth
-        if (openAboveClose) {
-        bar.resizeRelocate(-cw / 2, 0, cw, closeOffset)
-        }
-        else {
-        bar.resizeRelocate(-cw / 2, closeOffset, cw, closeOffset * -1)
-        }
+    private var lastOpenAboveClose: Boolean = openAboveClose
+
+  def update(closeOffset: Double, highOffset: Double, lowOffset: Double, candleWidth: Double): Unit = {
+    openAboveClose = closeOffset > 0
+    if (openAboveClose != lastOpenAboveClose) {
+      updateStyleClasses()
+      lastOpenAboveClose = openAboveClose
+    }
+    highLowLine.startY = highOffset
+    highLowLine.endY = lowOffset
+    val cw = if (candleWidth == -1) {
+      bar.delegate.prefWidth(-1)
+    } else
+      candleWidth
+    if (openAboveClose) {
+      bar.resizeRelocate(-cw / 2, 0, cw, closeOffset)
+    }
+    else {
+      bar.resizeRelocate(-cw / 2, closeOffset, cw, closeOffset * -1)
     }
 
+  }
 
 
-    private def updateStyleClasses(): Unit = {
-        val closeVsOpen = if (openAboveClose) "open-above-close" else "close-above-open"
-
-        styleClass = Seq("candlestick-candle", seriesStyleClass, dataStyleClass)
-        highLowLine.styleClass = Seq("candlestick-line", seriesStyleClass, dataStyleClass, closeVsOpen)
-        bar.styleClass = Seq("candlestick-bar", seriesStyleClass, dataStyleClass, closeVsOpen)
-        val barColor = if (openAboveClose) "#0079db" else "#ffffff" // replace with the colors you want
-        highLowLine.setStyle(s"-fx-stroke: $barColor;")
-    }
-
-    }
 
 
+    private val styleClasses = Seq("candlestick-candle", seriesStyleClass, dataStyleClass)
+  private val lineStyleClasses = Seq("candlestick-line", seriesStyleClass, dataStyleClass)
+  private val barStyleClasses = Seq("candlestick-bar", seriesStyleClass, dataStyleClass)
+
+  private def updateStyleClasses(): Unit = {
+    // val start = System.nanoTime()
+    val closeVsOpen = if (openAboveClose) "open-above-close" else "close-above-open"
+
+    styleClass = styleClasses
+    highLowLine.styleClass = lineStyleClasses :+ closeVsOpen
+    bar.styleClass = barStyleClasses :+ closeVsOpen
+    val barColor = if (openAboveClose) "#0079db" else "#ffffff" // replace with the colors you want
+    highLowLine.setStyle(s"-fx-stroke: $barColor;")
+        // val end = System.nanoTime()
+        // val duration = (end - start) / 1e6 // convert to milliseconds
+        // println(s"Execution time update: $duration ms")
+  }
+
+      updateStyleClasses()
 }
 
-
+}

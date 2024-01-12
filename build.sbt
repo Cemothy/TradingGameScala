@@ -13,6 +13,7 @@ lazy val root = project
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
     libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0",
     libraryDependencies += "org.postgresql" % "postgresql" % "42.2.5",
+    libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.3",
     libraryDependencies ++= {
       // Determine OS version of JavaFX binaries
       lazy val osName = System.getProperty("os.name") match {
