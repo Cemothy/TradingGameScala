@@ -1,4 +1,9 @@
 package de.htwg.se.TradingGame.model.GetMarketDataComponent 
+import com.google.inject.Inject
+import de.htwg.se.TradingGame.model.DataSave.TradeData
+import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
+import de.htwg.se.TradingGame.model.FileIO.TradeDataFileIO
+import de.htwg.se.TradingGame.model.FileIO.TradeDataXMLFileIO
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model._
 
@@ -11,22 +16,35 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-import de.htwg.se.TradingGame.model.DataSave.TradeData
+import de.htwg.se.TradingGame.model.DataSave.TradeData.startDate
+import de.htwg.se.TradingGame.model.DataSave.TradeData.endDate
+import java.time.ZoneId
 
 object GetMarketData{
-val url = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c"
-val username = "dbsys31"
-val password = "dbsys31"
+
+val url = "jdbc:sqlite:src/main/scala/de/htwg/se/TradingGame/Database/litedbCandleSticks.db"
 val Path: String = new File("src/main/scala/de/htwg/se/TradingGame/model/BrowseInterpreter.scala").getAbsolutePath
 val formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
 val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+val outputFormatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S")
+def getDatesForMarktnames(marktnames: List[String]): Map[String, (String, String)] = {
+  marktnames.map { marktname =>
+    val firstDate = LocalDateTime.parse(getFirstDateofFile(marktname), outputFormatter2)
+    val lastDate = LocalDateTime.parse(getLastDateofFile(marktname), outputFormatter2)
+    val firstDateoutput = firstDate.format(formatter)
+    val lastDateoutput = lastDate.format(formatter)
+    startDate = firstDate.atZone(ZoneId.systemDefault()).toEpochSecond()
+    endDate = lastDate.atZone(ZoneId.systemDefault()).toEpochSecond()
+    marktname -> (firstDateoutput, lastDateoutput)
+  }.toMap
+}
 
 def isDateInFile(dateTime: String): Boolean = {
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
-  val sql = "SELECT COUNT(*) FROM Candlestick WHERE Zeitstempel = TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val sql = "SELECT COUNT(*) FROM Candlestick WHERE strftime('%Y.%m.%d,%H:%M', Zeitstempel) = ? AND TimeframeID = 1"
   val pstmt = conn.prepareStatement(sql)
   pstmt.setString(1, dateTime)
 
@@ -45,10 +63,10 @@ def isDateInFile(dateTime: String): Boolean = {
 }
 
 def nextPossibleDateinFile(dateTime: String): String = {
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
-  val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE Zeitstempel > TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE Zeitstempel > datetime(strftime('%Y-%m-%d %H:%M', ?)) AND TimeframeID = 1"
   val pstmt = conn.prepareStatement(sql)
   pstmt.setString(1, dateTime)
 
@@ -66,9 +84,46 @@ def nextPossibleDateinFile(dateTime: String): String = {
   if (nextPossibleDate != null) nextPossibleDate.toString else "No Date found"
 }
 
+
+def getPairNames(connectionString: String): List[String] = {
+  var conn: Connection = null
+  var rs: ResultSet = null
+  try {
+    conn = DriverManager.getConnection(connectionString)
+    val statement = conn.createStatement()
+    rs = statement.executeQuery("SELECT Marktname FROM Markt")
+
+    var pairNames = List[String]()
+    while (rs.next()) {
+      pairNames = rs.getString("Marktname") :: pairNames
+    }
+    pairNames
+  } catch {
+    case e: Exception =>
+      e.printStackTrace()
+      List()
+  } finally {
+    if (rs != null) {
+      try {
+        rs.close()
+      } catch {
+        case e: Exception =>
+          e.printStackTrace()
+      }
+    }
+    if (conn != null) {
+      try {
+        conn.close()
+      } catch {
+        case e: Exception =>
+          e.printStackTrace()
+      }
+    }
+  }
+}
 def getLastDateofFile (): String = {
 
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
   val sql = "SELECT MAX(Zeitstempel) FROM Candlestick WHERE TimeframeID = 1"
@@ -88,8 +143,53 @@ def getLastDateofFile (): String = {
   if (lastDate != null) lastDate.toString else "No Date found"
 }
 
+def getLastDateofFile(marktname: String): String = {
+  var conn: Connection = DriverManager.getConnection(url)
+
+  // Prepare the SQL statement
+  val sql = "SELECT MAX(Candlestick.Zeitstempel) FROM Candlestick JOIN Markt ON Candlestick.MarktID = Markt.MarktID WHERE Markt.Marktname = ? AND Candlestick.TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+  pstmt.setString(1, marktname)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val lastDate = rs.getTimestamp(1)
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the last date, or "No Date found" if there's no such date
+  if (lastDate != null) lastDate.toString else "No Date found"
+}
+
+def getFirstDateofFile(marktname: String): String = {
+  var conn: Connection = DriverManager.getConnection(url)
+
+  // Prepare the SQL statement
+  val sql = "SELECT MIN(Candlestick.Zeitstempel) FROM Candlestick JOIN Markt ON Candlestick.MarktID = Markt.MarktID WHERE Markt.Marktname = ? AND Candlestick.TimeframeID = 1"
+  val pstmt = conn.prepareStatement(sql)
+  pstmt.setString(1, marktname)
+
+  // Execute the query and get the result
+  val rs: ResultSet = pstmt.executeQuery()
+  rs.next()
+  val firstDate = rs.getTimestamp(1)
+
+  // Close the connection
+  rs.close()
+  pstmt.close()
+  conn.close()
+
+  // Return the first date, or "No Date found" if there's no such date
+  if (firstDate != null) firstDate.toString else "No Date found"
+}
+
+
 def getFirsDateofFile (): String = {
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
   val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE TimeframeID = 1"
@@ -109,10 +209,10 @@ def getFirsDateofFile (): String = {
   if (firstDate != null) firstDate.toString else "No Date found"
 }
 def getPriceForDateTimeDouble(dateTime: String, ohlc: String): Double = {
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
-  val sql = s"SELECT $ohlc FROM Candlestick WHERE Zeitstempel = TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val sql = s"SELECT $ohlc FROM Candlestick WHERE Zeitstempel = datetime(strftime('%Y-%m-%d %H:%M', ?)) AND TimeframeID = 1"
   val pstmt = conn.prepareStatement(sql)
   pstmt.setString(1, dateTime)
 
@@ -130,10 +230,10 @@ def getPriceForDateTimeDouble(dateTime: String, ohlc: String): Double = {
 }
 
 def getPriceForDateTimeString(dateTime: String, ohlc: String): String = {
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
-  val sql = s"SELECT $ohlc FROM Candlestick WHERE Zeitstempel = TO_TIMESTAMP(?, 'YYYY.MM.DD,HH24:MI') AND TimeframeID = 1"
+  val sql = s"SELECT $ohlc FROM Candlestick WHERE Zeitstempel = datetime(strftime('%Y-%m-%d %H:%M', ?)) AND TimeframeID = 1"
   val pstmt = conn.prepareStatement(sql)
   pstmt.setString(1, dateTime)
 
@@ -151,7 +251,7 @@ def getPriceForDateTimeString(dateTime: String, ohlc: String): String = {
 }
 
 def isDateBeforefirstDateinFile(dateTime: String): Boolean = {
-  var conn: Connection = DriverManager.getConnection(url, username, password)
+  var conn: Connection = DriverManager.getConnection(url)
 
   // Prepare the SQL statement
   val sql = "SELECT MIN(Zeitstempel) FROM Candlestick WHERE TimeframeID = 1"
@@ -177,7 +277,7 @@ def isDateBeforefirstDateinFile(dateTime: String): Boolean = {
 def isDateAfterLastDateinFile(dateTime: String): Boolean = {
   var dateAfterLastDate: Boolean = false
 
-  val lastDate = getLastDateofFile()
+  val lastDate = TradeData.endDate.toString()
   val lastDateLocalDateTime = LocalDateTime.parse(lastDate, formatter)
   val dateTimeLocalDateTime = LocalDateTime.parse(dateTime, formatter)
 
@@ -216,23 +316,21 @@ def dateWhenTradeTriggered(trade: TradeComponent): String = {
   var date: String = "Trade was not triggered"
 
   try {
-    conn = DriverManager.getConnection(url, username, password)
+    conn = DriverManager.getConnection(url)
     val datestart = LocalDateTime.parse(trade.datestart, formatter)
     val formattedDatestart = datestart.format(outputFormatter)
 
     // Prepare the SQL statement
     val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
                   JOIN Markt m ON c.MarktID = m.MarktID
-                  WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= TO_TIMESTAMP('$formattedDatestart', 'YYYY-MM-DD HH24:MI:SS')
+                  WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= datetime(strftime('%Y-%m-%d %H:%M:%S', '$formattedDatestart'))
                   ORDER BY c.Zeitstempel"""
-
 
     pstmt = conn.prepareStatement(sql)
 
     // Execute the query and get the result
     rs = pstmt.executeQuery()
     
-  
     // Process the result
     var found = false
     while (rs.next() && !found) {
@@ -266,13 +364,13 @@ def dateWhenTradehitTakeProfit(trade: TradeComponent): String = {
   var date: String = "Trade did not hit take profit"
 
   try {
-    conn = DriverManager.getConnection(url, username, password)
+    conn = DriverManager.getConnection(url)
     val datestart = LocalDateTime.parse(trade.datestart, formatter)
     val formattedDatestart = datestart.format(outputFormatter)
     // Prepare the SQL statement
     val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
               JOIN Markt m ON c.MarktID = m.MarktID
-              WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= TO_TIMESTAMP('$formattedDatestart', 'YYYY-MM-DD HH24:MI:SS')
+              WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= datetime(strftime('%Y-%m-%d %H:%M:%S', '$formattedDatestart'))
               ORDER BY c.Zeitstempel"""
 
     pstmt = conn.prepareStatement(sql)
@@ -316,13 +414,13 @@ def dateWhenTradehitStopLoss(trade: TradeComponent): String = {
   var date: String = "Trade did not hit stop loss"
 
   try {
-    conn = DriverManager.getConnection(url, username, password)
+    conn = DriverManager.getConnection(url)
     val datestart = LocalDateTime.parse(trade.datestart, formatter)
     val formattedDatestart = datestart.format(outputFormatter)
     // Prepare the SQL statement
     val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
               JOIN Markt m ON c.MarktID = m.MarktID
-              WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= TO_TIMESTAMP('$formattedDatestart', 'YYYY-MM-DD HH24:MI:SS')
+              WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= datetime(strftime('%Y-%m-%d %H:%M:%S', '$formattedDatestart'))
               ORDER BY c.Zeitstempel"""
     pstmt = conn.prepareStatement(sql)
 
@@ -430,13 +528,14 @@ def calculateCurrentProfit(trade: TradeDoneCalculations, volume: Double, current
 
 
 
-
-def closeProgram: String = {
-
-    println(doneTradeStringwithProfit)
-    System.exit(0)
-    "should not print"
-  }
+class GetMarketDataclass @Inject() (tradeData: TradeDataclass) {
+  def closeProgram: String = {
+      tradeData.saveData(TradeData.savename)
+      println(doneTradeStringwithProfit)
+      System.exit(0)
+      "should not print"
+    }
+}
 
 def doneTradeStringwithProfit: String = {
   var output = ""

@@ -1,0 +1,18 @@
+.root {
+    -fx-base: rgb(4, 13, 40);
+    -fx-background: rgb(4, 4, 40);
+    -fx-control-inner-background: rgb(4, 4, 40);
+    -fx-accent: #91bced;
+    -fx-default-button: -fx-focus-color;
+    -fx-focus-color: #bcb9ff;
+    -fx-text-fill: rgb(180, 180, 180);
+}
+
+.text-input {
+    -fx-text-fill: rgb(180, 180, 180);
+    -fx-prompt-text-fill: gray;
+}
+
+.button {
+    -fx-text-fill: rgb(180, 180, 180);
+}
