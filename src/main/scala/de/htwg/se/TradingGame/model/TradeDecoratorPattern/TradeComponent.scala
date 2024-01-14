@@ -1,5 +1,6 @@
 package de.htwg.se.TradingGame.model.TradeDecoratorPattern
 
+
 trait TradeComponent {
   def entryTrade: Double
   def stopLossTrade: Double

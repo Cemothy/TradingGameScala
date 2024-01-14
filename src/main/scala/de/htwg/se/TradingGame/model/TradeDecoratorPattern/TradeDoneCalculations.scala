@@ -4,10 +4,11 @@ import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData._
 
+
 class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade) {
-  val dateTradeTriggered: String = dateWhenTradeTriggered(trade)
-  val tradeWinOrLose: String = didTradeWinnorLoose(trade)
-  val dateTradeDone: String = datewhenTradeisdone(trade)
+  var dateTradeTriggered: String = dateWhenTradeTriggered(trade)
+  var tradeWinOrLose: String = didTradeWinnorLoose(trade)
+  var dateTradeDone: String = datewhenTradeisdone(trade)
   var currentprofit: Double = 0.0
 
   val creator: ProfitCalculationStrategyCreator = tradeWinOrLose match {
@@ -20,5 +21,16 @@ class TradeDoneCalculations(trade: TradeComponent) extends TradeDecorator(trade)
   val strategy: ProfitCalculationStrategy = creator.createProfitCalculationStrategy(trade)
 
 
-  val endProfit: Double = strategy.calculateProfit(trade)
+  var endProfit: Double = strategy.calculateProfit(trade)
+
+
+  // Second constructor that takes all values as inputs
+  def this(trade: TradeComponent, dateTradeTriggered: String, tradeWinOrLose: String, dateTradeDone: String, currentprofit: Double, endProfit: Double) = {
+    this(trade) // Call the primary constructor
+    this.dateTradeTriggered = dateTradeTriggered
+    this.tradeWinOrLose = tradeWinOrLose
+    this.dateTradeDone = dateTradeDone
+    this.currentprofit = currentprofit
+    this.endProfit = endProfit
+  }
 }
