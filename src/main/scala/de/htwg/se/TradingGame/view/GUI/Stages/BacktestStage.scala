@@ -54,26 +54,26 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import Stages.BacktestEvaluationStage
+import de.htwg.se.TradingGame.view.GUI.DraggableCandleStickChart
+import de.htwg.se.TradingGame.model.BacktestStage._
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
+import de.htwg.se.TradingGame.model.DataSave.TradeData
+
 
 object BacktestStage extends JFXApp3 {
     override def start(): Unit = BacktestStage(controller).createStage().show()
 }
-
 class BacktestStage(controller: IController){
-    val sizecandles = 3500
-
-    var data = getCandleSticksdadabase("1h", "EURUSD", LocalDateTime.now(), sizecandles)
-
-    val chart = createChart(data)
-    val chartPane = new DraggableCandleStickChart(chart)
+    val chartPane = new DraggableCandleStickChart
     var dragStartX: Double = 0
     var dragStartY: Double = 0
     var summprofit = 0.0
     var nextClickAction: String = ""
     val crosshairPane = new Pane()
     val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
-    val crosshair = new Crosshair(crosshairPane) // Pass the crosshairPane instead of chartPane
+    val crosshair = new Crosshair(crosshairPane)
     crosshair.createCrosshair()
     val dateLabelcross = new Label {
     textFill = Color.Black
@@ -292,18 +292,12 @@ class BacktestStage(controller: IController){
         
         timeframeComboBox.value = "1h"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
-            
-            val newdata = getCandleSticksdadabase(newTimeframe.toString(), tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
-            clearAndAddData(chart, newdata)
-            setLowerBoundForCandlesnumber(chart)
-            
+ 
             }
 
         tickerComboBox.onKeyPressed = (keyEvent: KeyEvent) => {
             if (keyEvent.code == KeyCode.Enter) {
-                val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
-                clearAndAddData(chart, newdata)
-                updateCandleStickChartAxis(chart, newdata)
+
             }
         }
         val endButton = new Button("Finish Backtesting")
@@ -333,11 +327,7 @@ class BacktestStage(controller: IController){
 
 
         def showdataandupdatedatetext(): Unit = {
-            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")), timeframeComboBox.value.value, tickerComboBox.text.value )
-            val dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(getHighestVisibleXTime(chart).get.toLong), ZoneId.systemDefault())
-            // backtestDate = dateTime.format(formatter)
-            // dateInput.text = backtestDate
-   
+        
         }
 
 
@@ -375,8 +365,6 @@ class BacktestStage(controller: IController){
             controller.computeInput(browseinput)
             //controller.printDescriptor()
         
-            showData(chart, LocalDateTime.parse(dateInput.text.value, DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")),timeframeComboBox.value.value, tickerComboBox.text.value )
-            val dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(getHighestVisibleXTime(chart).get.toLong), ZoneId.systemDefault())
             // backtestDate = dateTime.format(formatter)
             // dateInput.text = backtestDate
             tradesBuffer.clear()
@@ -395,11 +383,7 @@ class BacktestStage(controller: IController){
 
         backtrackButton.onAction = () => {
     
-            val dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(getHighestVisibleXTime(chart).get.toLong), ZoneId.systemDefault())
-            // backtestDate = dateTime.format(formatter)
-            // dateInput.text = backtestDate
-
-            deleteFirstCandle(chart)
+ 
             tradesBuffer.clear()
             tradesBuffer ++= TradeData.donetrades.map(trade => {
                 updatecurrentProfit(trade)
@@ -439,9 +423,7 @@ class BacktestStage(controller: IController){
         applyDateButton.setOnAction(_ => {
             val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
             
-            val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
-            clearAndAddData(chart, newdata)
-            updateCandleStickChartAxis(chart ,newdata)
+
             println(browseinput)
             controller.computeInput(browseinput)
             //controller.printDescriptor()
@@ -484,9 +466,8 @@ class BacktestStage(controller: IController){
         val sentimentcircleButton = new ToggleButton(".oO0")
         sentimentcircleButton.onAction = (ae: ActionEvent) => {
             if (sentimentcircleButton.selected.value) {
-                chartPane.addcircle(tickerComboBox.text.value)
             } else {
-                chartPane.deleteAllCircles()
+
             }
 }
         startHorizontalLineButton.onAction = (ae: ActionEvent) => {
@@ -518,9 +499,7 @@ class BacktestStage(controller: IController){
                 val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
                 val dateString = localDateTime.format(formatter)
                 dateInput.text = dateString
-                //backtestDate = dateString
-                val newdata = getCandleSticksdadabase(timeframeComboBox.value.value, tickerComboBox.text.value, LocalDateTime.parse(dateInput.text.value, formatter), sizecandles)
-                addDataAndHideAfterDate(chart, newdata, localDateTime.atZone(ZoneId.systemDefault()).toEpochSecond)
+              
                 //updateCandleStickChartAxis(chart, newdata)
                 val browseinput = s"${tickerComboBox.text.value} ${dateInput.text.value}"
                 println(browseinput)

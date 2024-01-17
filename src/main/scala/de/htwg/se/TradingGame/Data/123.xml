@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<TradeData>
+      
+      <Balance>123.0</Balance>
+      <Pair>EURUSD</Pair>
+      <BacktestDate>1640862720</BacktestDate>
+    </TradeData>

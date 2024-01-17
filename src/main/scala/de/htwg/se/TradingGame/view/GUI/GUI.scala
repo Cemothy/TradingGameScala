@@ -3,8 +3,10 @@ import de.htwg.se.TradingGame.controller.IController
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.model.InterpretterComponent._
 import de.htwg.se.TradingGame.util.Observer
+import de.htwg.se.TradingGame.view.GUI.Stages._
 import scalafx.application.JFXApp3
 import scalafx.application.Platform
+
 import Stages.BacktestEvaluationStage
 import Stages.BacktestOrLiveTradeStage
 import Stages.ChoosePairAndDateStage
@@ -54,6 +56,6 @@ class GUI(controller: IController) extends JFXApp3 with Observer {
     }
   }
     override def start(): Unit = {
-
+       loginstage.createStage().show()
   }
 }

@@ -1,6 +1,7 @@
 package de.htwg.se.TradingGame.model.BacktestStage
 
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.CandleStick
+import de.htwg.se.TradingGame.model.BacktestStage.CandleStick
+import de.htwg.se.TradingGame.model.DataSave._
 
 import java.sql._
 import java.time.Instant
@@ -8,7 +9,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import scala.collection.mutable.ListBuffer
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample
 
 object GetDatabaseData extends App {
 
@@ -37,13 +37,13 @@ def tryConnect(connectionString: String): Boolean = {
  def getCandleSticksdadabase(interval: String, symbol: String, endDate: LocalDateTime, size: Int): ListBuffer[CandleStick] = {
   val candleSticks = ListBuffer[CandleStick]()
   interval match {
-    case "1m" => AdvCandleStickChartSample.distancecandles = 1 * 60 
-    case "5m" => AdvCandleStickChartSample.distancecandles = 5 * 60 
-    case "15m" => AdvCandleStickChartSample.distancecandles = 15 * 60 
-    case "1h" => AdvCandleStickChartSample.distancecandles = 60 * 60 
-    case "4h" => AdvCandleStickChartSample.distancecandles = 60 * 4 * 60 
-    case "1d" => AdvCandleStickChartSample.distancecandles = 60 * 24 * 60 
-    case "1w" => AdvCandleStickChartSample.distancecandles = 60 * 24 * 7 * 60 
+    case "1m" => TradeData.distancecandles = 1 * 60 
+    case "5m" => TradeData.distancecandles = 5 * 60 
+    case "15m" => TradeData.distancecandles = 15 * 60 
+    case "1h" => TradeData.distancecandles = 60 * 60 
+    case "4h" => TradeData.distancecandles = 60 * 4 * 60 
+    case "1d" => TradeData.distancecandles = 60 * 24 * 60 
+    case "1w" => TradeData.distancecandles = 60 * 24 * 7 * 60 
     case _ => throw new IllegalArgumentException("Invalid interval")
   }
 
