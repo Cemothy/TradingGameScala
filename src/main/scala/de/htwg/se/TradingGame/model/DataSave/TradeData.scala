@@ -4,22 +4,22 @@ import com.google.inject.Inject
 import de.htwg.se.TradingGame.model.FileIO.TradeDataFileIO
 import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData.getFirsDateofFile
 import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData.getLastDateofFile
+import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData.getPairNames
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
 import scalafx.scene.input.KeyCode.T
 
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.XML
-import scala.io.Source
-import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData.getPairNames
-import java.nio.file.Files
-import java.nio.file.Paths
-import scala.collection.JavaConverters._
 object TradeData {
   val trades: ArrayBuffer[TradeComponent] = ArrayBuffer.empty[TradeComponent]
   val donetrades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
@@ -32,13 +32,32 @@ object TradeData {
   var databaseConnectionString: String = ""
   val databaseStrings: List[String] = Source.fromResource("de/htwg/se/TradingGame/Database/DatabaseconnectionStrings").getLines().toList
   var pairList: List[String] = null
+  var distancecandles = 3600
+  var numbercandles = 100
+  var interval = "1h"
+  var lowestLoadedDate: Long = 0
+  var highestLoadedDate: Long = 0
+  var alwayslowestLoadedDate: Long = 0
+  var alwayshighestLoadedDate: Long = 0
   val loadFileList: List[String] = 
     Files.list(Paths.get(getClass.getResource("/de/htwg/se/TradingGame/Data/").toURI))
       .iterator()
       .asScala
       .map(_.getFileName.toString)
       .toList
-
+  
+  def intervalasSeconds: Int = {
+    interval match {
+      case "1m" => 1 * 60 
+      case "5m" => 5 * 60 
+      case "15m" => 15 * 60 
+      case "1h" => 60 * 60 
+      case "4h" => 60 * 4 * 60 
+      case "1d" => 60 * 24 * 60 
+      case "1w" => 60 * 24 * 7 * 60 
+      case _ => throw new IllegalArgumentException("Invalid interval")
+    }
+  }
 
    def printTradeData(): Unit = {
     println(s"Trades: $trades")

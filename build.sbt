@@ -8,9 +8,12 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % Test,
     libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R24",
-    libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
     libraryDependencies += "com.oracle.database.jdbc" % "ojdbc8" % "19.8.0.0",
     libraryDependencies += "net.codingwell" %% "scala-guice" % "7.0.0",
+    libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.3",
+    libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0",
+    libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.3",
+    libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.34.0",
     libraryDependencies ++= {
       // Determine OS version of JavaFX binaries
       lazy val osName = System.getProperty("os.name") match {
@@ -24,4 +27,3 @@ lazy val root = project
     },
     unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "scala"
   )
-

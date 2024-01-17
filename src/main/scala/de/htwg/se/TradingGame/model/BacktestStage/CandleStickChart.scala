@@ -1,7 +1,6 @@
 package de.htwg.se.TradingGame.model.BacktestStage
 
-import scala.collection.parallel.CollectionConverters._
-import javafx.application.Platform
+import de.htwg.se.TradingGame.model.BacktestStage._
 import de.htwg.se.TradingGame.model.DataSave.TradeData
 import javafx.collections.FXCollections
 import javafx.scene.{chart => jfxsc}
@@ -55,11 +54,16 @@ import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.TreeMap
+import scala.collection.parallel.CollectionConverters._
 import scala.compiletime.ops.boolean
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.CandleStick
-import de.htwg.se.TradingGame.view.GUI.AdvCandleStickChartSample.distancecandles
+
+object AdvCandleStickChartSample extends JFXApp3{
+
+override def start(): Unit ={
+
+}
 
 class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuffer[jfxsc.XYChart.Series[Number, Number]] = ObservableBuffer.empty) extends jfxsc.XYChart[Number, Number](xa, ya) {
     setData(initialData)
@@ -74,6 +78,8 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
     def plotChildren = getPlotChildren
     def xAxis = getXAxis
     def yAxis = getYAxis
+    def addCustomNode(node: Node): Unit = getPlotChildren.add(node)
+        
 
     override def layoutPlotChildren(): Unit = {
         if (data == null) 
@@ -96,7 +102,7 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
                     case dayValues: CandleStick =>
                         val x = xAxis.displayPosition(dayValues.day)
                         item.node() match 
-                            case candle: Candle if candle.isVisible =>
+                            case candle: Candle =>
                                 val yOpen = yAxis.displayPosition(dayValues.open)
                                 val yClose = yAxis.displayPosition(dayValues.close)
                                 val yHigh = yAxis.displayPosition(dayValues.high)
@@ -104,7 +110,7 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
                                 val candleWidth = xAxis match 
                                     case xa: jfxsc.NumberAxis =>
                                         val pos1 = xa.displayPosition(1)
-                                        val pos2 = xa.displayPosition(distancecandles + 1)
+                                        val pos2 = xa.displayPosition(TradeData.distancecandles + 1)
                                         (pos2 - pos1) * 0.8
                                     case _ => -1
                                 Some((candle, yClose - yOpen, yHigh - yOpen, yLow - yOpen, candleWidth, x, yOpen))
@@ -113,13 +119,25 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
             }
         }.seq
 
-        def run(): Unit = 
+        Platform.runLater(() => {
             updates.foreach { case (candle, yCloseOpen, yHighOpen, yLowOpen, candleWidth, x, yOpen) =>
+                if(x >= xAxis.displayPosition(TradeData.backtestDate)) {
+                    candle.setVisible(false)
+                } else if(x >= xAxis.displayPosition(xAxisUpperBound) || x <= xAxis.displayPosition(xAxisLowerBound)) {
+                    candle.setVisible(false)
+                }
+                else {
+                    candle.setVisible(true)
+                }
+                if(candle.isVisible()) {
                 candle.update(yCloseOpen, yHighOpen, yLowOpen, candleWidth)
                 candle.layoutX = x
                 candle.layoutY = yOpen
             }
-        }
+
+            }
+        })
+            }
 
     override def dataItemChanged(item: jfxsc.XYChart.Data[Number, Number]): Unit = {}
 
@@ -254,5 +272,5 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
   
       updateStyleClasses()
 }
-
+}
 

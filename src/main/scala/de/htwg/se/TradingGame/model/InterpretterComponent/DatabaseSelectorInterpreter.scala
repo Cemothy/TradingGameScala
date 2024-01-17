@@ -7,7 +7,6 @@ import com.google.inject.name.Names
 import de.htwg.se.TradingGame.TradingGameModule
 import de.htwg.se.TradingGame.model.DataSave.TradeData.databaseConnectionString
 import de.htwg.se.TradingGame.model._
-import de.htwg.se.TradingGame.view.GUI.GetDatabaseData
 import net.codingwell.scalaguice.InjectorExtensions.*
 
 import scala.io.Source

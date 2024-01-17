@@ -19,10 +19,11 @@ class Controller @Inject() extends IController {
   private val undoManager = new UndoManager
 
   override def computeInput(input: String): Unit = 
-    input match 
+    input match {
       case "undo" => undo()
       case "redo" => redo()
       case _ => doStep(input)
+    }
     
   def doStep(input: String): Unit = 
     undoManager.doStep(new SetCommand(input, this))
@@ -47,4 +48,5 @@ class Controller @Inject() extends IController {
   override def getdatabaseconnectionStrings: List[String] = TradeData.databaseStrings
   override def getloadFileList: List[String] = TradeData.loadFileList
   override def getPairList: List[String] = TradeData.pairList
+
 }
