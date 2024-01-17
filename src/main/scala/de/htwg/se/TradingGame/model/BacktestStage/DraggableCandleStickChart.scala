@@ -65,7 +65,7 @@ import de.htwg.se.TradingGame.model.DataSave.TradeData.alwayslowestLoadedDate
 
 
 class DraggableCandleStickChart extends StackPane {
-  val size = 2001
+  val size = 2007
   val chartData = new ChartData(TradeData.databaseConnectionString, TradeData.pair, size)
   val candleData = chartData.initialize(TradeData.backtestDate)
   //candleData.foreach(candleStick => println(s"Day: ${candleStick.day}, Open: ${candleStick.open}, Close: ${candleStick.close}, High: ${candleStick.high}, Low: ${candleStick.low}"))
@@ -143,38 +143,55 @@ class DraggableCandleStickChart extends StackPane {
 
  def addDataLeftwhenNeeded: Unit = {
   if(TradeData.lowestLoadedDate > getxLowerBound && candleStickChart.getData.size() == 1) {
+    println("addDataLeftwhenNeeded case 1")
     val candleData = chartData.getLowerThird
     val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
     val series = XYChart.Series[Number, Number](ObservableBuffer(dataPoints.toSeq: _*))
-    candleStickChart.getData.add(series)
-  } else if(TradeData.lowestLoadedDate > getxUpperBound && candleStickChart.getData.size() == 2){
+    candleStickChart.getData.add(0,series)
+  } else if(TradeData.lowestLoadedDate - ((size/9) * TradeData.intervalasSeconds) > getxUpperBound && candleStickChart.getData.size() == 2){
+    println("addDataLeftwhenNeeded case 2")
     val data = candleStickChart.getData
     if (data.nonEmpty) { 
-      data.remove(0) // remove the first series
+      data.remove(1) // remove the first series
       if (data.size > 0) {
         val lowestSeries = data.minBy(series => series.getData.get(0).getXValue.longValue())
         val lowestDataPoint = lowestSeries.getData.minBy(dataPoint => dataPoint.getXValue.longValue())
+        TradeData.highestLoadedDate = TradeData.lowestLoadedDate
+        TradeData.alwayshighestLoadedDate = TradeData.highestLoadedDate
         TradeData.lowestLoadedDate = lowestDataPoint.getXValue.longValue()
+        
+        
       }
     }
+  }else if(candleStickChart.getData.size() == 2 && TradeData.highestLoadedDate - ((2*(size/9)) * TradeData.intervalasSeconds) < getxLowerBound && TradeData.alwayslowestLoadedDate != TradeData.lowestLoadedDate){
+    candleStickChart.getData.remove(1)
+    println("addDataLeftwhenNeeded case 3")
   }
 }
 def addDataRightWhenNeeded: Unit = {
   if(TradeData.highestLoadedDate < getxUpperBound && candleStickChart.getData.size() == 1) {
+    println("addDataRightWhenNeeded case 1")
     val candleData = chartData.getUpperThird
     val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
     val series = XYChart.Series[Number, Number](ObservableBuffer(dataPoints.toSeq: _*))
-    candleStickChart.getData.add(series)
-  } else if(TradeData.highestLoadedDate < getxLowerBound && candleStickChart.getData.size() == 2){
+    candleStickChart.getData.add(1, series)
+  } else if(TradeData.highestLoadedDate +((size/9) * TradeData.intervalasSeconds) < getxLowerBound && candleStickChart.getData.size() == 2){
+    println("addDataRightWhenNeeded case 2")
     val data = candleStickChart.getData
     if (data.nonEmpty) {
-      data.remove(data.size() - 1)
+      data.remove(0)
       if (data.size > 0) {
         val highestSeries = data.maxBy(series => series.getData.get(0).getXValue.longValue())
         val highestDataPoint = highestSeries.getData.maxBy(dataPoint => dataPoint.getXValue.longValue())
+        TradeData.lowestLoadedDate = TradeData.highestLoadedDate
         TradeData.highestLoadedDate = highestDataPoint.getXValue.longValue()
+        TradeData.alwayslowestLoadedDate = TradeData.lowestLoadedDate
+
       }
     }
+  }else if(candleStickChart.getData.size() == 2 && TradeData.lowestLoadedDate + ((2*(size/9)) * TradeData.intervalasSeconds) > getxUpperBound && TradeData.alwayshighestLoadedDate != TradeData.highestLoadedDate){
+    println("addDataRightWhenNeeded case 3")
+    candleStickChart.getData.remove(0)
   }
 }
 def addDataWhenNeeded: Unit = {

@@ -67,62 +67,38 @@ val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
   }
 
 def getUpperThird: ListBuffer[CandleStick] = {
-  // Get the upper third of the buffer
   val upperThird = candleSticks.getNewestThird
-//   println("Upper third data:")
-// upperThird.foreach { candleStick =>
-//   val date = Instant.ofEpochSecond(candleStick.day).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter)
-//   println(s"Date: $date, Close: ${candleStick.close}")
-// }
-
-  // Remove the lower third of the buffer
   for (_ <- 1 to bufferSize / 3) {
     candleSticks.removeOldest()
   }
+
   println()
  println("getUpperThird before alwayslowestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayslowestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
   println("getUpperThird before alwayshighestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayshighestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
-  // Find the data point with the highest day in upperThird and set TradeData.alwayshighestLoadedDate to this value
   val highestDataPointInUpperThird = upperThird.maxBy(dataPoint => dataPoint.day)
   TradeData.alwayshighestLoadedDate = highestDataPointInUpperThird.day
   println("getUpperThird after alwayslowestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayslowestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
   println("getUpperThird after alwayshighestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayshighestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
-  // Fetch new data from the database and add it to the buffer
   Future{
   getCandleDataBufferRight(TradeData.alwayshighestLoadedDate)
 }
-  // Print out the upper third data
   upperThird
 }
 def getLowerThird: ListBuffer[CandleStick] = {
-  
-  // Get the lower third of the buffer
   val lowerThird = candleSticks.getOldestThird
-  // Remove the upper third of the buffer
-//   println("lowerThird third data:")
-// lowerThird.foreach { candleStick =>
-//   val date = Instant.ofEpochSecond(candleStick.day).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter)
-//   println(s"Date: $date, Close: ${candleStick.close}")
-// }
-
-
   for (_ <- 1 to bufferSize / 3) {
     candleSticks.removeNewest()
   }
   println()
   println("getLowerThird before alwayslowestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayslowestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
   println("getLowerThird before alwayshighestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayshighestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
-  // Find the data point with the lowest day in lowerThird and set TradeData.alwayslowestLoadedDate to this value
   val lowestDataPointInLowerThird = lowerThird.minBy(dataPoint => dataPoint.day)
   TradeData.alwayslowestLoadedDate = lowestDataPointInLowerThird.day
-
   println("getLowerThird after alwayslowestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayslowestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
   println("getLowerThird after alwayshighestLoadedDate: " + Instant.ofEpochSecond(TradeData.alwayshighestLoadedDate).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter))
-  // Fetch new data from the database and add it to the buffer
   Future{
   getCandleDataBufferLeft(TradeData.alwayslowestLoadedDate)
   }
-  // Print out the lower third data
   lowerThird
 }
 
