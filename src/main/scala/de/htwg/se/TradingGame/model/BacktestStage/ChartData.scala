@@ -66,6 +66,23 @@ val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     candleSticks.getMiddleThird
   }
 
+
+  def moveBufferRight = {
+for (_ <- 1 to bufferSize / 3) {
+    candleSticks.removeOldest()
+  }
+  Future{
+  getCandleDataBufferRight(TradeData.alwayshighestLoadedDate)
+}
+  }
+  def moveBufferLeft = {
+for (_ <- 1 to bufferSize / 3) {
+    candleSticks.removeNewest()
+  }
+  Future{
+  getCandleDataBufferLeft(TradeData.alwayslowestLoadedDate)
+}
+  }
 def getUpperThird: ListBuffer[CandleStick] = {
   val upperThird = candleSticks.getNewestThird
   for (_ <- 1 to bufferSize / 3) {
