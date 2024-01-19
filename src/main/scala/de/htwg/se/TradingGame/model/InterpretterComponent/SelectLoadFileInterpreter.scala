@@ -11,25 +11,23 @@ import java.nio.file.Paths
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
-class SelectLoadFileInterpreter @Inject() (val gameStateManager: GameStateManager)extends Interpreter {
-
+class SelectLoadFileInterpreter @Inject() (val gameStateManager: GameStateManager) extends Interpreter {
   gameStateManager.changeLoadFileList( Files.list(Paths.get(getClass.getResource("/de/htwg/se/TradingGame/model/Data/").toURI)).iterator().asScala.map(_.getFileName.toString).toList)
-  var descriptor: String =  s"Choose a file to load:\n${gameStateManager.currentState.loadFileList}\n"
-  
+  var descriptor: String = s"Choose a file to load:\n${gameStateManager.currentState.loadFileList}\n"
+
   val loadFile: String = "\\w+.\\w+"
   val wrongInput: String = ".*"
 
-  def doLoadFile(input: String): (String, Interpreter) = 
-      val filename = input.split("\\.")(0)
-      gameStateManager.changeSaveName(filename)
-      gameStateManager.loadCurrentState()
-      ("File loaded successfully", BacktestInterpreter(gameStateManager))
+  def doLoadFile(input: String): (String, Interpreter) = {
+    val filename = input.split("\\.")(0)
+    gameStateManager.changeSaveName(filename)
+    gameStateManager.loadCurrentState()
+    ("File loaded successfully", BacktestInterpreter(gameStateManager))
+  }
 
-
-    
   def doWrongInput(input: String): (String, SelectLoadFileInterpreter) = ("Wrong input. Please select a valid file", SelectLoadFileInterpreter(gameStateManager))
+
   override def resetState: Interpreter = SelectLoadFileInterpreter(gameStateManager)
-  override val actions: Map[String, String => (String, Interpreter)] = Map( (loadFile, doLoadFile))
 
-
+  override val actions: Map[String, String => (String, Interpreter)] = Map((loadFile, doLoadFile))
 }
