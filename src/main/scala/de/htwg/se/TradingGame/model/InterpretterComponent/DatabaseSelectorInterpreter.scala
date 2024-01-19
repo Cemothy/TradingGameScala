@@ -15,7 +15,7 @@ import scalafx.scene.input.KeyCode.D
 import scala.io.Source
 
 class DatabaseSelectorInterpreter @Inject() (val gameStateManager: GameStateManager)extends Interpreter {
-  val databaseStrings: List[String] = Source.fromFile("src/main/scala/de/htwg/se/TradingGame/Database/DatabaseconnectionStrings.txt").getLines.toList
+  val databaseStrings: List[String] = Source.fromFile("TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\Database\\DatabaseconnectionStrings.txt").getLines.toList
   val databaseOptions: String = databaseStrings.zipWithIndex.map { case (s, i) => s"${i+1}: $s" }.mkString("\n")
   var descriptor: String = "Please select a database by entering its number:\n" + databaseOptions + "\n"
 

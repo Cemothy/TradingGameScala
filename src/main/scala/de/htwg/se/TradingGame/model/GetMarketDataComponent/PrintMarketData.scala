@@ -19,49 +19,40 @@ import scala.io.Source
 
 class PrintMarketData(gameStateManager: GameStateManager){
 
-
-  def closeProgram: String = {
-      gameStateManager.saveCurrentState()
-      println(doneTradeStringwithProfit)
-      System.exit(0)
-      "should not print"
+  def closeProgram: String = 
+    gameStateManager.saveCurrentState()
+    println(doneTradeStringwithProfit)
+    System.exit(0)
+    "should not print"
+    
+  def doneTradeStringwithProfit: String = 
+    var output = ""
+    for (trade <- gameStateManager.currentState.doneTrades) {
+      output += "__________________________________________________________\n"
+      output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
+      output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "
+      output += s"Take Profit Trade: ${trade.trade.takeProfitTrade}  |  "
+      output += s"Risk Trade: ${trade.trade.risk}  |  "
+      output += s"Date: ${trade.trade.datestart}  |  "
+      output += s"Ticker: ${trade.trade.ticker}  |  "
+      output += s"Date Trade Triggered: ${trade.dateTradeTriggered}  |  "
+      output += s"Date Trade Done: ${trade.dateTradeDone}  |  "
+      output += s"Trade Winner or Loser: ${trade.tradeWinOrLose}  |  "
+      output += s"Trade Buy or Sell: ${if (trade.trade.takeProfitTrade > trade.trade.stopLossTrade) "Buy" else "Sell"}  |  "
+      output += s"Profit: $$${trade.endProfit * gameStateManager.currentState.balance}\n"
+      output += "__________________________________________________________\n"
+      gameStateManager.changeBalance(gameStateManager.currentState.balance + trade.endProfit * gameStateManager.currentState.balance) 
+      output += "__________________________________________________________\n"
+      output += s"new Balance: $$${gameStateManager.currentState.balance}\n"
+      output += "__________________________________________________________\n"
     }
-
-
-def doneTradeStringwithProfit: String = {
-  var output = ""
-  for (trade <- gameStateManager.currentState.doneTrades) {
     output += "__________________________________________________________\n"
-    output += s"Entry Trade: ${trade.trade.entryTrade}  |  "
-    output += s"Stop Loss Trade: ${trade.trade.stopLossTrade}  |  "
-    output += s"Take Profit Trade: ${trade.trade.takeProfitTrade}  |  "
-    output += s"Risk Trade: ${trade.trade.risk}  |  "
-    output += s"Date: ${trade.trade.datestart}  |  "
-    output += s"Ticker: ${trade.trade.ticker}  |  "
-    output += s"Date Trade Triggered: ${trade.dateTradeTriggered}  |  "
-    output += s"Date Trade Done: ${trade.dateTradeDone}  |  "
-    output += s"Trade Winner or Loser: ${trade.tradeWinOrLose}  |  "
-    output += s"Trade Buy or Sell: ${if (trade.trade.takeProfitTrade > trade.trade.stopLossTrade) "Buy" else "Sell"}  |  "
-    output += s"Profit: $$${trade.endProfit * gameStateManager.currentState.balance}\n"
+    output += s"Final Balance: $$${gameStateManager.currentState.balance}\n"
     output += "__________________________________________________________\n"
-    gameStateManager.changeBalance(gameStateManager.currentState.balance + trade.endProfit * gameStateManager.currentState.balance) 
-    output += "__________________________________________________________\n"
-    output += s"new Balance: $$${gameStateManager.currentState.balance}\n"
-    output += "__________________________________________________________\n"
-  }
-  output += "__________________________________________________________\n"
-  output += s"Final Balance: $$${gameStateManager.currentState.balance}\n"
-  output += "__________________________________________________________\n"
 
-  output += "Closing the program..."
-  output
-}
-
-
-
-
-
-
+    output += "Closing the program..."
+    output
+  
 }
 
 

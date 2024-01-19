@@ -25,7 +25,4 @@ class GameStateManager  @Inject() (fileIO: TradeDataFileIO){
   def getCurrentState: GameState = currentState
   def loadCurrentState(): Unit = currentState = fileIO.loadData(currentState.savename, this)
   def saveCurrentState(): Unit = fileIO.saveData(currentState, currentState.savename)
-
-
-
 }
