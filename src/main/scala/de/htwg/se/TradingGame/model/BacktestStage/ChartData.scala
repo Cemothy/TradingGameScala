@@ -14,10 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChartData extends App {
-  Class.forName("org.sqlite.JDBC")
   var conn: Connection = null
-  //tryConnect("jdbc:sqlite:src/main/scala/de/htwg/se/TradingGame/Database/litedbCandleSticks.db")
-  //tryConnect("jdbc:sqlite:src/main/scala/de/htwg/se/TradingGame/Database/litedbCandleSticks.db")
   def tryConnect(connectionString: String): Boolean = 
     try 
       conn = DriverManager.getConnection(connectionString)

@@ -52,6 +52,7 @@ class BacktestInterpreter @Inject() (val gameStateManager: GameStateManager) ext
     val splitInput = input.split(" ")
     gameStateManager.changeBalance(splitInput(1).toDouble)
     (s"changed balance to ${gameStateManager.currentState.balance}", this)
+
   def doChangeBacktestDateto(input: String): (String, BacktestInterpreter) = 
     val splitInput = input.split(" ")
     gameStateManager.changeBacktestDate(convertToEpochSeconds(splitInput(1)))
@@ -83,7 +84,7 @@ class BacktestInterpreter @Inject() (val gameStateManager: GameStateManager) ext
     gameStateManager.changeDistanceCandles(intervalasSeconds(gameStateManager.currentState.interval))
     (s"changed interval to ${gameStateManager.currentState.interval}", this)
   
-  def doinvest(input: String): (String, BacktestInterpreter) = {
+  def doinvest(input: String): (String, BacktestInterpreter) = 
     val splitInput = input.split(" ")
     val entry = splitInput(1).toDouble
     val stoploss = splitInput(2).toDouble
@@ -94,39 +95,28 @@ class BacktestInterpreter @Inject() (val gameStateManager: GameStateManager) ext
     val trade = new Trade(entry, stoploss, takeprofit, riskpercent, datestart, ticker)
     val tradebuffer = gameStateManager.currentState.trades += trade
     gameStateManager.changeTrades(tradebuffer)
-     val tradeDoneCalculationsFuture = Future {
-    TradeDoneCalculations(trade, gameStateManager)
-  }
-
-   tradeDoneCalculationsFuture.onComplete {
-    case Success(tradeDoneCalculations) =>
-      val tradeDoneCalculationsBuffer = gameStateManager.currentState.doneTrades += tradeDoneCalculations
-      gameStateManager.changeDoneTrades(tradeDoneCalculationsBuffer)
-    case Failure(e) =>
-      // handle error
-  }
+    val tradeDoneCalculationsFuture = Future { TradeDoneCalculations(trade, gameStateManager)}
+    tradeDoneCalculationsFuture.onComplete {
+      case Success(tradeDoneCalculations) =>
+        val tradeDoneCalculationsBuffer = gameStateManager.currentState.doneTrades += tradeDoneCalculations
+        gameStateManager.changeDoneTrades(tradeDoneCalculationsBuffer)
+      case Failure(e) =>
+    }
     (s"Ticker: ${ticker}\nDate: ${datestart}\nAdded trade with entry $entry, stoploss $stoploss, takeprofit $takeprofit, riskpercent $riskpercent, TradeBuffer ${gameStateManager.currentState.doneTrades}", this)
-  }
-
-
-  //def doWrongInput(input: String): (String, BacktestInterpreter) = ("Wrong input. Please choose from Available Symbols: EURUSD\n\nto Stop : Q\n\n", this)
+  
   def doQuit(input: String): (String, BacktestInterpreter) = (printmarketdata.closeProgram, BacktestInterpreter(gameStateManager))
   override def resetState: Interpreter =  BacktestInterpreter(gameStateManager)
   
-
-
-
-override val actions: Map[String, String => (String, Interpreter)] =
-  Map(
-    (quit, doQuit), 
-    (changeBacktestDateto, doChangeBacktestDateto), 
-    (changepairto, dochangepairto), 
-    (changeStartBalanceto, dochangeStartBalanceto), 
-    (changeSaveNameto, dochangeSaveNameto), 
-    (changeDistanceCandlesTo, dochangeDistanceCandlesTo), 
-    (changeintervalto, dochangeintervalto), 
-    (invest, doinvest),
-    (changebalanceto, dochanebalanceto)
-    //(wrongInput, doWrongInput)
-  )
+  override val actions: Map[String, String => (String, Interpreter)] =
+    Map(
+      (quit, doQuit), 
+      (changeBacktestDateto, doChangeBacktestDateto), 
+      (changepairto, dochangepairto), 
+      (changeStartBalanceto, dochangeStartBalanceto), 
+      (changeSaveNameto, dochangeSaveNameto), 
+      (changeDistanceCandlesTo, dochangeDistanceCandlesTo), 
+      (changeintervalto, dochangeintervalto), 
+      (invest, doinvest),
+      (changebalanceto, dochanebalanceto)
+    )
 }

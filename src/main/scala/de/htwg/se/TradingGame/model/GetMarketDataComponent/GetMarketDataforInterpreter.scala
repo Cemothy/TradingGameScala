@@ -27,65 +27,63 @@ object GetMarketDataforInterpreter {
       case _ => throw new IllegalArgumentException("Invalid interval")
     }
   }
-//val formatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
-//val outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-val outputFormatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S")
+  val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+  val outputFormatter2 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S")
 
-def tryConnect(connectionString: String): Boolean = {
-  var conn: Connection = null
-  try {
-    conn = DriverManager.getConnection(connectionString)
-    true
-  } catch {
-    case e: Exception =>
-      e.printStackTrace()
-      false
-  } finally {
-    if (conn != null) {
-      try {
-        conn.close()
-      } catch {
-        case e: Exception =>
-          e.printStackTrace()
+  def tryConnect(connectionString: String): Boolean = {
+    var conn: Connection = null
+    try {
+      conn = DriverManager.getConnection(connectionString)
+      true
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+        false
+    } finally {
+      if (conn != null) {
+        try {
+          conn.close()
+        } catch {
+          case e: Exception =>
+            e.printStackTrace()
+        }
       }
     }
   }
-}
 
-def convertToEpochSeconds(dateString: String): Long = {
-  val formatter = DateTimeFormatter.ofPattern("yyy.MM.dd,HH:mm")
-  val date = LocalDateTime.parse(dateString, formatter)
-  val epochSeconds = date.atZone(ZoneId.systemDefault()).toEpochSecond
-  epochSeconds
-}
-def getPairNames(connectionString: String): List[String] = {
-  var conn: Connection = null
-  var statement: Statement = null
-  var rs: ResultSet = null
-  try {
-    conn = DriverManager.getConnection(connectionString)
-    statement = conn.createStatement()
-    rs = statement.executeQuery("SELECT Marktname FROM Markt")
-
-    val pairNames = ListBuffer[String]()
-    while (rs.next()) {
-      pairNames += rs.getString("Marktname")
-    }
-    val pairList = pairNames.toList
-    pairList // Return the list
-  } catch {
-    case e: Exception =>
-      e.printStackTrace()
-      Nil
-  } finally {
-    if (rs != null) rs.close()
-    if (statement != null) statement.close()
-    if (conn != null) conn.close()
+  def convertToEpochSeconds(dateString: String): Long = {
+    val formatter = DateTimeFormatter.ofPattern("yyy.MM.dd,HH:mm")
+    val date = LocalDateTime.parse(dateString, formatter)
+    val epochSeconds = date.atZone(ZoneId.systemDefault()).toEpochSecond
+    epochSeconds
   }
-}
+  def getPairNames(connectionString: String): List[String] = {
+    var conn: Connection = null
+    var statement: Statement = null
+    var rs: ResultSet = null
+    try {
+      conn = DriverManager.getConnection(connectionString)
+      statement = conn.createStatement()
+      rs = statement.executeQuery("SELECT Marktname FROM Markt")
 
-    def getDatesForMarktnames(marktnames: List[String], gameStateManager: GameStateManager): Map[String, (String, String)] = {
+      val pairNames = ListBuffer[String]()
+      while (rs.next()) {
+        pairNames += rs.getString("Marktname")
+      }
+      val pairList = pairNames.toList
+      pairList // Return the list
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+        Nil
+    } finally {
+      if (rs != null) rs.close()
+      if (statement != null) statement.close()
+      if (conn != null) conn.close()
+    }
+  }
+
+  def getDatesForMarktnames(marktnames: List[String], gameStateManager: GameStateManager): Map[String, (String, String)] = {
     marktnames.map { marktname =>
         val firstDate = LocalDateTime.parse(getFirstDateofFile(marktname, gameStateManager), outputFormatter2)
         val lastDate = LocalDateTime.parse(getLastDateofFile(marktname, gameStateManager), outputFormatter2)
@@ -96,47 +94,32 @@ def getPairNames(connectionString: String): List[String] = {
         marktname -> (firstDateoutput, lastDateoutput)
     }.toMap
     }
-    def getFirstDateofFile(marktname: String, gameStateManager: GameStateManager): String = {
-  var conn: Connection = DriverManager.getConnection(gameStateManager.currentState.databaseConnectionString)
+  def getFirstDateofFile(marktname: String, gameStateManager: GameStateManager): String = {
+    var conn: Connection = DriverManager.getConnection(gameStateManager.currentState.databaseConnectionString)
+    val sql = "SELECT MIN(Candlestick.Zeitstempel) FROM Candlestick JOIN Markt ON Candlestick.MarktID = Markt.MarktID WHERE Markt.Marktname = ? AND Candlestick.TimeframeID = 1"
+    val pstmt = conn.prepareStatement(sql)
+    pstmt.setString(1, marktname)
+    val rs: ResultSet = pstmt.executeQuery()
+    rs.next()
+    val firstDate = rs.getTimestamp(1)
+    rs.close()
+    pstmt.close()
+    conn.close()
+    if (firstDate != null) firstDate.toString else "No Date found"
+  }
 
-  // Prepare the SQL statement
-  val sql = "SELECT MIN(Candlestick.Zeitstempel) FROM Candlestick JOIN Markt ON Candlestick.MarktID = Markt.MarktID WHERE Markt.Marktname = ? AND Candlestick.TimeframeID = 1"
-  val pstmt = conn.prepareStatement(sql)
-  pstmt.setString(1, marktname)
-
-  // Execute the query and get the result
-  val rs: ResultSet = pstmt.executeQuery()
-  rs.next()
-  val firstDate = rs.getTimestamp(1)
-
-  // Close the connection
-  rs.close()
-  pstmt.close()
-  conn.close()
-
-  // Return the first date, or "No Date found" if there's no such date
-  if (firstDate != null) firstDate.toString else "No Date found"
-}
-def getLastDateofFile(marktname: String, gameStateManager: GameStateManager): String = {
-  var conn: Connection = DriverManager.getConnection(gameStateManager.currentState.databaseConnectionString)
-
-  // Prepare the SQL statement
-  val sql = "SELECT MAX(Candlestick.Zeitstempel) FROM Candlestick JOIN Markt ON Candlestick.MarktID = Markt.MarktID WHERE Markt.Marktname = ? AND Candlestick.TimeframeID = 1"
-  val pstmt = conn.prepareStatement(sql)
-  pstmt.setString(1, marktname)
-
-  // Execute the query and get the result
-  val rs: ResultSet = pstmt.executeQuery()
-  rs.next()
-  val lastDate = rs.getTimestamp(1)
-
-  // Close the connection
-  rs.close()
-  pstmt.close()
-  conn.close()
-
-  // Return the last date, or "No Date found" if there's no such date
-  if (lastDate != null) lastDate.toString else "No Date found"
-}
+  def getLastDateofFile(marktname: String, gameStateManager: GameStateManager): String = {
+    var conn: Connection = DriverManager.getConnection(gameStateManager.currentState.databaseConnectionString)
+    val sql = "SELECT MAX(Candlestick.Zeitstempel) FROM Candlestick JOIN Markt ON Candlestick.MarktID = Markt.MarktID WHERE Markt.Marktname = ? AND Candlestick.TimeframeID = 1"
+    val pstmt = conn.prepareStatement(sql)
+    pstmt.setString(1, marktname)
+    val rs: ResultSet = pstmt.executeQuery()
+    rs.next()
+    val lastDate = rs.getTimestamp(1)
+    rs.close()
+    pstmt.close()
+    conn.close()
+    if (lastDate != null) lastDate.toString else "No Date found"
+  }
 
 }

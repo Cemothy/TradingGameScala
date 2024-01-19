@@ -16,46 +16,50 @@ import Stages.LoadorNewFileStage
 import Stages.LoginStage
 import Stages.SelectLoadFileStage
 import Stages.SelectNewFileStage
+import scalafx.scene.input.KeyCode.L
 
 class GUI(controller: IController) extends JFXApp3 with Observer {
   controller.add(this)
-  val loginstage = new LoginStage(controller)
-  val backtestOrLiveTradeStage = new BacktestOrLiveTradeStage(controller)
-  val loadoeNewFileStage = new LoadorNewFileStage(controller)
-  val selectLoadFileStage = new SelectLoadFileStage(controller)
-  val selectNewFileStage = new SelectNewFileStage(controller)
-  val choosepairandDateStage = new ChoosePairAndDateStage(controller)
-  val balancestage = new BalanceStage(controller)
-  //val backtestStage = new BacktestStage(controller)
-  val DatabaseSelectorStage = new DatabaseSelectorStage(controller)
-  val backtestevaluationStage = new BacktestEvaluationStage(controller)
- override def update: Unit = {
-  Platform.runLater {
-    if(controller.interpreter.isInstanceOf[LoginInterpreter]){
-      new LoginStage(controller).createStage().show()
-    } else if(controller.interpreter.isInstanceOf[BacktestOrLiveInterpreter]){
-      new BacktestOrLiveTradeStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[LoadorNewFileInterpreter]){
-      new LoadorNewFileStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[SelectLoadFileInterpreter]){
-      new SelectLoadFileStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[SelectNewFileInterpreter]){
-      new SelectNewFileStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[ChoosePairAndDateInterpreter]){
-      new ChoosePairAndDateStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[BalanceInterpreter]){
-      new BalanceStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[BacktestInterpreter]){
-      new BacktestStage(controller).createStage().show()
-    }else if(controller.interpreter.isInstanceOf[DatabaseSelectorInterpreter]){
-      new DatabaseSelectorStage(controller).createStage().show()
+  var previousInterpreter: Option[Interpreter] = None
+  override def update: Unit = {
+    Platform.runLater {
+      val currentInterpreter = controller.interpreter
+
+      if (currentInterpreter != previousInterpreter) {
+        previousInterpreter = Some(currentInterpreter)
+
+        if (currentInterpreter.isInstanceOf[LoginInterpreter]) {
+          new LoginStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[BacktestOrLiveInterpreter]) {
+          new BacktestOrLiveTradeStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[LoadorNewFileInterpreter]) {
+          new LoadorNewFileStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[SelectLoadFileInterpreter]) {
+          new SelectLoadFileStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[SelectNewFileInterpreter]) {
+          new SelectNewFileStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[ChoosePairAndDateInterpreter]) {
+          new ChoosePairAndDateStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[BalanceInterpreter]) {
+          new BalanceStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[BacktestInterpreter]) {
+          new  BacktestStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        } else if (currentInterpreter.isInstanceOf[DatabaseSelectorInterpreter]) {
+          new DatabaseSelectorStage(controller).createStage().show()
+          previousInterpreter = Some(currentInterpreter)
+        }
+      }
     }
-    // }else if(controller.interpreter.isInstanceOf[BacktestEvaluationInterpreter]){
-    //   new BacktestEvaluationStage(controller).createStage().show()
-    // }
   }
-}
     override def start(): Unit = {
-       loginstage.createStage().show()
+    
   }
 }

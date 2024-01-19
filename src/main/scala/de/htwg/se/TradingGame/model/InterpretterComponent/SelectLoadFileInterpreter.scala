@@ -13,7 +13,7 @@ import scala.jdk.CollectionConverters._
 
 class SelectLoadFileInterpreter @Inject() (val gameStateManager: GameStateManager)extends Interpreter {
 
-  gameStateManager.changeLoadFileList( Files.list(Paths.get(getClass.getResource("/de/htwg/se/TradingGame/Data/").toURI)).iterator().asScala.map(_.getFileName.toString).toList)
+  gameStateManager.changeLoadFileList( Files.list(Paths.get(getClass.getResource("/de/htwg/se/TradingGame/model/Data/").toURI)).iterator().asScala.map(_.getFileName.toString).toList)
   var descriptor: String =  s"Choose a file to load:\n${gameStateManager.currentState.loadFileList}\n"
   
   val loadFile: String = "\\w+.\\w+"

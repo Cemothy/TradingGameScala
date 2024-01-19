@@ -13,19 +13,14 @@ import scalafx.scene.input.KeyCode.B
 
 
 class BalanceInterpreter @Inject() (val gameStateManager: GameStateManager) extends Interpreter {
-
   var descriptor: String = "What Balance do you want to start with?\n"
-
   val balanceInput: String = "\\d+"
   val wrongInput: String = ".*"
-
   def doBalance(input: String): (String, Interpreter) = 
     gameStateManager.changeStartBalance(input.toDouble)
     gameStateManager.changeBalance(input.toDouble)
     ("Processing balance...", ChoosePairAndDateInterpreter(gameStateManager))
-
   def doWrongInput(input: String): (String, BalanceInterpreter) = ("Wrong input. Please enter a valid balance", this)
-
   override def resetState: Interpreter = BalanceInterpreter(gameStateManager)
   override val actions: Map[String, String => (String, Interpreter)] = Map( (balanceInput, doBalance))
 }

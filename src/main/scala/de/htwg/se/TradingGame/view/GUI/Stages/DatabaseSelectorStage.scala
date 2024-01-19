@@ -21,7 +21,7 @@ object DatabaseSelectorStage extends JFXApp3 {
 
 class DatabaseSelectorStage(controller: IController) {
 
-  val databaseStrings: List[String] = Source.fromFile("src/main/scala/de/htwg/se/TradingGame/Database/DatabaseconnectionStrings.txt").getLines.toList
+  val databaseStrings: List[String] = Source.fromFile("TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\Database\\DatabaseconnectionStrings.txt").getLines.toList
   def createStage(): JFXApp3.PrimaryStage = 
     val databaseList = new ListView[String] {
     val myBuffer: ObservableBuffer[String] = new ObservableBuffer[String]
