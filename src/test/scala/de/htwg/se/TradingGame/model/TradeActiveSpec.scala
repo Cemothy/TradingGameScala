@@ -8,6 +8,7 @@ import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.Trade
 
 
 class TradeActiveSpec extends AnyWordSpec with Matchers {
+    //try
     "A TradeActive" when {
 
         val tradeActive = new TradeActive(Trade(1.0, 1.0, 1.0, 1.0, "2023.02.02,12:12", "EURUSD"), isActive = true, _currentProfit = 100.0)
@@ -18,7 +19,6 @@ class TradeActiveSpec extends AnyWordSpec with Matchers {
                 tradeActive.currentProfit shouldBe 100.0
             }
         }
-
         "setting the current profit" should {
             "update the current profit value" in {
                 tradeActive.setcurrentProfitto(200.0)

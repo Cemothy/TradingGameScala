@@ -22,9 +22,7 @@ class LoginInterpreter @Inject() (username: String, password: String, val gameSt
   def doLogin(input: String): (String, Interpreter) = ("Login successful", DatabaseSelectorInterpreter(gameStateManager))
 
   def doWrongInput(input: String): (String, Interpreter) = ("Invalid input. Please type a username and password", this)
-
   override def resetState: Interpreter = 
     LoginInterpreter(username, password, gameStateManager)
-
   override val actions: Map[String, String => (String, Interpreter)] = Map((loginPattern, doLogin))
 }
