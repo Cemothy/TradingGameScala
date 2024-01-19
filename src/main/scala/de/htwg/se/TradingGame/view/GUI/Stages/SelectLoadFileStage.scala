@@ -22,8 +22,9 @@ object SelectLoadFileStage extends JFXApp3 {
 class SelectLoadFileStage(controller: IController) {
 
   def createStage(): JFXApp3.PrimaryStage = 
-    val files = controller.getloadFileList
-    val filesObservableBuffer = ObservableBuffer[String](files: _*)
+    val files = controller.gameStateManager.currentState.loadFileList
+    val filesObservableBuffer = ObservableBuffer[String](files.toList: _*)
+    
 
     val fileSelectionComboBox = new ComboBox[String] {
         items = filesObservableBuffer
@@ -34,7 +35,7 @@ class SelectLoadFileStage(controller: IController) {
 
     new JFXApp3.PrimaryStage {
       title = "Select File"
-      loadButton.onAction = _ => controller.computeInput(fileSelectionComboBox.value.value.split(".")(0))
+      loadButton.onAction = _ => controller.computeInput(fileSelectionComboBox.getValue.split("\\.")(0))
       scene = new Scene {
         root = new VBox {
           padding = Insets(20)

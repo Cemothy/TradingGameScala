@@ -59,14 +59,14 @@ import de.htwg.se.TradingGame.model.BacktestStage._
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
-import de.htwg.se.TradingGame.model.DataSave.TradeData
+
 
 
 object BacktestStage extends JFXApp3 {
     override def start(): Unit = BacktestStage(controller).createStage().show()
 }
 class BacktestStage(controller: IController){
-    val chartPane = new DraggableCandleStickChart
+    val chartPane = new DraggableCandleStickChart(controller)
     var dragStartX: Double = 0
     var dragStartY: Double = 0
     var summprofit = 0.0
@@ -255,7 +255,7 @@ class BacktestStage(controller: IController){
         val volumeCollum = new TableColumn[TradeDoneCalculations, Double] {
             text = "Volume"
             cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
-                ObjectProperty(new TradeWithVolume(features.value, controller.getBalance).volume)
+                ObjectProperty(new TradeWithVolume(features.value, controller.gameStateManager.currentState.balance).volume)
             }
         }
         val tradebuysell = new TableColumn[TradeDoneCalculations, String] {
@@ -280,7 +280,7 @@ class BacktestStage(controller: IController){
         }
 
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
-        tradesBuffer ++= TradeData.donetrades
+        tradesBuffer ++= controller.gameStateManager.currentState.doneTrades
 
 
 
@@ -368,7 +368,7 @@ class BacktestStage(controller: IController){
             // backtestDate = dateTime.format(formatter)
             // dateInput.text = backtestDate
             tradesBuffer.clear()
-            tradesBuffer ++= TradeData.donetrades.map(trade => {
+            tradesBuffer ++= controller.gameStateManager.currentState.doneTrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -385,7 +385,7 @@ class BacktestStage(controller: IController){
     
  
             tradesBuffer.clear()
-            tradesBuffer ++= TradeData.donetrades.map(trade => {
+            tradesBuffer ++= controller.gameStateManager.currentState.doneTrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -428,7 +428,7 @@ class BacktestStage(controller: IController){
             controller.computeInput(browseinput)
             //controller.printDescriptor()
             tradesBuffer.clear()
-               tradesBuffer ++= TradeData.donetrades.map(trade => {
+               tradesBuffer ++= controller.gameStateManager.currentState.doneTrades.map(trade => {
                 updatecurrentProfit(trade)
                 trade
             })
@@ -449,7 +449,7 @@ class BacktestStage(controller: IController){
  
 
             tradesBuffer.clear()
-            tradesBuffer ++= TradeData.donetrades
+            tradesBuffer ++= controller.gameStateManager.currentState.doneTrades
            
             table.refresh()
 
@@ -529,7 +529,7 @@ class BacktestStage(controller: IController){
         )
         
 
-        val balanceLabel = new Label(s"Balance: ${controller.getBalance}")
+        val balanceLabel = new Label(s"Balance: ${controller.gameStateManager.currentState.balance}")
         
         val spacer = new Region()
         HBox.setHgrow(spacer, Priority.Always)

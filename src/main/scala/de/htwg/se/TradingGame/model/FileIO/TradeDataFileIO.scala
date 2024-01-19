@@ -7,12 +7,13 @@ import com.google.inject.Inject
 import com.google.inject.Injector
 import com.google.inject.name.Names
 import net.codingwell.scalaguice.InjectorExtensions.*
-
+import _root_.de.htwg.se.TradingGame.model.GameStateFolder.GameState
 import scala.collection.mutable.ArrayBuffer
+import _root_.de.htwg.se.TradingGame.controller.GameStateManager
 
 trait TradeDataFileIO {
-  def saveData(donetrades: ArrayBuffer[TradeDoneCalculations], balance: Double, pair: String, backtestDate: Long, filename: String): Unit
-  def loadData(filename: String): (ArrayBuffer[TradeDoneCalculations], Double, String, Long)
-    val injector: Injector = Guice.createInjector(new TradingGameModule)
+  def saveData(gameState: GameState,  filename: String): Unit
+  def loadData(filename: String , gameStateManager: GameStateManager): GameState
+  val injector: Injector = Guice.createInjector(new TradingGameModule)
 
 }

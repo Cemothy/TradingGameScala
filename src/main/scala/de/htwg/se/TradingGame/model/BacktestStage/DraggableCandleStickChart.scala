@@ -5,7 +5,6 @@ import de.htwg.se.TradingGame.model.BacktestStage.AdvCandleStickChartSample.Cand
 import de.htwg.se.TradingGame.model.BacktestStage.AdvCandleStickChartSample.CandleStickChart
 import de.htwg.se.TradingGame.model.BacktestStage.ChartData.ChartData
 import de.htwg.se.TradingGame.model.BacktestStage._
-import de.htwg.se.TradingGame.model.DataSave.TradeData
 import javafx.collections.FXCollections
 import javafx.scene.{chart => jfxsc}
 import javafx.scene.{layout => jfxsl}
@@ -61,18 +60,20 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.TreeMap
 import scala.compiletime.ops.boolean
 import scala.jdk.CollectionConverters._
-import de.htwg.se.TradingGame.model.DataSave.TradeData.alwayslowestLoadedDate
+import de.htwg.se.TradingGame.controller.IController
 
 
-class DraggableCandleStickChart extends StackPane {
+
+class DraggableCandleStickChart (controller: IController) extends StackPane {
   val size = 5004
-  val chartData = new ChartData(TradeData.databaseConnectionString, TradeData.pair, size)
-  val candleData = chartData.initialize(TradeData.backtestDate)
-  //candleData.foreach(candleStick => println(s"Day: ${candleStick.day}, Open: ${candleStick.open}, Close: ${candleStick.close}, High: ${candleStick.high}, Low: ${candleStick.low}"))
+  val gameStateManager = controller.gameStateManager
+  val chartData = new ChartData(size, gameStateManager)
+  val candleData = chartData.initialize(gameStateManager.currentState.backtestDate)
   val candleStickChart = createChart(candleData)
   updateXYAxis
   setBoundsToBacktestDate
   val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  var numbercandles = 0
   var horizontalLines: List[Line] = List()
   var startX = 0.0
   var startY = 0.0
@@ -107,8 +108,8 @@ class DraggableCandleStickChart extends StackPane {
   def yAxis = candleStickChart.yAxis.delegate
 
   def setBoundsToBacktestDate: Unit = 
-    setxLowerBound(TradeData.backtestDate - TradeData.intervalasSeconds*200)
-    setxUpperBound(TradeData.backtestDate)
+    setxLowerBound(gameStateManager.currentState.backtestDate - gameStateManager.currentState.distancecandles*200)
+    setxUpperBound(gameStateManager.currentState.backtestDate)
     setyLowerBound(candleData.minBy(_.low).low)
     setyUpperBound(candleData.maxBy(_.high).high)
     updateXYAxis
@@ -132,7 +133,7 @@ class DraggableCandleStickChart extends StackPane {
       val yAxis = new NumberAxis(candleData(0).low, candleData(0).high, 1)
       val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
       val series = XYChart.Series[Number, Number]("Candles", ObservableBuffer(dataPoints.toSeq: _*))
-      val chart = new CandleStickChart(xAxis, yAxis) {
+      val chart = new CandleStickChart(gameStateManager,xAxis, yAxis) {
         data = ObservableBuffer(series)
         getStylesheets += css
       }
@@ -141,77 +142,48 @@ class DraggableCandleStickChart extends StackPane {
       println("Resource not found: AdvCandleStickChartSample.css")
       null
 
- def addDataLeftwhenNeeded: Unit = {
-  if(TradeData.lowestLoadedDate >= getxLowerBound && candleStickChart.getData.size() == 1) {
-    println("addDataLeftwhenNeeded case 1")
-    println("lowestLoadedDate: " + TradeData.lowestLoadedDate)
-    println("getxLowerBound: " + getxLowerBound)
-    val candleData = chartData.getLowerThird
-    val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
-    val series = XYChart.Series[Number, Number](ObservableBuffer(dataPoints.toSeq: _*))
-    candleStickChart.getData.add(0,series)
-  } else if(TradeData.lowestLoadedDate - ((size/9) * TradeData.intervalasSeconds) > getxUpperBound && candleStickChart.getData.size() == 2){
-    println("addDataLeftwhenNeeded case 2")
-    val data = candleStickChart.getData
-    if (data.nonEmpty) { 
-      data.remove(1) // remove the first series
-      if (data.size > 0) {
-        val lowestSeries = data.minBy(series => series.getData.get(0).getXValue.longValue())
-        val lowestDataPoint = lowestSeries.getData.minBy(dataPoint => dataPoint.getXValue.longValue())
-        TradeData.highestLoadedDate = TradeData.lowestLoadedDate
-        TradeData.alwayshighestLoadedDate = TradeData.highestLoadedDate
-        TradeData.lowestLoadedDate = lowestDataPoint.getXValue.longValue()
-        
-        
-      }
-    }
-  }else if(candleStickChart.getData.size() == 2 && TradeData.highestLoadedDate - ((2*(size/9)) * TradeData.intervalasSeconds) < getxLowerBound && TradeData.alwayslowestLoadedDate != TradeData.lowestLoadedDate){
-
-    TradeData.alwayslowestLoadedDate = TradeData.lowestLoadedDate
-    candleStickChart.getData.remove(0)
-    chartData.moveBufferRight
-
-    println("addDataLeftwhenNeeded case 3")
-  }
-}
-def addDataRightWhenNeeded: Unit = {
-  if(TradeData.highestLoadedDate <= getxUpperBound && candleStickChart.getData.size() == 1) {
-    println("addDataRightWhenNeeded case 1")
-
-    val candleData = chartData.getUpperThird
-    val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
-    val series = XYChart.Series[Number, Number](ObservableBuffer(dataPoints.toSeq: _*))
-    candleStickChart.getData.add(1, series)
-  } else if(TradeData.highestLoadedDate +((size/9) * TradeData.intervalasSeconds) < getxLowerBound && candleStickChart.getData.size() == 2){
-    println("addDataRightWhenNeeded case 2")
-    val data = candleStickChart.getData
-    if (data.nonEmpty) {
+  def addDataLeftwhenNeeded: Unit = 
+    if(chartData.lowestLoadedDate >= getxLowerBound && candleStickChart.getData.size() == 1) 
+      val candleData = chartData.getLowerThird
+      val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
+      val series = XYChart.Series[Number, Number](ObservableBuffer(dataPoints.toSeq: _*))
+      candleStickChart.getData.add(0,series)
+    else if(chartData.lowestLoadedDate - ((size/9) * gameStateManager.currentState.distancecandles) > getxUpperBound && candleStickChart.getData.size() == 2)
+      val data = candleStickChart.getData
+      data.remove(1) 
+      val lowestSeries = data.minBy(series => series.getData.get(0).getXValue.longValue())
+      val lowestDataPoint = lowestSeries.getData.minBy(dataPoint => dataPoint.getXValue.longValue())
+      chartData.highestLoadedDate = chartData.lowestLoadedDate
+      chartData.alwayshighestLoadedDate = chartData.highestLoadedDate
+      chartData.lowestLoadedDate = lowestDataPoint.getXValue.longValue()
+    else if(candleStickChart.getData.size() == 2 && chartData.highestLoadedDate - ((2*(size/9)) * gameStateManager.currentState.distancecandles) < getxLowerBound && chartData.alwayslowestLoadedDate != chartData.lowestLoadedDate)
+      chartData.alwayslowestLoadedDate = chartData.lowestLoadedDate
+      candleStickChart.getData.remove(0)
+      chartData.moveBufferRight
+  
+  def addDataRightWhenNeeded: Unit = 
+    if(chartData.highestLoadedDate <= getxUpperBound && candleStickChart.getData.size() == 1) 
+      val candleData = chartData.getUpperThird
+      val dataPoints = candleData.map { d => XYChart.Data[Number, Number](d.day, d.open, d)}
+      val series = XYChart.Series[Number, Number](ObservableBuffer(dataPoints.toSeq: _*))
+      candleStickChart.getData.add(1, series)
+    else if(chartData.highestLoadedDate +((size/9) * gameStateManager.currentState.distancecandles) < getxLowerBound && candleStickChart.getData.size() == 2)
+      val data = candleStickChart.getData
       data.remove(0)
-      if (data.size > 0) {
-        val highestSeries = data.maxBy(series => series.getData.get(0).getXValue.longValue())
-        val highestDataPoint = highestSeries.getData.maxBy(dataPoint => dataPoint.getXValue.longValue())
-        TradeData.lowestLoadedDate = TradeData.highestLoadedDate
-        TradeData.highestLoadedDate = highestDataPoint.getXValue.longValue()
-        TradeData.alwayslowestLoadedDate = TradeData.lowestLoadedDate
-
-      }
-    }
-  }else if(candleStickChart.getData.size() == 2 && TradeData.lowestLoadedDate + ((2*(size/9)) * TradeData.intervalasSeconds) > getxUpperBound && TradeData.alwayshighestLoadedDate != TradeData.highestLoadedDate){
-    println("addDataRightWhenNeeded case 3")
-    println("TradeData.lowestLoadedDate + ((2*(size/9)) * TradeData.intervalasSeconds: ) " + (TradeData.lowestLoadedDate + ((2*(size/9)) * TradeData.intervalasSeconds)))
-    println("((2*(size/9)) * TradeData.intervalasSeconds): " + ((2*(size/9)) * TradeData.intervalasSeconds))
-    println("TradeData.intervalasSeconds: " + TradeData.intervalasSeconds)
-    println("getxUpperBound: " + getxUpperBound)
-    TradeData.alwayshighestLoadedDate = TradeData.highestLoadedDate
-    candleStickChart.getData.remove(1)
-    chartData.moveBufferLeft
-  }
-}
-def addDataWhenNeeded: Unit = {
-  addDataLeftwhenNeeded
-  addDataRightWhenNeeded
-}
-
+      val highestSeries = data.maxBy(series => series.getData.get(0).getXValue.longValue())
+      val highestDataPoint = highestSeries.getData.maxBy(dataPoint => dataPoint.getXValue.longValue())
+      chartData.lowestLoadedDate = chartData.highestLoadedDate
+      chartData.highestLoadedDate = highestDataPoint.getXValue.longValue()
+      chartData.alwayslowestLoadedDate = chartData.lowestLoadedDate
+    else if(candleStickChart.getData.size() == 2 && chartData.lowestLoadedDate + ((2*(size/9)) * gameStateManager.currentState.distancecandles) > getxUpperBound && chartData.alwayshighestLoadedDate != chartData.highestLoadedDate)
+      chartData.alwayshighestLoadedDate = chartData.highestLoadedDate
+      candleStickChart.getData.remove(1)
+      chartData.moveBufferLeft
+  
+  def addDataWhenNeeded: Unit = 
+    addDataLeftwhenNeeded
+    addDataRightWhenNeeded
+  
   def setupperboundxtolastdata(candleData: ListBuffer[CandleStick]): Unit = 
     val lastDataPoint = candleData.last.day
     setxUpperBound(lastDataPoint)
@@ -491,9 +463,9 @@ def addDataWhenNeeded: Unit = {
     val zoomStep = range * zoomFactor
     val xAxisWidth = candleStickChart.xAxis.delegate.getWidth
     val zoomhighlowlines = xAxisWidth * zoomFactor
-    val maxCandles = size/9
-    val distanceCandles = TradeData.distancecandles
-    TradeData.numbercandles = (range / distanceCandles).toInt
+    val maxCandles = size/10
+    val distanceCandles = gameStateManager.currentState.distancecandles
+    numbercandles = (range / distanceCandles).toInt
     if (deltaY < 0) 
       if (range >= (maxCandles * distanceCandles)) 
         return
