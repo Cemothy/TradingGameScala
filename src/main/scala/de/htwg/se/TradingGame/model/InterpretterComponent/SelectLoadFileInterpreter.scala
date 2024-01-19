@@ -1,38 +1,35 @@
 package de.htwg.se.TradingGame.model.InterpretterComponent 
 
 import com.google.inject.Inject
-import de.htwg.se.TradingGame.model.DataSave.TradeData
-import de.htwg.se.TradingGame.model.DataSave.TradeData._
-import de.htwg.se.TradingGame.model.DataSave.TradeData.savename
-import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
+import de.htwg.se.TradingGame.controller.GameStateManager
 import de.htwg.se.TradingGame.model._
+import org.checkerframework.checker.units.qual.g
+import scalafx.scene.input.KeyCode.S
 
 import java.nio.file.Files
 import java.nio.file.Paths
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
-class SelectLoadFileInterpreter @Inject() extends Interpreter {
+class SelectLoadFileInterpreter @Inject() (val gameStateManager: GameStateManager)extends Interpreter {
 
-  val tradeData = injector.getInstance(classOf[TradeDataclass])
-  val fileList = TradeData.loadFileList.mkString("\n")
-  override val descriptor: String =  s"Choose a file to load:\n$fileList\n"
+  gameStateManager.changeLoadFileList( Files.list(Paths.get(getClass.getResource("/de/htwg/se/TradingGame/Data/").toURI)).iterator().asScala.map(_.getFileName.toString).toList)
+  var descriptor: String =  s"Choose a file to load:\n${gameStateManager.currentState.loadFileList}\n"
   
   val loadFile: String = "\\w+.\\w+"
   val wrongInput: String = ".*"
 
   def doLoadFile(input: String): (String, Interpreter) = 
-    if (TradeData.loadFileList.contains(input)) 
       val filename = input.split("\\.")(0)
-      tradeData.loadData(filename)
-      savename = filename
-      ("File loaded successfully", BacktestInterpreter())
-    else 
-      ("File does not exist", this)
+      gameStateManager.changeSaveName(filename)
+      gameStateManager.loadCurrentState()
+      ("File loaded successfully", BacktestInterpreter(gameStateManager))
+
+
     
-  def doWrongInput(input: String): (String, SelectLoadFileInterpreter) = ("Wrong input. Please select a valid file", this)
-  override def resetState: Interpreter = this
-  override val actions: Map[String, String => (String, Interpreter)] = Map((wrongInput, doWrongInput), (loadFile, doLoadFile))
+  def doWrongInput(input: String): (String, SelectLoadFileInterpreter) = ("Wrong input. Please select a valid file", SelectLoadFileInterpreter(gameStateManager))
+  override def resetState: Interpreter = SelectLoadFileInterpreter(gameStateManager)
+  override val actions: Map[String, String => (String, Interpreter)] = Map( (loadFile, doLoadFile))
 
 
 }

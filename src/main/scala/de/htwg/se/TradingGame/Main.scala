@@ -1,9 +1,8 @@
 package de.htwg.se.TradingGame
 
 import com.google.inject.Guice
+import com.google.inject.Injector
 import de.htwg.se.TradingGame.controller.IController
-import de.htwg.se.TradingGame.model.DataSave.TradeData
-import de.htwg.se.TradingGame.model.DataSave.TradeDataclass
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.view.GUI.GUI
 import de.htwg.se.TradingGame.view.TUI.TUI
@@ -24,10 +23,10 @@ import java.nio.file.Paths
 import scala.collection.mutable.ArrayBuffer
 
 object Main extends JFXApp3 {
-  val injector = Guice.createInjector(new TradingGameModule)
+  val injector: Injector = Guice.createInjector(new TradingGameModule)
   val controller: IController = injector.getInstance(classOf[IController])
   val interpreter = injector.getInstance(classOf[Interpreter])
-  val tradeData = injector.getInstance(classOf[TradeDataclass])
+
 
 
   val tui = new TUI(controller)

@@ -5,32 +5,54 @@ import com.google.inject.Inject
 import com.google.inject.Injector
 import com.google.inject.name.Names
 import de.htwg.se.TradingGame.TradingGameModule
-import de.htwg.se.TradingGame.model.DataSave.TradeData._
+import de.htwg.se.TradingGame.controller.GameStateManager
+import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketDataforInterpreter._
 import de.htwg.se.TradingGame.model._
 import net.codingwell.scalaguice.InjectorExtensions.*
-import de.htwg.se.TradingGame.model.DataSave.TradeData
-import de.htwg.se.TradingGame.model.GetMarketDataComponent.GetMarketData.getDatesForMarktnames
+import org.checkerframework.checker.units.qual.C
+import org.checkerframework.checker.units.qual.g
 
-class ChoosePairAndDateInterpreter @Inject() extends Interpreter {
-  val datesForMarktnames = getDatesForMarktnames(TradeData.pairList)
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+class ChoosePairAndDateInterpreter @Inject() (val gameStateManager: GameStateManager) extends Interpreter {
+  gameStateManager.changePairList(getPairNames(gameStateManager.currentState.databaseConnectionString))
+  val datesForMarktnames = getDatesForMarktnames(gameStateManager.currentState.pairList, gameStateManager)
   val pairList: String = datesForMarktnames.map { case (marktname, (startDate, endDate)) =>
     s"Pair: $marktname, Start Date: $startDate, End Date: $endDate"
   }.mkString("\n")
   
-  override val descriptor: String = s"Please select a pair and a date like:\n pair yyyy.MM.DD,HH:mm\nAvailable pairs:\n$pairList\n"
+  var descriptor: String = s"Please select a pair and a date like:\n pair yyyy.MM.DD,HH:mm\nAvailable pairs:\n$pairList\n"
 
   val pairAndDateInput: String = "\\w+ \\d{4}\\.\\d{2}\\.\\d{2},\\d{2}:\\d{2}"
   val wrongInput: String = ".*"
 
-  def doPairAndDate(input: String): (String, Interpreter) = 
-    val splitInput = input.split(" ")
-    pair = splitInput(0)
-    backtestDate = convertToEpochSeconds(splitInput(1))
-    printTradeData()
-    ("Processing pair and date...", BacktestInterpreter()) // Return to BacktestInterpreter
+ def doPairAndDate(input: String): (String, Interpreter) = {
+  val splitInput = input.split(" ")
+  val pair = splitInput(0)
   
+  datesForMarktnames.get(pair) match {
+    case Some((startDate, endDate)) =>
+      val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+      val startDateTime = LocalDateTime.parse(startDate, formatter)
+      val endDateTime = LocalDateTime.parse(endDate, formatter)
+      val startEpochSecond = startDateTime.atZone(ZoneId.systemDefault()).toEpochSecond
+      val endEpochSecond = endDateTime.atZone(ZoneId.systemDefault()).toEpochSecond
+
+      gameStateManager.changeEndDate(endEpochSecond)
+      gameStateManager.changeStartDate(startEpochSecond)
+    case None =>
+      // Handle the case where the pair is not found in the map
+  }
+
+  gameStateManager.changePair(splitInput(0)) 
+  gameStateManager.changeBacktestDate(convertToEpochSeconds(splitInput(1)))
+  gameStateManager.changeDistanceCandles(intervalasSeconds(gameStateManager.currentState.interval))
+  ("Processing pair and date...", BacktestInterpreter(gameStateManager)) 
+}
 
   def doWrongInput(input: String): (String, ChoosePairAndDateInterpreter) = ("Wrong input. Please select a pair and a date", this)
-  override def resetState: Interpreter = this
-  override val actions: Map[String, String => (String, Interpreter)] = Map((wrongInput, doWrongInput), (pairAndDateInput, doPairAndDate))
+  override def resetState: Interpreter = ChoosePairAndDateInterpreter(gameStateManager)
+  override val actions: Map[String, String => (String, Interpreter)] = Map( (pairAndDateInput, doPairAndDate))
 }

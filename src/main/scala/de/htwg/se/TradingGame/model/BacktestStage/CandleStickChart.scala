@@ -1,7 +1,6 @@
 package de.htwg.se.TradingGame.model.BacktestStage
 
 import de.htwg.se.TradingGame.model.BacktestStage._
-import de.htwg.se.TradingGame.model.DataSave.TradeData
 import javafx.collections.FXCollections
 import javafx.scene.{chart => jfxsc}
 import javafx.scene.{layout => jfxsl}
@@ -58,6 +57,7 @@ import scala.collection.parallel.CollectionConverters._
 import scala.compiletime.ops.boolean
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
+import de.htwg.se.TradingGame.controller.GameStateManager
 
 object AdvCandleStickChartSample extends JFXApp3{
 
@@ -65,7 +65,7 @@ override def start(): Unit ={
 
 }
 
-class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuffer[jfxsc.XYChart.Series[Number, Number]] = ObservableBuffer.empty) extends jfxsc.XYChart[Number, Number](xa, ya) {
+class CandleStickChart(gameStateManager: GameStateManager, xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuffer[jfxsc.XYChart.Series[Number, Number]] = ObservableBuffer.empty ) extends jfxsc.XYChart[Number, Number](xa, ya) {
     setData(initialData)
     setAnimated(false)
     xAxis.animated = false
@@ -110,7 +110,7 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
                                 val candleWidth = xAxis match 
                                     case xa: jfxsc.NumberAxis =>
                                         val pos1 = xa.displayPosition(1)
-                                        val pos2 = xa.displayPosition(TradeData.distancecandles + 1)
+                                        val pos2 = xa.displayPosition(gameStateManager.currentState.distancecandles + 1)
                                         (pos2 - pos1) * 0.8
                                     case _ => -1
                                 Some((candle, yClose - yOpen, yHigh - yOpen, yLow - yOpen, candleWidth, x, yOpen))
@@ -121,7 +121,7 @@ class CandleStickChart(xa: NumberAxis, ya:NumberAxis, initialData: ObservableBuf
 
         Platform.runLater(() => {
             updates.foreach { case (candle, yCloseOpen, yHighOpen, yLowOpen, candleWidth, x, yOpen) =>
-                if(x >= xAxis.displayPosition(TradeData.backtestDate)) {
+                if(x >= xAxis.displayPosition(gameStateManager.currentState.backtestDate)) {
                     candle.setVisible(false)
                 } else if(x >= xAxis.displayPosition(xAxisUpperBound) || x <= xAxis.displayPosition(xAxisLowerBound)) {
                     candle.setVisible(false)
