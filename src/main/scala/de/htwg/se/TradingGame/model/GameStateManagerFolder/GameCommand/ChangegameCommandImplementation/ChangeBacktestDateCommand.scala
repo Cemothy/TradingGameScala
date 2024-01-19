@@ -1,15 +1,13 @@
 package de.htwg.se.TradingGame.model.GaneStateManagerFolder.GameCommand.ChangegameCommandImplementation
 
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder.DefaultGameStateimpl.DefaultGameState
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder.GameState
+import de.htwg.se.TradingGame.model.GaneStateManagerFolder.GameCommand.IGameCommand
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeDoneCalculations
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
-import de.htwg.se.TradingGame.model.GameStateFolder._
-
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder.GameState
-import de.htwg.se.TradingGame.model.GaneStateManagerFolder.GameCommand.IGameCommand
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder.DefaultGameStateimpl.DefaultGameState
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeDoneCalculations
 
 
 class ChangeBacktestDateCommand(newBacktestDate: Long) extends IGameCommand {

@@ -2,19 +2,15 @@ package de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateManagerImpl
 
 
 import com.google.inject.Inject
-import de.htwg.se.TradingGame.model.FileIO.TradeDataFileIO
-import de.htwg.se.TradingGame.model.GameCommand.ChangegameCommandImplementation._
-import de.htwg.se.TradingGame.model.GameCommand._
-import de.htwg.se.TradingGame.model.GameStateFolder._
 import de.htwg.se.TradingGame.controller._
-
+import de.htwg.se.TradingGame.model.FileIO.TradeDataFileIO
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder.DefaultGameStateimpl.DefaultGameState
 import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder._
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
+import de.htwg.se.TradingGame.model.GaneStateManagerFolder.GameCommand.ChangegameCommandImplementation._
 import de.htwg.se.TradingGame.model.GaneStateManagerFolder.GameCommand.IGameCommand
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeDoneCalculations
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.GameStateFolder.DefaultGameStateimpl.DefaultGameState
-import de.htwg.se.TradingGame.model.GaneStateManagerFolder.GameCommand.ChangegameCommandImplementation._
 
 class GameStateManager  @Inject() (fileIO: TradeDataFileIO) extends IGameStateManager{
   var currentState: GameState = new DefaultGameState()

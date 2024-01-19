@@ -2,12 +2,11 @@ package de.htwg.se.TradingGame.controller.Controllerimplementation
 
 import com.google.inject._
 import de.htwg.se.TradingGame.TradingGameModule
-import de.htwg.se.TradingGame.model.GameCommand._
+import de.htwg.se.TradingGame.controller._
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.util.UndoManager
 import net.codingwell.scalaguice.InjectorExtensions._
-import de.htwg.se.TradingGame.controller._
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 
 class Controller @Inject() extends IController {
   var output: String = ""

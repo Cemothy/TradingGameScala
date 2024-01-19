@@ -1,6 +1,7 @@
 package de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder
 
-import de.htwg.se.TradingGame.model.BacktestStage._
+
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 import javafx.collections.FXCollections
 import javafx.scene.{chart => jfxsc}
 import javafx.scene.{layout => jfxsl}
@@ -57,7 +58,6 @@ import scala.collection.parallel.CollectionConverters._
 import scala.compiletime.ops.boolean
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 
 object AdvCandleStickChartSample extends JFXApp3{
 
