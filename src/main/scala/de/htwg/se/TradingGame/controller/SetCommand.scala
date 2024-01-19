@@ -3,7 +3,9 @@ package de.htwg.se.TradingGame.controller
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.util.Command
 
-class SetCommand(input: String, controller: Controller) extends Command {
+import Controllerimplementation.Controller
+
+class SetCommand(input: String, controller: IController) extends Command {
   val interpreter = controller.interpreter
   override def doStep: Unit = 
     val result = interpreter.processInputLine(input)

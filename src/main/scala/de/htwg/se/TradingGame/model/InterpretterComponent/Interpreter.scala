@@ -6,18 +6,18 @@ import com.google.inject.name.Names
 import de.htwg.se.TradingGame.TradingGameModule
 import de.htwg.se.TradingGame.model._
 import net.codingwell.scalaguice.InjectorExtensions.*
-import de.htwg.se.TradingGame.controller.GameStateManager
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 
 trait Interpreter {
   val actions: Map[String, String => (String, Interpreter)]
-  val gameStateManager: GameStateManager
+  val gameStateManager: IGameStateManager
   var descriptor: String
   def doWrongInput: String => (String, Interpreter) = input => ("Wrong input. read above for right input.", this)
   final def selectRegEx(input: String): String => (String, Interpreter) = {
     val matchingAction = actions.find { case (pattern, action) => input.matches(pattern) }
     matchingAction match {
       case Some((_, action)) => action
-      case None => doWrongInput // Pass input to doWrongInput
+      case None => doWrongInput 
     }
   }
   final def processInputLine(input: String): (String, Interpreter) = {

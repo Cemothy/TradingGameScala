@@ -54,11 +54,11 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import de.htwg.se.TradingGame.view.GUI.DraggableCandleStickChart
-import de.htwg.se.TradingGame.model.BacktestStage._
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeDoneCalculations
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeisBuy
+import de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder.DraggableCandleStickChart
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeDoneCalculations
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeWithVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeisBuy
+import de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder._
 
 
 

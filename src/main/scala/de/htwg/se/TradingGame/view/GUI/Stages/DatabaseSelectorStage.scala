@@ -2,7 +2,7 @@ package de.htwg.se.TradingGame.view.GUI.Stages
 
 import de.htwg.se.TradingGame.Main.controller
 import de.htwg.se.TradingGame.controller.IController
-import de.htwg.se.TradingGame.model.InterpretterComponent.DatabaseSelectorInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.DatabaseSelectorInterpreter
 import scalafx.Includes._
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer

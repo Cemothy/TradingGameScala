@@ -17,6 +17,15 @@ import Stages.LoginStage
 import Stages.SelectLoadFileStage
 import Stages.SelectNewFileStage
 import scalafx.scene.input.KeyCode.L
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BacktestOrLiveInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BacktestInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BalanceInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.ChoosePairAndDateInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.DatabaseSelectorInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.LoadorNewFileInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.LoginInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.SelectLoadFileInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.SelectNewFileInterpreter
 
 class GUI(controller: IController) extends JFXApp3 with Observer {
   controller.add(this)
