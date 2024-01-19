@@ -2,12 +2,12 @@ package de.htwg.se.TradingGame.model
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeWithVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.Trade
+import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.ConcreteFactorieCreators.StopLossCalculationStrategyCreator
+import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.ConcreteStrategies.StopLossCalculationStrategyRisk
+import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.ConcreteStrategies.StopLossCalculationStrategyVolume
 
-import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.StopLossCalculationStrategyCreator
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.{TradeComponent, TradeWithVolume}
-import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.StopLossCalculationStrategyVolume
-import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.StopLossCalculationStrategyRisk
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
 
 class StopLossCalculationStrategyCreatorSpec extends AnyWordSpec with Matchers {
     "StopLossCalculationStrategyCreator" should {

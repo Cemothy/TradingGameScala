@@ -2,9 +2,10 @@ package de.htwg.se.TradingGame.model
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.StopLossCalculationStrategyVolume
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeWithVolume
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
+import de.htwg.se.TradingGame.model.ProfitcalculationStrategyPattern.ConcreteStrategies.StopLossCalculationStrategyVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeWithVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.Trade
+
 
 class StopLossCalculationStrategyVolumeSpec extends AnyFlatSpec with Matchers {
     // Test case 1: Calculate profit for a trade with positive entry and stop loss

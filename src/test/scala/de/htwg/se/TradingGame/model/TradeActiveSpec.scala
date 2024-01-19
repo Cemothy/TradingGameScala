@@ -3,8 +3,8 @@ package de.htwg.se.TradingGame.model
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeComponent
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.TradeActive
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Trade
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeActive
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.Trade
 
 
 class TradeActiveSpec extends AnyWordSpec with Matchers {
