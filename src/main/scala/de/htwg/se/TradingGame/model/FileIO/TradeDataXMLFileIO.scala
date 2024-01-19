@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 
 class TradeDataXMLFileIO extends TradeDataFileIO{
   override def saveData(gameState: GameState,  filename: String): Unit = {
-    val filnamexml = "TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\model\\Data\\" + filename + ".xml"
+    val filnamexml = "./src/main/scala/de/htwg/se/TradingGame/model/Data/" + filename + ".xml"
     val file = new java.io.File(filnamexml)
     println("Absolute path: " + file.getAbsolutePath)
     println("Exists: " + file.exists)
@@ -57,7 +57,7 @@ class TradeDataXMLFileIO extends TradeDataFileIO{
   }
 
   override def loadData(filename: String, gameStateManager: GameStateManager): GameState = {
-    val filnamexml = "src\\main\\scala\\de\\htwg\\se\\TradingGame\\model\\Data\\" + filename + ".xml"
+    val filnamexml = "./src/main/scala/de/htwg/se/TradingGame/model/Data/" + filename + ".xml"
     val file = XML.loadFile(filnamexml)
 
     val doneTradesl = (file \ "DoneTrades" \ "DoneTrades").map { trade =>
