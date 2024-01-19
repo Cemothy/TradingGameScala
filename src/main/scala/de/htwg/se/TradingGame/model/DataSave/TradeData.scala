@@ -20,6 +20,7 @@ import scala.io.Source
 import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.XML
+
 object TradeData {
   val trades: ArrayBuffer[TradeComponent] = ArrayBuffer.empty[TradeComponent]
   val donetrades: ArrayBuffer[TradeDoneCalculations] = ArrayBuffer.empty[TradeDoneCalculations]
@@ -59,7 +60,7 @@ object TradeData {
     }
   }
 
-   def printTradeData(): Unit = {
+  def printTradeData(): Unit = {
     println(s"Trades: $trades")
     println(s"Done Trades: $donetrades")
     println(s"Balance: $balance")
@@ -69,13 +70,14 @@ object TradeData {
   }
 
 
-def convertToEpochSeconds(dateString: String): Long = {
-  val formatter = DateTimeFormatter.ofPattern("yyy.MM.dd,HH:mm")
-  val date = LocalDateTime.parse(dateString, formatter)
-  val epochSeconds = date.atZone(ZoneId.systemDefault()).toEpochSecond
-  epochSeconds
+  def convertToEpochSeconds(dateString: String): Long = {
+    val formatter = DateTimeFormatter.ofPattern("yyy.MM.dd,HH:mm")
+    val date = LocalDateTime.parse(dateString, formatter)
+    val epochSeconds = date.atZone(ZoneId.systemDefault()).toEpochSecond
+    epochSeconds
+  }
 }
-}
+
 class TradeDataclass @Inject() (tradeDataFileIO: TradeDataFileIO) {
 
   def loadData(filename: String): Unit = {

@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.xml._
 
 class TradeDataXMLFileIO extends TradeDataFileIO{
-   override def saveData(donetrades: ArrayBuffer[TradeDoneCalculations], balance: Double, pair: String, backtestDate: Long, filename: String): Unit = {
+  override def saveData(donetrades: ArrayBuffer[TradeDoneCalculations], balance: Double, pair: String, backtestDate: Long, filename: String): Unit = {
     val filnamexml = "C:\\Users\\Samuel\\Documents\\SoftwareEngeneering\\TradingGameScala\\src\\main\\scala\\de\\htwg\\se\\TradingGame\\Data\\" + filename + ".xml"
     val file = new java.io.File(filnamexml)
     println("Absolute path: " + file.getAbsolutePath)
@@ -34,7 +34,7 @@ class TradeDataXMLFileIO extends TradeDataFileIO{
       </DoneTrades>
     }
 
-   val rootElement = <TradeData>
+    val rootElement = <TradeData>
       {doneTradesElements}
       <Balance>{balance}</Balance>
       <Pair>{pair}</Pair>

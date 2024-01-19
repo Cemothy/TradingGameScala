@@ -71,20 +71,20 @@ class CircularBuffer[A](size: Int)(implicit tag: ClassTag[A]) {
         } else None
 
     def getNewestThird: ListBuffer[A] = {
-    val third = size / 3
-    val start = 2 * third
-    val end = size
-    val newestThird = if (tail < head) buffer.slice(start, end)
-    else (buffer.slice(tail, buffer.length) ++ buffer.slice(0, head)).slice(start, end)
-    ListBuffer(newestThird: _*)
-}
+        val third = size / 3
+        val start = 2 * third
+        val end = size
+        val newestThird = if (tail < head) buffer.slice(start, end)
+        else (buffer.slice(tail, buffer.length) ++ buffer.slice(0, head)).slice(start, end)
+        ListBuffer(newestThird: _*)
+    }
 
-def getOldestThird: ListBuffer[A] = {
-    val third = size / 3
-    val start = 0
-    val end = third
-    val oldestThird = if (tail < head) buffer.slice(start, end)
-    else (buffer.slice(tail, buffer.length) ++ buffer.slice(0, head)).slice(start, end)
-    ListBuffer(oldestThird: _*)
-}
+    def getOldestThird: ListBuffer[A] = {
+        val third = size / 3
+        val start = 0
+        val end = third
+        val oldestThird = if (tail < head) buffer.slice(start, end)
+        else (buffer.slice(tail, buffer.length) ++ buffer.slice(0, head)).slice(start, end)
+        ListBuffer(oldestThird: _*)
+    }
 }
