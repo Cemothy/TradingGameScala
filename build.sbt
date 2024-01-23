@@ -16,7 +16,7 @@ lazy val root = project
     libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.34.0",
     libraryDependencies += "org.scalatestplus" %% "mockito-3-4" % "3.2.10.0" % Test,
     libraryDependencies ++= {
-      // Determine OS version of JavaFX binaries
+      // Determine OS version of JavaFX binaries afd
       lazy val osName = System.getProperty("os.name") match {
         case n if n.startsWith("Linux") => "linux"
         case n if n.startsWith("Mac") => "mac"
