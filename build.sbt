@@ -27,5 +27,4 @@ lazy val root = project
         .map(m => "org.openjfx" % s"javafx-$m" % "16" classifier osName)
     },
     unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "scala",
-    coverageExcludedPackages := "view.*;controller.*;Util.*"
   )

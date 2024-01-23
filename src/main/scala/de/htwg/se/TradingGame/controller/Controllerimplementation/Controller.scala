@@ -8,12 +8,8 @@ import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.util.UndoManager
 import net.codingwell.scalaguice.InjectorExtensions._
 
-class Controller @Inject() extends IController {
+class Controller @Inject() (var interpreter: Interpreter, val gameStateManager: IGameStateManager, private val undoManager: UndoManager) extends IController {
   var output: String = ""
-  override val injector: Injector = Guice.createInjector(new TradingGameModule)
-  var interpreter: Interpreter = injector.getInstance(classOf[Interpreter])
-  val gameStateManager: IGameStateManager = interpreter.gameStateManager
-  private val undoManager = new UndoManager
   override def computeInput(input: String): Unit = 
     input match 
       case "undo" => undo()

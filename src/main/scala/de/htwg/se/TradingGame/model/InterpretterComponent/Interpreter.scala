@@ -4,9 +4,9 @@ import com.google.inject.Inject
 import com.google.inject.Injector
 import com.google.inject.name.Names
 import de.htwg.se.TradingGame.TradingGameModule
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 import de.htwg.se.TradingGame.model._
 import net.codingwell.scalaguice.InjectorExtensions.*
-import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 
 trait Interpreter {
   val actions: Map[String, String => (String, Interpreter)]
