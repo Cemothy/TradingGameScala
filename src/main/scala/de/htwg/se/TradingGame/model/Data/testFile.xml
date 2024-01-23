@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<GameState>
+        <Balance>0.0</Balance>
+        <BacktestDate>0</BacktestDate>
+        <StartBalance>0.0</StartBalance>
+        <Pair></Pair>
+        <SaveName></SaveName>
+        <EndDate>0</EndDate>
+        <StartDate>0</StartDate>
+        <DatabaseConnectionString></DatabaseConnectionString>
+        <DistanceCandles>0</DistanceCandles>
+        <Interval>1h</Interval>
+        <DoneTrades>
+          
+        </DoneTrades>
+      </GameState>
