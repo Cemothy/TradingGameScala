@@ -14,6 +14,7 @@ lazy val root = project
     libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.2.0",
     libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.3",
     libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.34.0",
+    libraryDependencies += "org.scalatestplus" %% "mockito-3-4" % "3.2.10.0" % Test,
     libraryDependencies ++= {
       // Determine OS version of JavaFX binaries
       lazy val osName = System.getProperty("os.name") match {
@@ -25,5 +26,6 @@ lazy val root = project
       Seq("base", "controls", "fxml", "graphics", "media", "swing", "web")
         .map(m => "org.openjfx" % s"javafx-$m" % "16" classifier osName)
     },
-    unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "scala"
+    unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "scala",
+    coverageExcludedPackages := "view.*;controller.*;Util.*"
   )

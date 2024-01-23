@@ -61,5 +61,24 @@ trait GameState {
       loadFileList == other.loadFileList
     case _ => false
   }
+  override def hashCode(): Int = {
+    val prime = 31
+    var result = 1
+    result = prime * result + balance.hashCode
+    result = prime * result + backtestDate.hashCode
+    result = prime * result + trades.hashCode
+    result = prime * result + doneTrades.hashCode
+    result = prime * result + startbalance.hashCode
+    result = prime * result + pair.hashCode
+    result = prime * result + savename.hashCode
+    result = prime * result + endDate.hashCode
+    result = prime * result + startDate.hashCode
+    result = prime * result + databaseConnectionString.hashCode
+    result = prime * result + pairList.hashCode
+    result = prime * result + distancecandles.hashCode
+    result = prime * result + interval.hashCode
+    result = prime * result + loadFileList.hashCode
+    result
+  }
 }
 
