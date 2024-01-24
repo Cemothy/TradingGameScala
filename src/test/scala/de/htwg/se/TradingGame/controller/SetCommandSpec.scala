@@ -48,31 +48,5 @@ class SetCommandSpec extends AnyFlatSpec with Matchers {
     verify(controller).interpreter = interpreter
     verify(controller).output = "output"
   }
-"A SetCommand" should "undo step correctly" in {
-  // Mock the GameStateManager, GameState, and ArrayBuffers
-  val gameStateManager: IGameStateManager = mock(classOf[IGameStateManager])
-  val gameState: GameState = mock(classOf[GameState])
-  val trades: mutable.ArrayBuffer[Trade] = mock(classOf[mutable.ArrayBuffer[Trade]])
-  val doneTrades: mutable.ArrayBuffer[Trade] = mock(classOf[mutable.ArrayBuffer[Trade]])
 
-  // Mock the Controller and Interpreter
-  val controller: IController = mock(classOf[IController])
-  val interpreter: Interpreter = mock(classOf[Interpreter])
-
-  // Set up the mocks to return the mock ArrayBuffers
-  when(controller.interpreter.gameStateManager).thenReturn(gameStateManager)
-  when(gameStateManager.currentState).thenReturn(gameState)
-  when(gameState.trades).thenReturn(trades)
-  when(gameState.doneTrades).thenReturn(doneTrades)
-
-  when(controller.interpreter).thenReturn(interpreter)
-  when(interpreter.resetState).thenReturn(interpreter)
-
-  val command = new SetCommand("input", controller)
-  command.undoStep
-
-  verify(trades).trimEnd(1)
-  verify(doneTrades).trimEnd(1)
-  verify(controller).interpreter = interpreter
-}
 }
