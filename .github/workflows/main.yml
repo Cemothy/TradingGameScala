@@ -2,9 +2,9 @@ name: Scala CI
 
 on:
   push:
-    branches: [ "master", "CDP" ]
+    branches: [ "master", "backtesting" ]
   pull_request:
-    branches: [ "master", "CDP" ]
+    branches: [ "master", "backtesting" ]
 
 
 permissions:
