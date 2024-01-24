@@ -10,7 +10,6 @@ import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
 trait IController extends Observable {
   var output: String
   var interpreter: Interpreter
-  val gameStateManager: IGameStateManager
   def computeInput(input: String): Unit
   def printDescriptor(): Unit
   val injector: Injector = Guice.createInjector(new TradingGameModule)

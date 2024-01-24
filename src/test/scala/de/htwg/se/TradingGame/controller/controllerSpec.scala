@@ -24,7 +24,7 @@ class ControllerSpec extends AnyFlatSpec with Matchers {
   }
 
   "A Controller" should "compute input correctly" in {
-    val controller = new Controller(interpreter, gameStateManager, undoManager)
+    val controller = new Controller(interpreter, undoManager)
   
     controller.computeInput("undo")
     verify(undoManager).undoStep
@@ -37,26 +37,26 @@ class ControllerSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "do step correctly" in {
-    val controller = new Controller(interpreter, gameStateManager, undoManager)
+    val controller = new Controller(interpreter,undoManager)
 
     controller.doStep("any input")
     verify(undoManager).doStep(any[Command])
   }
 
   it should "undo correctly" in {
-    val controller = new Controller(interpreter, gameStateManager, undoManager)
+    val controller = new Controller(interpreter, undoManager)
     controller.undo()
     verify(undoManager).undoStep
   }
 
   it should "redo correctly" in {
-    val controller = new Controller(interpreter, gameStateManager, undoManager)
+    val controller = new Controller(interpreter,undoManager)
     controller.redo()
     verify(undoManager).redoStep
   }
 
   it should "print descriptor correctly" in {
-    val controller = new Controller(interpreter, gameStateManager, undoManager)
+    val controller = new Controller(interpreter, undoManager)
     when(interpreter.descriptor).thenReturn("descriptor")
     controller.printDescriptor()
     controller.output should be ("descriptor")

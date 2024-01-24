@@ -8,7 +8,7 @@ import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
 import de.htwg.se.TradingGame.util.UndoManager
 import net.codingwell.scalaguice.InjectorExtensions._
 
-class Controller @Inject() (var interpreter: Interpreter, val gameStateManager: IGameStateManager, private val undoManager: UndoManager) extends IController {
+class Controller @Inject() (var interpreter: Interpreter, private val undoManager: UndoManager) extends IController {
   var output: String = ""
   override def computeInput(input: String): Unit = 
     input match 

@@ -31,11 +31,12 @@ class GUI(controller: IController) extends JFXApp3 with Observer {
   controller.add(this)
   var previousInterpreter: Option[Interpreter] = None
   override def update: Unit = {
-    Platform.runLater {
-      val currentInterpreter = controller.interpreter
+  Platform.runLater {
+    val currentInterpreter = controller.interpreter
 
-      if (currentInterpreter != previousInterpreter) {
-        previousInterpreter = Some(currentInterpreter)
+  if (previousInterpreter.isEmpty || currentInterpreter.getClass != previousInterpreter.get.getClass) {
+  previousInterpreter = Some(currentInterpreter)
+
 
         if (currentInterpreter.isInstanceOf[LoginInterpreter]) {
           new LoginStage(controller).createStage().show()

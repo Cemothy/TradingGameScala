@@ -22,7 +22,7 @@ object SelectLoadFileStage extends JFXApp3 {
 class SelectLoadFileStage(controller: IController) {
 
   def createStage(): JFXApp3.PrimaryStage = 
-    val files = controller.gameStateManager.currentState.loadFileList
+    val files = controller.interpreter.gameStateManager.currentState.loadFileList
     val filesObservableBuffer = ObservableBuffer[String](files.toList: _*)
     
 

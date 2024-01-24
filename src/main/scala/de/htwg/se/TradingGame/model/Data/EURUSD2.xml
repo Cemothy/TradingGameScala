@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<GameState>
+        <Balance>100000.0</Balance>
+        <BacktestDate>1549335600</BacktestDate>
+        <StartBalance>100000.0</StartBalance>
+        <Pair>EURUSD</Pair>
+        <SaveName>EURUSD2</SaveName>
+        <EndDate>1705074960</EndDate>
+        <StartDate>31791600</StartDate>
+        <DatabaseConnectionString>jdbc:sqlite:src/main/scala/de/htwg/se/TradingGame/Database/litedbCandleSticks.db</DatabaseConnectionString>
+        <DistanceCandles>3600</DistanceCandles>
+        <Interval>1h</Interval>
+        <DoneTrades>
+          <DoneTrades>
+        <entryTrade>1.13328</entryTrade>
+        <stopLossTrade>1.12455</stopLossTrade>
+        <takeProfitTrade>1.14413</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2019.06.25,14:05</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>Trade was not triggered</dateTradeTriggered>
+        <tradeWinOrLose>Trade was not triggered</tradeWinOrLose>
+        <dateTradeDone>Trade was not triggered</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.0</endProfit>
+      </DoneTrades><DoneTrades>
+        <entryTrade>1.13328</entryTrade>
+        <stopLossTrade>1.14102</stopLossTrade>
+        <takeProfitTrade>1.12506</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2019.07.12,20:05</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>Trade was not triggered</dateTradeTriggered>
+        <tradeWinOrLose>Trade was not triggered</tradeWinOrLose>
+        <dateTradeDone>Trade was not triggered</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.0</endProfit>
+      </DoneTrades><DoneTrades>
+        <entryTrade>1.13328</entryTrade>
+        <stopLossTrade>1.14102</stopLossTrade>
+        <takeProfitTrade>1.12506</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2019.07.12,20:05</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>Trade was not triggered</dateTradeTriggered>
+        <tradeWinOrLose>Trade was not triggered</tradeWinOrLose>
+        <dateTradeDone>Trade was not triggered</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.0</endProfit>
+      </DoneTrades><DoneTrades>
+        <entryTrade>1.13731</entryTrade>
+        <stopLossTrade>1.12877</stopLossTrade>
+        <takeProfitTrade>1.15</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2019.01.15,03:00</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>Trade was not triggered</dateTradeTriggered>
+        <tradeWinOrLose>Trade was not triggered</tradeWinOrLose>
+        <dateTradeDone>Trade was not triggered</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.0</endProfit>
+      </DoneTrades><DoneTrades>
+        <entryTrade>1.13731</entryTrade>
+        <stopLossTrade>1.12877</stopLossTrade>
+        <takeProfitTrade>1.15</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2019.01.29,01:00</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>Trade was not triggered</dateTradeTriggered>
+        <tradeWinOrLose>Trade was not triggered</tradeWinOrLose>
+        <dateTradeDone>Trade was not triggered</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.0</endProfit>
+      </DoneTrades><DoneTrades>
+        <entryTrade>1.13731</entryTrade>
+        <stopLossTrade>1.12877</stopLossTrade>
+        <takeProfitTrade>1.15</takeProfitTrade>
+        <risk>2.0</risk>
+        <datestart>2019.02.04,20:00</datestart>
+        <ticker>EURUSD</ticker>
+        <dateTradeTriggered>Trade was not triggered</dateTradeTriggered>
+        <tradeWinOrLose>Trade was not triggered</tradeWinOrLose>
+        <dateTradeDone>Trade was not triggered</dateTradeDone>
+        <currentprofit>0.0</currentprofit>
+        <endProfit>0.0</endProfit>
+      </DoneTrades>
+        </DoneTrades>
+      </GameState>

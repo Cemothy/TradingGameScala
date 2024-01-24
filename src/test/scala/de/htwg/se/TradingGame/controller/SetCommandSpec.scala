@@ -60,7 +60,7 @@ class SetCommandSpec extends AnyFlatSpec with Matchers {
   val interpreter: Interpreter = mock(classOf[Interpreter])
 
   // Set up the mocks to return the mock ArrayBuffers
-  when(controller.gameStateManager).thenReturn(gameStateManager)
+  when(controller.interpreter.gameStateManager).thenReturn(gameStateManager)
   when(gameStateManager.currentState).thenReturn(gameState)
   when(gameState.trades).thenReturn(trades)
   when(gameState.doneTrades).thenReturn(doneTrades)

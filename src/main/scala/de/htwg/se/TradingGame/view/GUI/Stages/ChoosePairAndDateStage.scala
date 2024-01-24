@@ -25,7 +25,7 @@ class ChoosePairAndDateStage(controller: IController) {
   val pairLabel = Label("Select a pair to trade:")
   val pairComboBox = new ComboBox[String](){
     val myBuffer: ObservableBuffer[String] = new ObservableBuffer[String]
-    myBuffer ++= controller.gameStateManager.currentState.pairList
+    myBuffer ++= controller.interpreter.gameStateManager.currentState.pairList
     items = myBuffer
   }
 

@@ -2,6 +2,11 @@ package de.htwg.se.TradingGame.view.GUI.Stages
 
 import de.htwg.se.TradingGame.Main.controller
 import de.htwg.se.TradingGame.controller.IController
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeDoneCalculations
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeWithVolume
+import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeisBuy
+import de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder.DraggableCandleStickChart
+import de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder._
 import javafx.event.ActionEvent
 import javafx.event.EventHandler
 import javafx.scene.shape.Line
@@ -54,11 +59,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder.DraggableCandleStickChart
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeDoneCalculations
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeWithVolume
-import de.htwg.se.TradingGame.model.TradeDecoratorPattern.Decorator.ConcreteDecorators.TradeisBuy
-import de.htwg.se.TradingGame.view.GUI.Stages.BacktestStageFolder._
 
 
 
@@ -137,13 +137,18 @@ class BacktestStage(controller: IController){
         dateLabelcross.layoutY = chartPane.height.value - dateLabelcross.height.value
         priceLabelcross.layoutX = 0
         priceLabelcross.layoutY = me.getY
+        entry.text = chartPane.entryprice
+        takeProfit.text = chartPane.takeProfitPrice
+        stopLoss.text = chartPane.stopLossPrice
     }
     chartWithCrosshair.onMousePressed = (me: MouseEvent) => {
         chartPane.updateOnMousePress(me)
+        chartPane.updateAllLines()
     }
     chartWithCrosshair.onMouseDragged = (me: MouseEvent) => {
         chartPane.updateOnDrag(me)
         crosshair.updateCrosshair(me)
+        chartPane.updateAllLines()
     }
     chartWithCrosshair.onMouseReleased = (me: MouseEvent) => {
         chartPane.updateOnMouseRelease()
@@ -197,7 +202,7 @@ class BacktestStage(controller: IController){
         val volumeCollum = new TableColumn[TradeDoneCalculations, Double] {
             text = "Volume"
             cellValueFactory = { (features: CellDataFeatures[TradeDoneCalculations, Double]) => 
-                ObjectProperty(new TradeWithVolume(features.value, controller.gameStateManager.currentState.balance).volume)
+                ObjectProperty(new TradeWithVolume(features.value, controller.interpreter.gameStateManager.currentState.balance).volume)
             }
         }
         val tradebuysell = new TableColumn[TradeDoneCalculations, String] {
@@ -215,16 +220,26 @@ class BacktestStage(controller: IController){
         timeframeComboBox.value = "1h"
         timeframeComboBox.value.onChange { (_, _, newTimeframe) =>
         //TODO: ändere timeframe vom chart und state und setze den chart richtig
+            controller.computeInput("changeintervalto " + newTimeframe)
+            
+        
+
         }
         val tradesBuffer = ObservableBuffer[TradeDoneCalculations]()
-        tradesBuffer ++= controller.gameStateManager.currentState.doneTrades
+        tradesBuffer ++= controller.interpreter.gameStateManager.currentState.doneTrades
 
         val table = new TableView[TradeDoneCalculations](tradesBuffer) {
             columns ++= List(dateCollum, tradebuysell, volumeCollum, riskCollum, tickerCollum, entryCollum, stoplossCollum, takeprofitCollum, currentProfit)
         }
+        def updateTable: Unit = {
+            tradesBuffer.clear()
+            tradesBuffer ++= controller.interpreter.gameStateManager.currentState.doneTrades
+            table.refresh()
+        }
         tickerComboBox.onKeyPressed = (keyEvent: KeyEvent) => {
             if (keyEvent.code == KeyCode.Enter) {
-                //TODO: ändere ticker vom chart state und setze das fenster richtig
+                //TODO: setze das fenster richtig
+                controller.computeInput("changePairto " + tickerComboBox.text.value)
             }
         }
         val endButton = new Button("Finish Backtesting")
@@ -247,7 +262,16 @@ class BacktestStage(controller: IController){
                 timeline.play()
         }
         def showdataandupdatedatetext(): Unit = {
-         //TODO: set the backtest date to the next value and update the text to the backtestdate
+         //TODO:
+         
+            val backtestDateTime = Instant.ofEpochSecond(controller.interpreter.gameStateManager.currentState.backtestDate)
+            val newDateTime = backtestDateTime.plusSeconds(controller.interpreter.gameStateManager.currentState.distancecandles)
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+            val newDateTimeString = newDateTime.atZone(ZoneId.systemDefault()).format(formatter)
+            controller.computeInput("changeBacktestDateto " + newDateTimeString)
+            dateInput.text = newDateTimeString
+            chartPane.update
+            
         }
         val runDataButton = new TimelineToggleButton {
             text = "Run Data"
@@ -269,9 +293,25 @@ class BacktestStage(controller: IController){
         }
         addcandlebuton.onAction = () => {
             //TODO: add one timeeinheit to backtestdate and update the table current profit 
+            val backtestDateTime = Instant.ofEpochSecond(controller.interpreter.gameStateManager.currentState.backtestDate)
+            val newDateTime = backtestDateTime.plusSeconds(controller.interpreter.gameStateManager.currentState.distancecandles)
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+            val newDateTimeString = newDateTime.atZone(ZoneId.systemDefault()).format(formatter)
+            controller.computeInput("changeBacktestDateto " + newDateTimeString)
+            dateInput.text = newDateTimeString
+            chartPane.update
+            updateTable
         }
         backtrackButton.onAction = () => {
           //TODO: update current profit and set backtest date one back
+            val backtestDateTime = Instant.ofEpochSecond(controller.interpreter.gameStateManager.currentState.backtestDate)
+            val newDateTime = backtestDateTime.minusSeconds(controller.interpreter.gameStateManager.currentState.distancecandles)
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd,HH:mm")
+            val newDateTimeString = newDateTime.atZone(ZoneId.systemDefault()).format(formatter)
+            controller.computeInput("changeBacktestDateto " + newDateTimeString)
+            dateInput.text = newDateTimeString
+            chartPane.update
+            updateTable
         }
         val topButtons = new HBox(endButton, tickerComboBox,timeframeComboBox, backtrackButton,runDataButton, addcandlebuton, speedSlider)
         VBox.setVgrow(chartPane, Priority.Always)
@@ -282,12 +322,17 @@ class BacktestStage(controller: IController){
             nextClickAction = "gotodate"
         }
         applyDateButton.setOnAction(_ => {
-            //TODO: update current profit of table. set backtest date to applied date and set the window so it fits the data
+            //TODO:set the window so it fits the data
+            controller.computeInput("changeBacktestDateto " + dateInput.text.value)
+            updateTable
+            
         })
         val risk = new TextField()
         val enterTradeButton = new Button("Enter Trade")
         enterTradeButton.setOnAction(_ => {
-            //TODO: send inputs to interpretter. update trade table. 
+            //TODO:  update trade table. 
+            controller.computeInput("invest " + entry.text.value + " " + stopLoss.text.value + " " + takeProfit.text.value + " " + risk.text.value)
+            updateTable
         })
         val tradeBoxButton = new Button("Trade Box")
         tradeBoxButton.onAction = () => {
@@ -315,6 +360,12 @@ class BacktestStage(controller: IController){
                 nextClickAction = "" 
             else if(nextClickAction == "gotodate") 
                 //TODO: set backtestdate to the clicked date via interpretter
+                val epochSeconds = chartPane.calculateXDate(me)
+                val instant = Instant.ofEpochSecond(epochSeconds.toLong)
+                val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+                val dateString = localDateTime.format(formatter)
+                controller.computeInput("changeBacktestDateto " + dateString)
+                chartPane.update
                 nextClickAction = ""
         }
         val rightButtons = new VBox(
@@ -335,7 +386,7 @@ class BacktestStage(controller: IController){
             risk,
             enterTradeButton
         )
-        val balanceLabel = new Label(s"Balance: ${controller.gameStateManager.currentState.balance}")
+        val balanceLabel = new Label(s"Balance: ${controller.interpreter.gameStateManager.currentState.balance}")
         val spacer = new Region()
         HBox.setHgrow(spacer, Priority.Always)
         val balanceProfitBox = new HBox(balanceLabel, spacer, profitLabel)

@@ -64,7 +64,7 @@ import scala.jdk.CollectionConverters._
 
 class DraggableCandleStickChart (controller: IController) extends StackPane {
   val size = 5004
-  val gameStateManager = controller.gameStateManager
+  val gameStateManager = controller.interpreter.gameStateManager
   val chartData = new ChartData.ChartData(size, gameStateManager)
   val candleData = chartData.initialize(gameStateManager.currentState.backtestDate)
   val candleStickChart = createChart(candleData)
@@ -94,6 +94,7 @@ class DraggableCandleStickChart (controller: IController) extends StackPane {
   if (plotBackground != null) 
     plotBackground.setStyle("-fx-background-color: #020209;")
   
+  def update = candleStickChart.layoutPlotChildren()
   def getxUpperBound = candleStickChart.getXAxis.asInstanceOf[javafx.scene.chart.NumberAxis].getClass.getMethod("getUpperBound").invoke(candleStickChart.getXAxis.asInstanceOf[javafx.scene.chart.NumberAxis]).asInstanceOf[Double]
   def getyUpperBound = candleStickChart.getYAxis.asInstanceOf[javafx.scene.chart.NumberAxis].getClass.getMethod("getUpperBound").invoke(candleStickChart.getYAxis.asInstanceOf[javafx.scene.chart.NumberAxis]).asInstanceOf[Double]
   def getxLowerBound = candleStickChart.getXAxis.asInstanceOf[javafx.scene.chart.NumberAxis].getClass.getMethod("getLowerBound").invoke(candleStickChart.getXAxis.asInstanceOf[javafx.scene.chart.NumberAxis]).asInstanceOf[Double]
@@ -139,7 +140,7 @@ class DraggableCandleStickChart (controller: IController) extends StackPane {
     else
       println("Resource not found: AdvCandleStickChartSample.css")
       null
-
+  
   def addDataLeftwhenNeeded: Unit = 
     if(chartData.lowestLoadedDate >= getxLowerBound && candleStickChart.getData.size() == 1) 
       val candleData = chartData.getLowerThird
