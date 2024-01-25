@@ -32,19 +32,19 @@ class GetMarketDataforTradeDoneCalculations(trade: TradeComponent, gameStateMana
 
   def didTradeWinnorLoose: Unit = {
     var result: String = "Trade did not hit take profit or stop loss"
-    val dateWhenTradehitTakeProfit1 = dateWhenTradehitTakeProfit
-    val dateWhenTradehitStopLoss1 = dateWhenTradehitStopLoss
     dateWhenTradeTriggered
+    dateTradehitTakeProfit = dateWhenTradehitTakeProfit
+    dateTradehitStopLoss = dateWhenTradehitStopLoss
     datewhenTradeisdone
     if(dateTradeTriggered.equals("Trade was not triggered")){
       result = "Trade was not triggered"
-    } else if(dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit") && !dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss")){
+    } else if(dateTradehitTakeProfit.equals("Trade did not hit take profit") && !dateTradehitStopLoss.equals("Trade did not hit stop loss")){
       result = "Trade hit stop loss"
-    } else if(dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss") && !dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit")){
+    } else if(dateTradehitStopLoss.equals("Trade did not hit stop loss") && !dateTradehitTakeProfit.equals("Trade did not hit take profit")){
       result = "Trade hit take profit"
-    }else if(dateWhenTradehitStopLoss1.equals("Trade did not hit stop loss") && dateWhenTradehitTakeProfit1.equals("Trade did not hit take profit")){
+    }else if(dateTradehitStopLoss.equals("Trade did not hit stop loss") && dateTradehitTakeProfit.equals("Trade did not hit take profit")){
       result = "Trade did not hit take profit or stop loss"
-    } else if(LocalDateTime.parse(dateWhenTradehitTakeProfit1, formatter).isBefore(LocalDateTime.parse(dateWhenTradehitStopLoss1, formatter))){
+    } else if(LocalDateTime.parse(dateTradehitTakeProfit, formatter).isBefore(LocalDateTime.parse(dateTradehitStopLoss, formatter))){
       result = "Trade hit take profit"
     } else {
       result = "Trade hit stop loss"
@@ -59,18 +59,19 @@ class GetMarketDataforTradeDoneCalculations(trade: TradeComponent, gameStateMana
   
       val datestart = LocalDateTime.parse(trade.datestart, formatter)
       val formattedDatestart = datestart.format(outputFormatter)
+  
 
       // Prepare the SQL statement
       val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
                     JOIN Markt m ON c.MarktID = m.MarktID
-                    WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= datetime(strftime('%Y-%m-%d %H:%M:%S', '$formattedDatestart'))
+                    WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND datetime(c.Zeitstempel / 1000, 'unixepoch') >= datetime('${formattedDatestart}')
                     ORDER BY c.Zeitstempel"""
 
       pstmt = conn.prepareStatement(sql)
 
       // Execute the query and get the result
       rs = pstmt.executeQuery()
-      
+    
       // Process the result
       var found = false
       while (rs.next() && !found) {
@@ -126,7 +127,7 @@ class GetMarketDataforTradeDoneCalculations(trade: TradeComponent, gameStateMana
       // Prepare the SQL statement
       val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
                 JOIN Markt m ON c.MarktID = m.MarktID
-                WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= datetime(strftime('%Y-%m-%d %H:%M:%S', '$formattedDatestart'))
+                WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND datetime(c.Zeitstempel / 1000, 'unixepoch') >= datetime('${formattedDatestart}')
                 ORDER BY c.Zeitstempel"""
 
       pstmt = conn.prepareStatement(sql)
@@ -170,7 +171,7 @@ class GetMarketDataforTradeDoneCalculations(trade: TradeComponent, gameStateMana
       val formattedDatestart = datestart.format(outputFormatter)
       val sql = s"""SELECT c.Zeitstempel, c.HighPrice, c.LowPrice FROM Candlestick c
                 JOIN Markt m ON c.MarktID = m.MarktID
-                WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND c.Zeitstempel >= datetime(strftime('%Y-%m-%d %H:%M:%S', '$formattedDatestart'))
+                WHERE m.Marktname = '${trade.ticker}' AND c.TimeframeID = 1 AND datetime(c.Zeitstempel / 1000, 'unixepoch') >= datetime('${formattedDatestart}')
                 ORDER BY c.Zeitstempel"""
       pstmt = conn.prepareStatement(sql)
       rs = pstmt.executeQuery()

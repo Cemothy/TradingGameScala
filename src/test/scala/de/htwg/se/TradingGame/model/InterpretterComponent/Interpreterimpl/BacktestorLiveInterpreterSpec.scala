@@ -1,27 +1,27 @@
 package de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl
-// 
-// import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
-// import org.scalatest.flatspec.AnyFlatSpec
-// import org.scalatest.matchers.should.Matchers
 
-// class BacktestOrLiveInterpreterSpec extends AnyFlatSpec with Matchers {
-//   "A BacktestOrLiveInterpreter" should "return a message and LoadorNewFileInterpreter when doBacktest is called" in {
-//     val gameStateManager: IGameStateManager = null // replace with a mock or a stub
-//     val interpreter = new BacktestOrLiveInterpreter(gameStateManager)
+import de.htwg.se.TradingGame.model.GameStateManagerFolder.IGameStateManager
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-//     val (message, returnedInterpreter) = interpreter.doBacktest("Backtest")
+class BacktestOrLiveInterpreterSpec extends AnyFlatSpec with Matchers {
+  "A BacktestOrLiveInterpreter" should "return a message and LoadorNewFileInterpreter when doBacktest is called" in {
+    val gameStateManager: IGameStateManager = null // replace with a mock or a stub
+    val interpreter = new BacktestOrLiveInterpreter(gameStateManager)
 
-//     message should be ("You chose Backtest")
-//     returnedInterpreter shouldBe a [LoadorNewFileInterpreter]
-//   }
+    val (message, returnedInterpreter) = interpreter.doBacktest("Backtest")
 
-//   it should "return a message and itself when doLiveTrade is called" in {
-//     val gameStateManager: IGameStateManager = null // replace with a mock or a stub
-//     val interpreter = new BacktestOrLiveInterpreter(gameStateManager)
+    message should be ("You chose Backtest")
+    returnedInterpreter shouldBe a [LoadorNewFileInterpreter]
+  }
 
-//     val (message, returnedInterpreter) = interpreter.doLiveTrade("Live Trade")
+  it should "return a message and itself when doLiveTrade is called" in {
+    val gameStateManager: IGameStateManager = null // replace with a mock or a stub
+    val interpreter = new BacktestOrLiveInterpreter(gameStateManager)
 
-//     message should be ("Not yet implemented.")
-//     returnedInterpreter shouldBe a [BacktestOrLiveInterpreter]
-//   }
-// }
+    val (message, returnedInterpreter) = interpreter.doLiveTrade("Live Trade")
+
+    message should be ("Not yet implemented.")
+    returnedInterpreter shouldBe a [BacktestOrLiveInterpreter]
+  }
+}

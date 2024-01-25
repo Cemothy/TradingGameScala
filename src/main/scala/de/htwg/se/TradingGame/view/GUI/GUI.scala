@@ -1,11 +1,21 @@
 package de.htwg.se.TradingGame.view.GUI
 import de.htwg.se.TradingGame.controller.IController
 import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BacktestInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BacktestOrLiveInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BalanceInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.ChoosePairAndDateInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.DatabaseSelectorInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.LoadorNewFileInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.LoginInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.SelectLoadFileInterpreter
+import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.SelectNewFileInterpreter
 import de.htwg.se.TradingGame.model.InterpretterComponent._
 import de.htwg.se.TradingGame.util.Observer
 import de.htwg.se.TradingGame.view.GUI.Stages._
 import scalafx.application.JFXApp3
 import scalafx.application.Platform
+import scalafx.scene.input.KeyCode.L
 
 import Stages.BacktestEvaluationStage
 import Stages.BacktestOrLiveTradeStage
@@ -16,26 +26,16 @@ import Stages.LoadorNewFileStage
 import Stages.LoginStage
 import Stages.SelectLoadFileStage
 import Stages.SelectNewFileStage
-import scalafx.scene.input.KeyCode.L
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BacktestOrLiveInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BacktestInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.BalanceInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.ChoosePairAndDateInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.DatabaseSelectorInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.LoadorNewFileInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.LoginInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.SelectLoadFileInterpreter
-import de.htwg.se.TradingGame.model.InterpretterComponent.Interpreterimpl.SelectNewFileInterpreter
 
 class GUI(controller: IController) extends JFXApp3 with Observer {
   controller.add(this)
   var previousInterpreter: Option[Interpreter] = None
   override def update: Unit = {
-  Platform.runLater {
-    val currentInterpreter = controller.interpreter
+    Platform.runLater {
+      val currentInterpreter = controller.interpreter
 
-  if (previousInterpreter.isEmpty || currentInterpreter.getClass != previousInterpreter.get.getClass) {
-  previousInterpreter = Some(currentInterpreter)
+      if (previousInterpreter.isEmpty || currentInterpreter.getClass != previousInterpreter.get.getClass) {
+        previousInterpreter = Some(currentInterpreter)
 
 
         if (currentInterpreter.isInstanceOf[LoginInterpreter]) {
